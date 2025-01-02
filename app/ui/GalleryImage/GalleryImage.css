@@ -1,0 +1,86 @@
+.gallery-image {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .gallery-image-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .gallery-image:hover .gallery-image-overlay {
+    opacity: 1;
+  }
+  
+  .gallery-image-text {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  
+  .dialog-content {
+    background-color: white;
+    padding: 1.5rem;
+    max-width: 425px;
+    width: 100%;
+  }
+  
+  .dialog-title {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  
+  .dialog-description {
+    color: #6b7280;
+    margin-bottom: 1rem;
+  }
+  
+  .form-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .form-label {
+    text-align: right;
+  }
+  
+  .form-input-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .form-checkbox-group {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .form-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .form-footer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  

@@ -1,0 +1,151 @@
+.header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header {
+    position: fixed;
+    width: 100%;
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
+    transition: transform 0.3s;
+    z-index: 50;
+  }
+  
+  .header-hidden {
+    transform: translateY(-100%);
+  }
+  
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+  }
+  
+  .header-title-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-line {
+    flex: 1;
+    height: 1px;
+    background-color: var(--luxury-color);
+  }
+  
+  .header-title {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0 1rem;
+  }
+  
+  .header-nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  
+  .header-nav-link {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .header-nav-link:hover {
+    color: var(--luxury-color);
+  }
+
+  .left-sub {
+    width: 90px;
+    display: flex;
+    flex-direction: row;
+    margin: 0 20px 0 20px;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .right-icons{
+    width: 100px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 20px 0 20px;
+
+  }
+
+
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 450px;
+  height: 100%;
+  background-color: #fff; /* Adjust as needed */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+  padding: 20px;
+  z-index: 1000;
+  transform: translateX(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-nav li {
+  margin: 20px 0;
+}
+
+.sidebar-nav a {
+  text-decoration: none;
+  color: #333; /* Adjust as needed */
+  font-size: 1.2rem;
+}
+
+.sidebar-nav a:hover {
+  color: #0070f3; /* Adjust as needed */
+}
+
+/* Optional: Add transitions or animations */
+
+  
+  

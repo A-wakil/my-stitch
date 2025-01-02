@@ -1,0 +1,170 @@
+'use client'
+
+import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import './AuthDialog.css'
+import { IoClose } from 'react-icons/io5'
+
+interface AuthProps {
+    onSubmit: (email: string, password: string) => Promise<void>
+    onGoogleSignIn: () => Promise<void>
+    isOpen: boolean
+    onClose: () => void
+}
+
+export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthProps) {
+    const [isLogin, setIsLogin] = useState(true)
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+    const [isLoading, setIsLoading] = useState(false)
+
+    const validateForm = () => {
+        const newErrors: { email?: string; password?: string } = {}
+
+        if (!email) {
+            newErrors.email = 'Email is required'
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Please enter a valid email'
+        }
+
+        if (!password) {
+            newErrors.password = 'Password is required'
+        } else if (password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters'
+        }
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!validateForm()) return
+
+        try {
+            setIsLoading(true)
+            await onSubmit(email, password)
+        } catch (error) {
+            console.error('Authentication error:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleGoogleSignIn = async () => {
+        try {
+            setIsLoading(true)
+            await onGoogleSignIn()
+        } catch (error) {
+            console.error('Google sign-in error:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    if (typeof window !== 'undefined') {
+        if (isOpen) {
+          document.body.style.overflow = 'hidden'
+        } else {
+          document.body.style.overflow = 'auto'
+        }
+      }
+
+    return (
+        <div className={`authDialog ${isOpen ? 'open' : ''}`}>
+            <div className="auth-container">
+                <div className="auth-card">
+                    <div className="auth-header">
+                        <h1 className="auth-title">{isLogin ? 'Welcome back' : 'Create account'}</h1>
+                        <p className="auth-subtitle">
+                            {isLogin
+                                ? 'Enter your details to sign in'
+                                : 'Enter your details to create an account'}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="auth-form">
+                        <div className="form-group">
+                            <label htmlFor="email" className="form-label">Email</label>
+                            <input
+                                id="email"
+                                type="email"
+                                className="form-input"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={isLoading}
+                            />
+                            {errors.email && <span className="form-error">{errors.email}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="password" className="form-label">Password</label>
+                            <input
+                                id="password"
+                                type="password"
+                                className="form-input"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
+                            />
+                            {errors.password && <span className="form-error">{errors.password}</span>}
+                        </div>
+
+                        <button type="submit" className="submit-button" disabled={isLoading}>
+                            {isLoading && <Loader2 className="loading-spinner" size={16} />}
+                            {isLogin ? 'Sign in' : 'Create account'}
+                        </button>
+                    </form>
+
+                    <div className="divider">
+                        <span>or continue with</span>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="google-button"
+                        onClick={handleGoogleSignIn}
+                        disabled={isLoading}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 18 18">
+                            <path
+                                fill="#4285F4"
+                                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+                            />
+                            <path
+                                fill="#34A853"
+                                d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+                            />
+                            <path
+                                fill="#FBBC05"
+                                d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.192 0 7.556 0 9s.348 2.808.957 4.039l3.007-2.332z"
+                            />
+                            <path
+                                fill="#EA4335"
+                                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
+                            />
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <div className="auth-footer">
+                        {isLogin ? (
+                            <>
+                                Don't have an account?{' '}
+                                <a href="#" onClick={() => setIsLogin(false)}>Sign up</a>
+                            </>
+                        ) : (
+                            <>
+                                Already have an account?{' '}
+                                <a href="#" onClick={() => setIsLogin(true)}>Sign in</a>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+

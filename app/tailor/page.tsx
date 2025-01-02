@@ -1,4 +1,4 @@
 
 export default function Dashboard() {
-    return <p>Dashboard</p>
+    return <p>Tailor Dashboard</p>
 }

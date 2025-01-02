@@ -1,6 +1,13 @@
+'use client'
 
+import { AuthProvider } from "./lib/AuthContext";
 import "./globals.css";
 
+import { ReactNode } from 'react'
+
+interface RootLayoutProps {
+  children: ReactNode
+}
 
 export default function RootLayout({
   children,
@@ -8,10 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <AuthProvider>
     <html lang="en">
       <body className="antialiased">
         {children}
       </body>
     </html>
+    </AuthProvider>
   );
 }

@@ -1,0 +1,46 @@
+.custom-button {
+  background-color: var(--luxury-color);
+  color: white;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.custom-button:hover {
+  background-color: rgba(139, 125, 107, 0.9);
+}
+
+.custom-input,
+.custom-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background-color: transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.custom-input:focus,
+.custom-textarea:focus {
+  outline: none;
+  border-color: var(--luxury-color);
+  box-shadow: 0 0 0 1px var(--luxury-color);
+}
+
+.custom-textarea {
+  min-height: 60px;
+}
+
+.custom-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+

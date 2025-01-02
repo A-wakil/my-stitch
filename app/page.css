@@ -12,3 +12,18 @@ main {
     background: #fff;
     box-shadow: inset 0 -1px 0 0 #e1e1e1;
 }
+
+.main-content {
+    padding-top: 6rem;
+  }
+  
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .loading-message {
+    text-align: center;
+    margin-top: 1rem;
+  }
