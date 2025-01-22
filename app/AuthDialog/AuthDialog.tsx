@@ -5,17 +5,18 @@ import { Loader2 } from 'lucide-react'
 import './AuthDialog.css'
 import { IoClose } from 'react-icons/io5'
 
-interface AuthProps {
-    onSubmit: (email: string, password: string) => Promise<void>
-    onGoogleSignIn: () => Promise<void>
+interface AuthDialogProps {
     isOpen: boolean
     onClose: () => void
+    onSubmit: (email: string, password: string) => void
+    onSignUp: (email: string, password: string) => void
+    onGoogleSignIn: () => void
 }
 
-export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthProps) {
-    const [isLogin, setIsLogin] = useState(true)
+export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn }: AuthDialogProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [isSignUp, setIsSignUp] = useState(false)
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
     const [isLoading, setIsLoading] = useState(false)
 
@@ -38,18 +39,12 @@ export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthPr
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-
-        if (!validateForm()) return
-
-        try {
-            setIsLoading(true)
-            await onSubmit(email, password)
-        } catch (error) {
-            console.error('Authentication error:', error)
-        } finally {
-            setIsLoading(false)
+        if (isSignUp) {
+            onSignUp(email, password)
+        } else {
+            onSubmit(email, password)
         }
     }
 
@@ -77,9 +72,9 @@ export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthPr
             <div className="auth-container">
                 <div className="auth-card">
                     <div className="auth-header">
-                        <h1 className="auth-title">{isLogin ? 'Welcome back' : 'Create account'}</h1>
+                        <h1 className="auth-title">{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
                         <p className="auth-subtitle">
-                            {isLogin
+                            {!isSignUp
                                 ? 'Enter your details to sign in'
                                 : 'Enter your details to create an account'}
                         </p>
@@ -114,7 +109,7 @@ export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthPr
 
                         <button type="submit" className="submit-button" disabled={isLoading}>
                             {isLoading && <Loader2 className="loading-spinner" size={16} />}
-                            {isLogin ? 'Sign in' : 'Create account'}
+                            {!isSignUp ? 'Sign in' : 'Create account'}
                         </button>
                     </form>
 
@@ -150,15 +145,15 @@ export function AuthDialog({ onSubmit, onGoogleSignIn, isOpen, onClose }: AuthPr
                     </button>
 
                     <div className="auth-footer">
-                        {isLogin ? (
+                        {!isSignUp ? (
                             <>
                                 Don't have an account?{' '}
-                                <a href="#" onClick={() => setIsLogin(false)}>Sign up</a>
+                                <a href="#" onClick={() => setIsSignUp(true)}>Sign up</a>
                             </>
                         ) : (
                             <>
                                 Already have an account?{' '}
-                                <a href="#" onClick={() => setIsLogin(true)}>Sign in</a>
+                                <a href="#" onClick={() => setIsSignUp(false)}>Sign in</a>
                             </>
                         )}
                     </div>

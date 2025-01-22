@@ -7,6 +7,7 @@ import './Header.css'
 import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../AuthDialog/AuthDialog'
+import { supabase } from '../../lib/supabaseClient'
 
 interface HeaderProps {
   waitlistLink: string
@@ -22,6 +23,15 @@ export function Header({ waitlistLink }: HeaderProps) {
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [])
 
   const controlNavbar = () => {
     if (typeof window !== 'undefined') {
@@ -43,7 +53,7 @@ export function Header({ waitlistLink }: HeaderProps) {
   }
 
   const toggleAuthDialog = () => {
-    setIsAuthDialogOpen(!isSidebarOpen)
+    setIsAuthDialogOpen(!isAuthDialogOpen)
   }
 
   const closeAuthDialog = () => {
@@ -51,17 +61,72 @@ export function Header({ waitlistLink }: HeaderProps) {
   }
 
   const handleSubmit = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Form submit:', { email, password })
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      })
+      
+      if (error) {
+        console.error('Authentication error:', error.message)
+        // Handle error (e.g., show error message to user)
+        return
+      }
+
+      if (data.user) {
+        // Handle successful sign in
+        console.log('Signed in successfully:', data.user)
+        closeAuthDialog()
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      // Handle unexpected errors
+    }
   }
 
   const handleGoogleSignIn = async () => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Google sign in')
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
+      })
+      
+      if (error) {
+        console.error('Google sign in error:', error.message)
+        return
+      }
+
+      // Handle successful sign in
+      console.log('Google sign in successful')
+      closeAuthDialog()
+    } catch (err) {
+      console.error('Unexpected error:', err)
+    }
   }
 
+  const handleSignUp = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      })
+      
+      if (error) {
+        console.error('Sign up error:', error.message)
+        // Handle error (e.g., show error message to user)
+        return
+      }
+
+      if (data.user) {
+        // Handle successful sign up
+        console.log('Signed up successfully:', data.user)
+        // Note: User might need to verify their email depending on your Supabase settings
+        closeAuthDialog()
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      // Handle unexpected errors
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -106,15 +171,29 @@ export function Header({ waitlistLink }: HeaderProps) {
             <div>Contact Us</div>
             <div className='right-icons'>
               <IoHeartOutline />
-              <div className='' onClick={toggleAuthDialog} style={{ cursor: 'pointer' }}>
+              <div 
+                className='' 
+                onClick={user ? undefined : toggleAuthDialog}
+                style={{ 
+                  cursor: user ? 'default' : 'pointer', 
+                  position: 'relative',
+                  opacity: user ? 0.5 : 1 
+                }}
+                title={user ? `Welcome ${user.displayName}` : undefined}
+              >
                 <IoPerson />
               </div>
               <IoBag />
             </div>
           </div>
         </div>
-        <AuthDialog onSubmit={handleSubmit}
-      onGoogleSignIn={handleGoogleSignIn} isOpen={isAuthDialogOpen} onClose={closeAuthDialog} />
+        <AuthDialog 
+          onSubmit={handleSubmit}
+          onSignUp={handleSignUp}
+          onGoogleSignIn={handleGoogleSignIn} 
+          isOpen={isAuthDialogOpen} 
+          onClose={closeAuthDialog} 
+        />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
       

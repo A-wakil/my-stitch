@@ -2,13 +2,10 @@
 
 
 import "./page.css"
-import AttireWrapper from "./ui/attire/attire";
-import { sampleAttire } from "./ui/sample_attire";
 import { useState, useCallback } from 'react'
 import { Header } from "./ui/Header/Header";
 import { GalleryImage } from "./ui/GalleryImage/GalleryImage";
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
-import { Attire } from "./lib/definitions";
 
 
 const sampleAttires = [
