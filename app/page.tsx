@@ -63,14 +63,13 @@ export default function Home() {
 
   const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreAttires)
 
-  const waitlistLink = '/waitlistlink'
 
 
 
 
   return (
     <div className="min-h-screen">
-      <Header waitlistLink={waitlistLink} />
+      <Header />
       <main className="main-content container">
         <div className="gallery-grid">
           {attires.map((attire, index) => (
@@ -78,7 +77,6 @@ export default function Home() {
               key={`${attire.alt}-${index}`}
               src={attire.src}
               alt={attire.alt}
-              waitlistLink={waitlistLink}
             />
           ))}
         </div>

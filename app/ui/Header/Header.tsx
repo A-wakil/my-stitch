@@ -9,16 +9,13 @@ import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../AuthDialog/AuthDialog'
 import { supabase } from '../../lib/supabaseClient'
 
-interface HeaderProps {
-  waitlistLink: string
-}
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export function Header({ waitlistLink }: HeaderProps) {
+export function Header() {
   const [visible, setVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)

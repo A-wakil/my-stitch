@@ -1,4 +1,7 @@
+import { Header } from "../ui/Header/Header";
 
 export default function Dashboard() {
-    return <p>Tailor Dashboard</p>
+    return <div><Header />
+    <p>Tailor Dashboard</p>
+    </div>
 }
