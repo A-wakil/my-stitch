@@ -1,0 +1,96 @@
+.container {
+  min-height: 100vh;
+  background-color: rgb(249 250 251);
+}
+
+.mainContent {
+  margin-left: 16rem; /* 256px / 16 = 16rem */
+}
+
+.profileCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.logo {
+  border-radius: 9999px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.starIcon {
+  color: #f59e0b; /* yellow-500 */
+}
+
+.designsGallery {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.imageCarousel {
+  position: relative;
+  height: 24rem;
+  margin-bottom: 1rem;
+}
+
+.carouselImage {
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.carouselDots {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background-color: rgb(156 163 175); /* gray-400 */
+  cursor: pointer;
+}
+
+.dotActive {
+  background-color: white;
+}
+
+.colorChip {
+  padding: 0.25rem 0.75rem;
+  background-color: rgb(243 244 246); /* gray-100 */
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.fabricOption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fabricTexture {
+  font-size: 0.875rem;
+  color: rgb(107 114 128); /* gray-500 */
+  margin-left: 0.5rem;
+} 
