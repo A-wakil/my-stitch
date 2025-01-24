@@ -1,0 +1,50 @@
+.tailor-profile-form {
+  width: 100%;
+  /* margin: 0 auto; */
+  padding: 1rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #000;
+}
+
+
+/* Style for Input and Textarea components */
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+}
+
+
+.file-upload {
+  background-color: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.file-upload input[type="file"] {
+  padding: 0.75rem;
+}
+
+.submit-button {
+  margin-top: 2rem;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  border-radius: 0.75rem;
+  background-color: #000;
+  color: white;
+} 

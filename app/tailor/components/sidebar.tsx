@@ -11,25 +11,25 @@ export function Sidebar() {
       <nav className="sidebar-nav">
         <ul className="sidebar-menu">
           <li>
-            <Link href="/dashboard" className="sidebar-link">
+            <Link href="/tailor" className="sidebar-link">
               <Home className="sidebar-icon" size={20} />
               Home
             </Link>
           </li>
           <li>
-            <Link href="/dashboard/designs" className="sidebar-link">
+            <Link href="/tailor/designs" className="sidebar-link">
               <Scissors className="sidebar-icon" size={20} />
               Designs
             </Link>
           </li>
           <li>
-            <Link href="/dashboard/profile" className="sidebar-link">
+            <Link href="/tailor/profile" className="sidebar-link">
               <User className="sidebar-icon" size={20} />
               Profile
             </Link>
           </li>
           <li>
-            <Link href="/dashboard/settings" className="sidebar-link">
+            <Link href="/tailor/settings" className="sidebar-link">
               <Settings className="sidebar-icon" size={20} />
               Settings
             </Link>
