@@ -15,10 +15,7 @@ export default function Dashboard() {
         <div className={styles.mainContentInner}>
           <header className={styles.header}>
             <h2 className={styles.pageTitle}>Dashboard</h2>
-            <div className={styles.headerIcons}>
-              <button className={styles.iconButton}>🔔</button>
-              <button className={styles.iconButton}>↗️</button>
-            </div>
+           
           </header>
 
           <div className={styles.cardsGrid}>

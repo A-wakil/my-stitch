@@ -110,10 +110,34 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           className={styles.textarea}
         />
       </div>
-      <ImageUpload images={images} setImages={setImages} initialImages={initialData?.images} />
-      <ColorPicker colors={colors} setColors={setColors} />
-      <FabricPicker fabrics={fabrics} setFabrics={setFabrics} />
-      <Button type="submit">{initialData?.id ? "Update Design" : "Submit Design"}</Button>
+      <div className={styles.uploadSection}>
+        <h3 className={styles.sectionTitle}>Images</h3>
+        <ImageUpload 
+          images={images} 
+          setImages={setImages} 
+          initialImages={initialData?.images} 
+        />
+      </div>
+      <div className={styles.colorSection}>
+        <h3 className={styles.sectionTitle}>Colors</h3>
+        <ColorPicker 
+          colors={colors} 
+          setColors={setColors} 
+        />
+      </div>
+      <div className={styles.fabricSection}>
+        <h3 className={styles.sectionTitle}>Fabrics</h3>
+        <FabricPicker 
+          fabrics={fabrics} 
+          setFabrics={setFabrics} 
+        />
+      </div>
+      <Button 
+        type="submit" 
+        className={styles.submitButton}
+      >
+        {initialData?.id ? "Update Design" : "Submit Design"}
+      </Button>
     </form>
   )
 }
