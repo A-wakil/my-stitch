@@ -9,19 +9,26 @@ interface AuthDialogProps {
     isOpen: boolean
     onClose: () => void
     onSubmit: (email: string, password: string) => void
-    onSignUp: (email: string, password: string) => void
+    onSignUp: (email: string, password: string, firstName: string, lastName: string) => void
     onGoogleSignIn: () => void
 }
 
 export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn }: AuthDialogProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
     const [isSignUp, setIsSignUp] = useState(false)
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+    const [errors, setErrors] = useState<{ 
+        email?: string
+        password?: string
+        firstName?: string
+        lastName?: string 
+    }>({})
     const [isLoading, setIsLoading] = useState(false)
 
     const validateForm = () => {
-        const newErrors: { email?: string; password?: string } = {}
+        const newErrors: typeof errors = {}
 
         if (!email) {
             newErrors.email = 'Email is required'
@@ -35,14 +42,21 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
             newErrors.password = 'Password must be at least 6 characters'
         }
 
+        if (isSignUp) {
+            if (!firstName) newErrors.firstName = 'First name is required'
+            if (!lastName) newErrors.lastName = 'Last name is required'
+        }
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        if (!validateForm()) return
+
         if (isSignUp) {
-            onSignUp(email, password)
+            onSignUp(email, password, firstName, lastName)
         } else {
             onSubmit(email, password)
         }
@@ -59,18 +73,24 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
         }
     }
 
+    const handleBackgroundClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            onClose()
+        }
+    }
+
     if (typeof window !== 'undefined') {
         if (isOpen) {
           document.body.style.overflow = 'hidden'
         } else {
           document.body.style.overflow = 'auto'
         }
-      }
+    }
 
     return (
-        <div className={`authDialog ${isOpen ? 'open' : ''}`}>
-            <div className="auth-container">
-                <div className="auth-card">
+        <div className={`authDialog ${isOpen ? 'open' : ''}`} onClick={handleBackgroundClick}>
+            <div className={`auth-container ${isSignUp ? 'flipped' : ''}`}>
+                <div className={`auth-card ${isSignUp ? 'sign-up' : 'sign-in'}`}>
                     <div className="auth-header">
                         <h1 className="auth-title">{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
                         <p className="auth-subtitle">
@@ -81,6 +101,7 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                     </div>
 
                     <form onSubmit={handleSubmit} className="auth-form">
+                        
                         <div className="form-group">
                             <label htmlFor="email" className="form-label">Email</label>
                             <input
@@ -107,42 +128,76 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                             {errors.password && <span className="form-error">{errors.password}</span>}
                         </div>
 
+                        {isSignUp && (
+                            <>
+                                <div className="form-group">
+                                    <label htmlFor="firstName" className="form-label">First Name</label>
+                                    <input
+                                        id="firstName"
+                                        type="text"
+                                        className="form-input"
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
+                                        disabled={isLoading}
+                                    />
+                                    {errors.firstName && <span className="form-error">{errors.firstName}</span>}
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="lastName" className="form-label">Last Name</label>
+                                    <input
+                                        id="lastName"
+                                        type="text"
+                                        className="form-input"
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
+                                        disabled={isLoading}
+                                    />
+                                    {errors.lastName && <span className="form-error">{errors.lastName}</span>}
+                                </div>
+                            </>
+                        )}
+
                         <button type="submit" className="submit-button" disabled={isLoading}>
                             {isLoading && <Loader2 className="loading-spinner" size={16} />}
                             {!isSignUp ? 'Sign in' : 'Create account'}
                         </button>
                     </form>
 
-                    <div className="divider">
-                        <span>or continue with</span>
-                    </div>
+                    {!isSignUp && (
+                        <>
+                            <div className="divider">
+                                <span>or continue with</span>
+                            </div>
 
-                    <button
-                        type="button"
-                        className="google-button"
-                        onClick={handleGoogleSignIn}
-                        disabled={isLoading}
-                    >
-                        <svg width="18" height="18" viewBox="0 0 18 18">
-                            <path
-                                fill="#4285F4"
-                                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-                            />
-                            <path
-                                fill="#34A853"
-                                d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-                            />
-                            <path
-                                fill="#FBBC05"
-                                d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.192 0 7.556 0 9s.348 2.808.957 4.039l3.007-2.332z"
-                            />
-                            <path
-                                fill="#EA4335"
-                                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
-                            />
-                        </svg>
-                        Continue with Google
-                    </button>
+                            <button
+                                type="button"
+                                className="google-button"
+                                onClick={handleGoogleSignIn}
+                                disabled={isLoading}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 18 18">
+                                    <path
+                                        fill="#4285F4"
+                                        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+                                    />
+                                    <path
+                                        fill="#34A853"
+                                        d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+                                    />
+                                    <path
+                                        fill="#FBBC05"
+                                        d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.192 0 7.556 0 9s.348 2.808.957 4.039l3.007-2.332z"
+                                    />
+                                    <path
+                                        fill="#EA4335"
+                                        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
+                                    />
+                                </svg>
+                                Continue with Google
+                            </button>
+                        </>
+                    )}
 
                     <div className="auth-footer">
                         {!isSignUp ? (

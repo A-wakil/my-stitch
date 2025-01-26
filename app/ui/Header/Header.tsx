@@ -8,6 +8,9 @@ import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp } from "r
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../AuthDialog/AuthDialog'
 import { supabase } from '../../lib/supabaseClient'
+import { User } from '@supabase/supabase-js'
+import { LogOut } from "lucide-react"
+import { Button } from "../../tailor/components/ui/button"
 
 
 interface SidebarProps {
@@ -20,13 +23,13 @@ export function Header() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
     })
-    
+
     return () => subscription.unsubscribe()
   }, [])
 
@@ -63,7 +66,7 @@ export function Header() {
         email: email,
         password: password,
       })
-      
+
       if (error) {
         console.error('Authentication error:', error.message)
         // Handle error (e.g., show error message to user)
@@ -86,7 +89,7 @@ export function Header() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google'
       })
-      
+
       if (error) {
         console.error('Google sign in error:', error.message)
         return
@@ -106,11 +109,21 @@ export function Header() {
         email: email,
         password: password,
       })
-      
+
       if (error) {
         console.error('Sign up error:', error.message)
         // Handle error (e.g., show error message to user)
         return
+      } else {
+        // Insert profile with roles
+        const { data, error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: user?.id, email: email, roles: ['customer'] }, // Adjust as needed
+          ])
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
+        }
       }
 
       if (data.user) {
@@ -123,6 +136,11 @@ export function Header() {
       console.error('Unexpected error:', err)
       // Handle unexpected errors
     }
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
   }
 
   useEffect(() => {
@@ -149,7 +167,7 @@ export function Header() {
             </div>
 
             <Link href="/tailor" className='left-sub' style={{ cursor: 'pointer' }}>
-              Tailor
+              Become a Tailor
               <IoCutSharp />
             </Link>
 
@@ -168,32 +186,35 @@ export function Header() {
             <div>Contact Us</div>
             <div className='right-icons'>
               <IoHeartOutline />
-              <div 
-                className='' 
+              <div
+                className=''
                 onClick={user ? undefined : toggleAuthDialog}
-                style={{ 
-                  cursor: user ? 'default' : 'pointer', 
+                style={{
+                  cursor: user ? 'default' : 'pointer',
                   position: 'relative',
-                  opacity: user ? 0.5 : 1 
+                  opacity: user ? 0.5 : 1
                 }}
-                title={user ? `Welcome ${user.displayName}` : undefined}
+                title={user ? `Welcome ${user.email}` : undefined}
               >
                 <IoPerson />
               </div>
               <IoBag />
+              <Button onClick={handleSignOut} variant="ghost" size="icon">
+                <LogOut size={15} />
+              </Button>
             </div>
           </div>
         </div>
-        <AuthDialog 
+        <AuthDialog
           onSubmit={handleSubmit}
           onSignUp={handleSignUp}
-          onGoogleSignIn={handleGoogleSignIn} 
-          isOpen={isAuthDialogOpen} 
-          onClose={closeAuthDialog} 
+          onGoogleSignIn={handleGoogleSignIn}
+          isOpen={isAuthDialogOpen}
+          onClose={closeAuthDialog}
         />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      
+
 
     </>
   )
