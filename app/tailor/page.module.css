@@ -128,3 +128,27 @@
     grid-column: span 2;
   }
 }
+
+.authContainer {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backButton {
+  display: flex;
+  position: absolute;
+  top: -3rem;
+  right: 1rem;
+  z-index: 100;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* width: 200px; */
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}

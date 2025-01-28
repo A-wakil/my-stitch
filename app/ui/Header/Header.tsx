@@ -103,38 +103,33 @@ export function Header() {
     }
   }
 
-  const handleSignUp = async (email: string, password: string) => {
+  const handleSignUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
+      console.log('Starting sign up with data:', { email, firstName, lastName })
+
       const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
 
       if (error) {
         console.error('Sign up error:', error.message)
-        // Handle error (e.g., show error message to user)
         return
-      } else {
-        // Insert profile with roles
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { id: user?.id, email: email, roles: ['customer'] }, // Adjust as needed
-          ])
-        if (profileError) {
-          console.error('Error creating profile:', profileError)
-        }
       }
 
       if (data.user) {
-        // Handle successful sign up
         console.log('Signed up successfully:', data.user)
-        // Note: User might need to verify their email depending on your Supabase settings
         closeAuthDialog()
       }
     } catch (err) {
       console.error('Unexpected error:', err)
-      // Handle unexpected errors
     }
   }
 
@@ -185,7 +180,6 @@ export function Header() {
           <div className='header-content'>
             <div>Contact Us</div>
             <div className='right-icons'>
-              <IoHeartOutline />
               <div
                 className=''
                 onClick={user ? undefined : toggleAuthDialog}
@@ -194,14 +188,14 @@ export function Header() {
                   position: 'relative',
                   opacity: user ? 0.5 : 1
                 }}
-                title={user ? `Welcome ${user.email}` : undefined}
+                title={user ? `Welcome ${user.user_metadata.first_name} ${user.user_metadata.last_name}` : undefined}
               >
                 <IoPerson />
               </div>
               <IoBag />
-              <Button onClick={handleSignOut} variant="ghost" size="icon">
+              {user && <Button onClick={handleSignOut} variant="ghost" size="icon">
                 <LogOut size={15} />
-              </Button>
+              </Button>}
             </div>
           </div>
         </div>

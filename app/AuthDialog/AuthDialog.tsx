@@ -51,14 +51,21 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!validateForm()) return
 
-        if (isSignUp) {
-            onSignUp(email, password, firstName, lastName)
-        } else {
-            onSubmit(email, password)
+        try {
+            setIsLoading(true)
+            if (isSignUp) {
+                await onSignUp(email, password, firstName, lastName)
+            } else {
+                await onSubmit(email, password)
+            }
+        } catch (error) {
+            console.error('Auth error:', error)
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -95,7 +102,7 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                         <h1 className="auth-title">{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
                         <p className="auth-subtitle">
                             {!isSignUp
-                                ? 'Enter your details to sign in'
+                                ? 'Enter your details to continue'
                                 : 'Enter your details to create an account'}
                         </p>
                     </div>
