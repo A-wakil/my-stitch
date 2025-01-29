@@ -11,6 +11,7 @@ import { supabase } from '../../lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"
 import { Button } from "../../tailor/components/ui/button"
+import { SecDialog } from '../../AuthDialog/SecDialog'
 
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ export function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [isSecDialogOpen, setIsSecDialogOpen] = useState(false)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -58,6 +60,14 @@ export function Header() {
 
   const closeAuthDialog = () => {
     setIsAuthDialogOpen(false)
+  }
+
+  const tailorFirewall = () => {
+    if (user) {
+      setIsSecDialogOpen(true)
+    } else {
+      toggleAuthDialog()
+    }
   }
 
   const handleSubmit = async (email: string, password: string) => {
@@ -138,6 +148,35 @@ export function Header() {
     setUser(null)
   }
 
+  const closeSecDialog = () => {
+    setIsSecDialogOpen(false)
+  }
+
+  const handleSecurityQuestions = async (
+    question1: string,
+    answer1: string,
+    question2: string,
+    answer2: string
+  ) => {
+    try {
+      // Handle the security questions submission here
+      console.log('Security questions submitted:', { question1, answer1, question2, answer2 })
+      closeSecDialog()
+    } catch (err) {
+      console.error('Error handling security questions:', err)
+    }
+  }
+
+  const handleSecurityVerification = async (answer1: string, answer2: string) => {
+    try {
+      // Handle the security verification here
+      console.log('Security answers verified:', { answer1, answer2 })
+      closeSecDialog()
+    } catch (err) {
+      console.error('Error verifying security answers:', err)
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.addEventListener('scroll', controlNavbar)
@@ -161,10 +200,10 @@ export function Header() {
               Search
             </div>
 
-            <Link href="/tailor" className='left-sub' style={{ cursor: 'pointer' }}>
+            <div className='left-sub' onClick={tailorFirewall} style={{ cursor: 'pointer' }}>
               Become a Tailor
               <IoCutSharp />
-            </Link>
+            </div>
 
           </div>
           <div className="header-content">
@@ -208,8 +247,12 @@ export function Header() {
         />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-
-
+      <SecDialog
+        isOpen={isSecDialogOpen}
+        onClose={closeSecDialog}
+        onSubmit={handleSecurityQuestions}
+        onVerify={handleSecurityVerification}
+      />
     </>
   )
 }
