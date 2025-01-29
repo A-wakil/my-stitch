@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CustomButton } from '../custom-components/custom-components'
 import './Header.css'
 import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp } from "react-icons/io5";
@@ -20,6 +21,7 @@ interface SidebarProps {
 }
 
 export function Header() {
+  const router = useRouter()
   const [visible, setVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -159,8 +161,33 @@ export function Header() {
     answer2: string
   ) => {
     try {
-      // Handle the security questions submission here
-      console.log('Security questions submitted:', { question1, answer1, question2, answer2 })
+      if (!user) {
+        console.error('No user logged in')
+        return
+      }
+
+      // Insert the security questions and answers into Supabase
+      const { data, error } = await supabase
+        .from('secquestions')
+        .upsert([
+          {
+            id: user.id,
+            question1: question1,
+            answer1: answer1,
+            question2: question2,
+            answer2: answer2,
+          }
+        ], {
+          onConflict: 'id'  // This will update if the user already has security questions
+        })
+
+      if (error) {
+        console.error('Error saving security questions:', error)
+        // You might want to show an error message to the user here
+        return
+      }
+
+      console.log('Security questions saved successfully')
       closeSecDialog()
     } catch (err) {
       console.error('Error handling security questions:', err)
@@ -169,9 +196,37 @@ export function Header() {
 
   const handleSecurityVerification = async (answer1: string, answer2: string) => {
     try {
-      // Handle the security verification here
-      console.log('Security answers verified:', { answer1, answer2 })
-      closeSecDialog()
+      if (!user) {
+        console.error('No user logged in')
+        return
+      }
+
+      // Fetch the stored security questions and answers
+      const { data, error } = await supabase
+        .from('secquestions')
+        .select('answer1, answer2')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching security answers:', error)
+        return
+      }
+
+      if (!data) {
+        console.error('No security questions found for this user')
+        return
+      }
+
+      // Compare the answers
+      if (data.answer1 === answer1 && data.answer2 === answer2) {
+        console.log('Security answers verified successfully')
+        closeSecDialog()
+        router.push('/tailor')
+      } else {
+        console.error('Incorrect security answers')
+        // You might want to show an error message to the user here
+      }
     } catch (err) {
       console.error('Error verifying security answers:', err)
     }
