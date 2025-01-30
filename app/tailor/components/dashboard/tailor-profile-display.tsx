@@ -1,33 +1,72 @@
+"use client"
+import { useEffect, useState } from "react"
 import "./tailor-profile-display.css"
 import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Send, Phone, Edit } from "lucide-react"
-
-// Mock data for tailor profile
-
+import { supabase } from "../../../lib/supabaseClient"
+interface TailorProfile {
+  brand_name: string;
+  tailor_name: string;
+  logo_url: string;
+  banner_image_url: string;
+  address: string;
+  phone: string;
+  email: string;
+  bio: string;
+  website: string;
+  experience: string;
+  specializations: string[];
+}
 
 interface TailorProfileDisplayProps {
   onEdit: () => void;
-  profile: {
-    brandName: string;
-    tailorName: string;
-    logo: string;
-    bannerImage: string;
-    address: string;
-    phone: string;
-    email: string;
-    bio: string;
-    website: string;
-    experience: string;
-    specializations: string[];
-  };
 }
 
-export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayProps) {
+export function TailorProfileDisplay({ onEdit }: TailorProfileDisplayProps) {
+  const [profile, setProfile] = useState<TailorProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (!user) throw new Error('No user found')
+
+        const { data, error } = await supabase
+          .from('tailor_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (error) throw error
+
+        setProfile(data)
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load profile')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [supabase])
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (error || !profile) {
+    return <div>Error loading profile. Please try again later.</div>
+  }
+
   return (
     <Card className="profile-card">
       <div className="profile-banner">
-        <img src={profile.bannerImage} alt="Profile Banner" className="banner-image" />
+        <img src={profile.banner_image_url} alt="Profile Banner" className="banner-image" />
         <Button 
           onClick={onEdit} 
           className="edit-button" 
@@ -39,7 +78,7 @@ export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayPr
       </div>
       <CardContent className="profile-content">
         <div className="profile-header">
-          <img src={profile.logo} alt="Profile" className="profile-image" />
+          <img src={profile.logo_url} alt="Profile" className="profile-image" />
           <div className="profile-badges">
             <span className="badge experience">{profile.experience}</span>
             {profile.specializations.map((specialization, index) => (
@@ -49,8 +88,8 @@ export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayPr
         </div>
 
         <div className="profile-info">
-          <h1 className="profile-name">{profile.tailorName}</h1>
-          <h2 className="profile-title">{profile.brandName}</h2>
+          <h1 className="profile-name">{profile.tailor_name}</h1>
+          <h2 className="profile-title">{profile.brand_name}</h2>
           
           <p className="profile-bio">{profile.bio}</p>
 

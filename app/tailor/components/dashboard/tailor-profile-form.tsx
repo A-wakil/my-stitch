@@ -1,11 +1,12 @@
 "use client"
-
 import { useState } from "react"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 import "./tailor-profile-form.css"
+import { supabase } from "../../../lib/supabaseClient"
 
 interface TailorProfile {
   brandName: string;
@@ -33,6 +34,9 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
   const [logo, setLogo] = useState<File | null>(null)
   const [banner, setBanner] = useState<File | null>(null)
   const [newSpecialization, setNewSpecialization] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target
@@ -78,13 +82,98 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadImage = async (file: File, path: string) => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Math.random()}.${fileExt}`
+    const filePath = `${path}/${fileName}`
+
+    const { error: uploadError, data } = await supabase.storage
+      .from('tailor-images')
+      .upload(filePath, file)
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('tailor-images')
+      .getPublicUrl(filePath)
+
+    return publicUrl
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onComplete(formData)
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) throw new Error('No user found')
+
+      // Upload images if they exist
+      let logoUrl = formData.logo
+      let bannerUrl = formData.bannerImage
+
+      if (logo) {
+        logoUrl = await uploadImage(logo, 'logos')
+      }
+      if (banner) {
+        bannerUrl = await uploadImage(banner, 'banners')
+      }
+
+      const profileData = {
+        id: user.id,
+        brand_name: formData.brandName,
+        tailor_name: formData.tailorName,
+        logo_url: logoUrl,
+        banner_image_url: bannerUrl,
+        address: formData.address,
+        phone: formData.phone,
+        email: formData.email,
+        bio: formData.bio,
+        rating: formData.rating || 0,
+        website: formData.website,
+        experience: formData.experience,
+        specializations: formData.specializations,
+      }
+
+      console.log('Sending profile data:', profileData)
+
+      const { data, error: upsertError } = await supabase
+        .from('tailor_profiles')
+        .upsert(profileData)
+
+      if (upsertError) {
+        console.error('Upsert error:', upsertError)
+        throw upsertError
+      }
+
+      console.log('Upsert response:', data)
+
+      onComplete({
+        ...formData,
+        logo: logoUrl,
+        bannerImage: bannerUrl,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Error updating profile:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="tailor-profile-form">
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
       <div className="form-group">
         <Label htmlFor="brandName">Brand Name</Label>
         <Input 
@@ -203,8 +292,21 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-actions">
-        <Button type="submit" className="submit-button">Update Profile</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button 
+          type="submit" 
+          className="submit-button"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Updating...' : 'Update Profile'}
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={isLoading}
+        >
+          Cancel
+        </Button>
       </div>
     </form>
   )
