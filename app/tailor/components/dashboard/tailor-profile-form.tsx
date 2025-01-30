@@ -52,7 +52,7 @@ export function TailorProfileForm({ onComplete }: TailorProfileFormProps) {
       </div>
       <div className="form-group">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required />
+        <Input id="email_t" type="email" required />
       </div>
       <div className="form-group">
         <Label htmlFor="bio">Bio</Label>

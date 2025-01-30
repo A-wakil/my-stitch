@@ -39,11 +39,16 @@ export function SecDialog({ isOpen, onClose, onSubmit, onVerify }: SecDialogProp
     const validateForm = () => {
         const newErrors: typeof errors = {}
 
-        if (!question1) newErrors.question1 = 'Please select a security question'
-        if (!answer1) newErrors.answer1 = 'Answer is required'
-        if (!question2) newErrors.question2 = 'Please select a security question'
-        if (!answer2) newErrors.answer2 = 'Answer is required'
-        if (question1 === question2) newErrors.question2 = 'Please select a different question'
+        if (isVerifying) {
+            if (!answer1) newErrors.answer1 = 'Answer is required'
+            if (!answer2) newErrors.answer2 = 'Answer is required'
+        } else {
+            if (!question1) newErrors.question1 = 'Please select a security question'
+            if (!answer1) newErrors.answer1 = 'Answer is required'
+            if (!question2) newErrors.question2 = 'Please select a security question'
+            if (!answer2) newErrors.answer2 = 'Answer is required'
+            if (question1 === question2) newErrors.question2 = 'Please select a different question'
+        }
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
