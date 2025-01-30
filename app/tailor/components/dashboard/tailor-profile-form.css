@@ -47,4 +47,42 @@
   border-radius: 0.75rem;
   background-color: #000;
   color: white;
+}
+
+.specializations-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.specializations-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.specialization-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  gap: 0.25rem;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-remove:hover {
+  color: #ef4444;
 } 
