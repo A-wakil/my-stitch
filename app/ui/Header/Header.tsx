@@ -307,6 +307,7 @@ export function Header() {
         onClose={closeSecDialog}
         onSubmit={handleSecurityQuestions}
         onVerify={handleSecurityVerification}
+        userId={user?.id}
       />
     </>
   )

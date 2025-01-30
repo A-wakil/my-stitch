@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
+import { supabase } from '../lib/supabaseClient'
 import './SecDialog.css'
 
 interface SecDialogProps {
@@ -9,9 +10,10 @@ interface SecDialogProps {
     onClose: () => void
     onSubmit: (question1: string, answer1: string, question2: string, answer2: string) => void
     onVerify: (answer1: string, answer2: string) => void
+    userId: string | undefined
 }
 
-export function SecDialog({ isOpen, onClose, onSubmit, onVerify }: SecDialogProps) {
+export function SecDialog({ isOpen, onClose, onSubmit, onVerify, userId }: SecDialogProps) {
     const [question1, setQuestion1] = useState('')
     const [answer1, setAnswer1] = useState('')
     const [question2, setQuestion2] = useState('')
@@ -35,6 +37,28 @@ export function SecDialog({ isOpen, onClose, onSubmit, onVerify }: SecDialogProp
         "What is the name of the street you grew up on?",
         "What is your favorite movie?"
     ]
+
+    useEffect(() => {
+        const checkExistingQuestions = async () => {
+            if (!userId) return;
+            
+            const { data, error } = await supabase
+                .from('secquestions')
+                .select('id')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                setIsVerifying(true);
+            } else {
+                setIsVerifying(false);
+            }
+        };
+
+        if (isOpen) {
+            checkExistingQuestions();
+        }
+    }, [isOpen, userId]);
 
     const validateForm = () => {
         const newErrors: typeof errors = {}
@@ -206,16 +230,11 @@ export function SecDialog({ isOpen, onClose, onSubmit, onVerify }: SecDialogProp
                     </form>
 
                     <div className="sec-footer">
-                        {!isVerifying ? (
+                        {isVerifying && 
                             <>
-                                
-                                <a href="#" onClick={() => setIsVerifying(true)}> Already set up security questions?</a>
+                                <a href="#" onClick={() => setIsVerifying(false)}>Forgot your Answers!</a>
                             </>
-                        ) : (
-                            <>
-                                <a href="#" onClick={() => setIsVerifying(false)}>Set up security questions now!</a>
-                            </>
-                        )}
+                        }
                     </div>
                 </div>
             </div>
