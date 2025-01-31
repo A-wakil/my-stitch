@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { DesignForm } from "@/components/dashboard/design-form"
+import { DesignForm } from "../../../components/dashboard/design-form"
 
 export default function EditDesignPage({ params }: { params: { id: string } }) {
   const [design, setDesign] = useState(null)

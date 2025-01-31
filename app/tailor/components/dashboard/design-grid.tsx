@@ -11,8 +11,11 @@ interface Design {
   id: string
   title: string
   images: string[]
-  colors: { name: string; image: string }[]
-  fabrics: { name: string; image: string }[]
+  fabrics: {
+    name: string
+    image: string
+    colors: { name: string; image: string }[]
+  }[]
 }
 
 export function DesignGrid() {
@@ -38,7 +41,7 @@ export function DesignGrid() {
   }
 
   const handleEdit = (id: string) => {
-    router.push(`/dashboard/designs/${id}/edit`)
+    router.push(`/tailor/designs/${id}/edit`)
   }
 
   const handleDelete = async (id: string) => {
@@ -61,30 +64,32 @@ export function DesignGrid() {
   return (
     <>
       <div className={styles.grid}>
-        {designs.map((design) => (
+        {designs?.map((design) => (
           <div key={design.id} className={styles['card-content']}>
             <img 
-              src={design.images[0] || "/placeholder.svg"} 
+              src={design.images?.[0] || "/placeholder.svg"} 
               alt={design.title} 
               className={styles['card-image']} 
             />
             <h3 className={styles['card-title']}>{design.title}</h3>
-            <div className={styles['color-container']}>
-              {design.colors.map((color, index) => (
-                <div key={index} className={styles['color-item']}>
-                  <div 
-                    className={styles['color-swatch']} 
-                    style={{ backgroundColor: color.name }}
-                  ></div>
-                  <span className={styles['color-name']}>{color.name}</span>
-                </div>
-              ))}
-            </div>
             <div className={styles['fabric-container']}>
-              {design.fabrics.map((fabric, index) => (
-                <span key={index} className={styles['fabric-item']}>
-                  {fabric.name}
-                </span>
+              {design.fabrics?.map((fabric, fabricIndex) => (
+                <div key={fabricIndex} className={styles['fabric-item']}>
+                  <div className={styles['fabric-header']}>
+                    <span className={styles['fabric-name']}>{fabric.name}</span>
+                  </div>
+                  <div className={styles['color-list']}>
+                    {fabric.colors?.map((color, colorIndex) => (
+                      <div key={colorIndex} className={styles['color-item']}>
+                        <div 
+                          className={styles['color-swatch']} 
+                          style={{ backgroundColor: color.name }}
+                        />
+                        <span className={styles['color-name']}>{color.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
             <div className={styles['card-footer']}>

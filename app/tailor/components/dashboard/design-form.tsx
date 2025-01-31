@@ -9,16 +9,7 @@ import { ColorPicker } from "../../components/dashboard/color-picker"
 import { FabricPicker } from "../../components/dashboard/fabric-picker"
 import { ImageUpload } from "../../components/dashboard/image-upload"
 import styles from "./styles/DesignForm.module.css"
-
-interface Color {
-  name: string
-  image: File | null
-}
-
-interface Fabric {
-  name: string
-  image: File | null
-}
+import { Color, Fabric } from "../../types/design"
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -27,8 +18,11 @@ interface DesignFormProps {
     title: string
     description: string
     images: string[]
-    colors: { name: string; image: string }[]
-    fabrics: { name: string; image: string }[]
+    fabrics: {
+      name: string
+      image: string
+      colors: { name: string; image: string }[]
+    }[]
   }
 }
 
@@ -36,17 +30,23 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [images, setImages] = useState<File[]>([])
-  const [colors, setColors] = useState<Color[]>(initialData?.colors.map((c) => ({ name: c.name, image: null })) || [])
   const [fabrics, setFabrics] = useState<Fabric[]>(
-    initialData?.fabrics.map((f) => ({ name: f.name, image: null })) || [],
+    initialData?.fabrics.map((f) => ({
+      name: f.name,
+      image: null,
+      colors: f.colors.map(c => ({ name: c.name, image: null }))
+    })) || []
   )
 
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title)
       setDescription(initialData.description)
-      setColors(initialData.colors.map((c) => ({ name: c.name, image: null })))
-      setFabrics(initialData.fabrics.map((f) => ({ name: f.name, image: null })))
+      setFabrics(initialData.fabrics.map((f) => ({
+        name: f.name,
+        image: null,
+        colors: f.colors.map(c => ({ name: c.name, image: null }))
+      })))
     }
   }, [initialData])
 
@@ -56,19 +56,24 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     const formData = new FormData()
     formData.append("title", title)
     formData.append("description", description)
+    
+    // Append images
     images.forEach((image, index) => {
-      formData.append(`images[${index}]`, image)
+      formData.append(`images`, image) // Changed from images[${index}]
     })
-    colors.forEach((color, index) => {
-      formData.append(`colors[${index}][name]`, color.name)
-      if (color.image) {
-        formData.append(`colors[${index}][image]`, color.image)
-      }
-    })
+    
+    // Convert fabrics array to JSON string and append as a single field
+    const fabricsData = fabrics.map(fabric => ({
+      name: fabric.name,
+      image: null, // Handle image separately
+      colors: fabric.colors
+    }))
+    formData.append('fabrics', JSON.stringify(fabricsData))
+    
+    // Append fabric images separately if they exist
     fabrics.forEach((fabric, index) => {
-      formData.append(`fabrics[${index}][name]`, fabric.name)
       if (fabric.image) {
-        formData.append(`fabrics[${index}][image]`, fabric.image)
+        formData.append(`fabricImages[${index}]`, fabric.image)
       }
     })
 
@@ -80,11 +85,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         method: method,
         body: formData,
       })
-      if (response.ok) {
-        onSubmitSuccess()
-      } else {
-        console.error("Failed to submit design")
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+      
+      onSubmitSuccess()
     } catch (error) {
       console.error("Error submitting design:", error)
     }
@@ -116,13 +122,6 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           images={images} 
           setImages={setImages} 
           initialImages={initialData?.images} 
-        />
-      </div>
-      <div className={styles.colorSection}>
-        <h3 className={styles.sectionTitle}>Colors</h3>
-        <ColorPicker 
-          colors={colors} 
-          setColors={setColors} 
         />
       </div>
       <div className={styles.fabricSection}>
