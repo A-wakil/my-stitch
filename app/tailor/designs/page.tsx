@@ -12,7 +12,7 @@ export default function DesignsPage() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Designs</h2>
+        <h2 className={styles.title}>{showForm ? "Add New Design" : "Designs"}</h2>
         <Button className={styles['add-button']} onClick={() => setShowForm(!showForm)}>{showForm ? "Cancel" : "Add New Design"}</Button>
       </div>
       <div className={styles.contentWrapper}>

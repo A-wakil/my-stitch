@@ -111,10 +111,9 @@ export default function Dashboard() {
     <div className={styles.pageContainer}>
       <main className={styles.mainContent}>
         <div className={styles.mainContentInner}>
-          <header className={styles.header}>
+          {/* <header className={styles.header}>
             <h2 className={styles.pageTitle}>Dashboard</h2>
-          </header>
-
+          </header> */}
           <div className={styles.cardsGrid}>
             <Card className={styles.card}>
               <h3>Total Designs</h3>

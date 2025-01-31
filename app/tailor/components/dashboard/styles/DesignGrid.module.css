@@ -3,6 +3,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   padding: 0 3rem;
+  margin-left: 17px;
+  height: 100%;
 }
 
 .card-content {
@@ -10,6 +12,7 @@
   background-color: white;
   border-radius: 0.75rem;
   border: 1px solid #eee;
+  height: 33rem;
 }
 
 .card-image {
