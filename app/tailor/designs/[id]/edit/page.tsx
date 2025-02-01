@@ -1,20 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { DesignForm } from "../../../components/dashboard/design-form"
 
-export default function EditDesignPage({ params }: { params: { id: string } }) {
+export default function EditDesignPage() {
+  const params = useParams()
+  const designId = params?.id as string
   const [design, setDesign] = useState(null)
   const router = useRouter()
 
   useEffect(() => {
     fetchDesign()
-  }, [params.id])
+  }, [designId])
 
   const fetchDesign = async () => {
     try {
-      const response = await fetch(`/api/designs/${params.id}`)
+      const response = await fetch(`/api/designs/${designId}`)
       if (response.ok) {
         const data = await response.json()
         setDesign(data)

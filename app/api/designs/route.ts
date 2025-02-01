@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { supabase } from '../../lib/supabaseClient'
+import { NextResponse } from 'next/server'
 
 interface Design {
   id: string;
@@ -8,103 +9,85 @@ interface Design {
   fabrics: {
     name: string;
     image: string;
+    price: number;
     colors: { name: string; image: string; }[];
   }[];
 }
 
-// Mock data for demonstration purposes
-export const designs: Design[] = [
-  {
-    id: "1",
-    title: "Summer Dress",
-    description: "A light and airy summer dress",
-    images: ["/placeholder.svg", "/placeholder.svg"],
-    fabrics: [
-      { 
-        name: "Cotton", 
-        image: "/fabric-cotton.svg",
-        colors: [
-          { name: "Red", image: "/color-red.svg" },
-          { name: "Blue", image: "/color-blue.svg" }
-        ]
-      },
-      { 
-        name: "Linen", 
-        image: "/fabric-linen.svg",
-        colors: [
-          { name: "Black", image: "/color-black.svg" },
-          { name: "Gray", image: "/color-gray.svg" }
-        ]
-      }
-    ]
-  },
-  {
-    id: "2",
-    title: "Winter Coat",
-    description: "A warm and stylish winter coat",
-    images: ["/placeholder.svg"],
-    fabrics: [
-      { 
-        name: "Wool", 
-        image: "/fabric-wool.svg",
-        colors: [
-          { name: "Black", image: "/color-black.svg" },
-          { name: "Gray", image: "/color-gray.svg" }
-        ]
-      },
-      { 
-        name: "Cashmere", 
-        image: "/fabric-cashmere.svg",
-        colors: [
-          { name: "Beige", image: "/color-beige.svg" },
-          { name: "Brown", image: "/color-brown.svg" }
-        ]
-      }
-    ],
-  },
-]
-
 export async function GET() {
-  return NextResponse.json(designs)
+  try {
+    const { data: designs, error } = await supabase
+      .from('designs')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(designs)
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const formData = await request.formData()
-
-  // Parse the fabrics JSON string
-  const fabricsData = JSON.parse(formData.get("fabrics") as string)
-  
-  // Get any fabric images that were uploaded
-  const fabricImages: Record<number, File> = {}
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith('fabricImages[')) {
-      const index = parseInt(key.match(/\[(\d+)\]/)?.[1] || '0')
-      fabricImages[index] = value as File
+  try {
+    const formData = await request.formData()
+    const fabricsData = JSON.parse(formData.get("fabrics") as string)
+    
+    const images = formData.getAll("images") as File[]
+    const imageUrls: string[] = []
+    
+    for (const image of images) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('design-images')
+          .upload(`${Date.now()}-${image.name}`, image)
+        
+        if (error) {
+          console.error('Storage error:', error)
+          continue
+        }
+        
+        const urlData = supabase.storage
+          .from('design-images')
+          .getPublicUrl(data.path)
+        
+        imageUrls.push(urlData.data.publicUrl)
+      } catch (error) {
+        console.error('Image upload error:', error)
+      }
     }
+
+    const { data, error } = await supabase
+      .from('designs')
+      .insert({
+        title: formData.get("title"),
+        description: formData.get("description"),
+        images: imageUrls,
+        fabrics: fabricsData
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(
+      { message: "Design submitted successfully", design: data }, 
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Internal Server Error',
+      details: error
+    }, { status: 500 })
   }
-
-  const newDesign: Design = {
-    id: Date.now().toString(),
-    title: formData.get("title") as string,
-    description: formData.get("description") as string,
-    images: formData.getAll("images").map((image) => URL.createObjectURL(image as File)),
-    fabrics: fabricsData.map((fabric: any, index: number) => ({
-      name: fabric.name,
-      image: fabricImages[index] 
-        ? URL.createObjectURL(fabricImages[index])
-        : "/placeholder.svg",
-      colors: fabric.colors.map((color: { name: string; image: string | null; }) => ({
-        name: color.name,
-        image: color.image || "/placeholder.svg"
-      }))
-    }))
-  }
-
-  designs.push(newDesign)
-
-  return NextResponse.json(
-    { message: "Design submitted successfully", design: newDesign }, 
-    { status: 201 }
-  )
 }
 

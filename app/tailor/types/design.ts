@@ -6,5 +6,6 @@ export interface Color {
 export interface Fabric {
   name: string
   image: File | null
+  price: number
   colors: Color[]
 } 

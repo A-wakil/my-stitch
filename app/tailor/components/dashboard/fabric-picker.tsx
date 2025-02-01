@@ -13,17 +13,20 @@ interface FabricPickerProps {
 export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
   const [fabricName, setFabricName] = useState("")
   const [fabricImage, setFabricImage] = useState<File | null>(null)
-  const [colorName, setColorName] = useState("")
+  const [colorName, setColorName] = useState("#000000")
+  const [fabricPrice, setFabricPrice] = useState("")
 
   const addFabric = () => {
     if (fabricName) {
       setFabrics((prevFabrics) => [...prevFabrics, { 
         name: fabricName, 
         image: fabricImage,
+        price: parseFloat(fabricPrice) || 0,
         colors: [] 
       }])
       setFabricName("")
       setFabricImage(null)
+      setFabricPrice("")
     }
   }
 
@@ -37,7 +40,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
         })
         return newFabrics
       })
-      setColorName("")
+      setColorName("#000000")
     }
   }
 
@@ -64,6 +67,14 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
       <Label>Available Fabrics</Label>
       <div className="flex space-x-2">
         <Input placeholder="Fabric name" value={fabricName} onChange={(e) => setFabricName(e.target.value)} />
+        <Input 
+          type="number" 
+          placeholder="Price per yard" 
+          value={fabricPrice} 
+          onChange={(e) => setFabricPrice(e.target.value)}
+          step="0.01"
+          min="0"
+        />
         <Input type="file" accept="image/*" onChange={handleImageUpload} />
         <Button type="button" onClick={addFabric}>Add Fabric</Button>
       </div>
@@ -82,6 +93,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
             
             <div className="space-y-2">
               <p className="font-semibold">{fabric.name}</p>
+              <p className="text-sm text-gray-600">${fabric.price.toFixed(2)} per yard</p>
               {fabric.image && (
                 <img
                   src={URL.createObjectURL(fabric.image)}

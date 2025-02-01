@@ -1,59 +1,84 @@
-import { NextResponse } from "next/server"
-import { designs } from "../route"
+import { supabase } from '../../../lib/supabaseClient'
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
-  const design = designs.find((d) => d.id === id)
-
-  if (design) {
-    return NextResponse.json(design)
-  } else {
-    return NextResponse.json({ message: "Design not found" }, { status: 404 })
-  }
+interface RouteContext {
+  params: {
+    id: string;
+  };
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
-  const formData = await request.formData()
+async function getParamsId(context: RouteContext) {
+  return context.params.id;
+}
 
-  const designIndex = designs.findIndex((d) => d.id === id)
+export async function GET(request: NextRequest, context: RouteContext) {
+  try {
+    const id = await getParamsId(context);
+    
+    const { data: design, error } = await supabase
+      .from('designs')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  if (designIndex !== -1) {
-    designs[designIndex] = {
-      ...designs[designIndex],
-      title: formData.get("title") as string,
-      description: formData.get("description") as string,
-      images: formData.getAll("images[]").map((image) => URL.createObjectURL(image as File)),
-      fabrics: formData.getAll("fabrics[][name]").map((name, index) => ({
-        name: name as string,
-        image: formData.get(`fabrics[${index}][image]`)
-          ? URL.createObjectURL(formData.get(`fabrics[${index}][image]`) as File)
-          : designs[designIndex].fabrics[index].image,
-        colors: formData.getAll(`fabrics[${index}][colors][][name]`).map((colorName, colorIndex) => ({
-          name: colorName as string,
-          image: formData.get(`fabrics[${index}][colors][${colorIndex}][image]`)
-            ? URL.createObjectURL(formData.get(`fabrics[${index}][colors][${colorIndex}][image]`) as File)
-            : designs[designIndex].fabrics[index].colors[colorIndex].image,
-        }))
-      })),
+    if (error || !design) {
+      return NextResponse.json({ message: "Design not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ message: "Design updated successfully", design: designs[designIndex] })
-  } else {
-    return NextResponse.json({ message: "Design not found" }, { status: 404 })
+    return NextResponse.json(design)
+  } catch (error) {
+    console.error('Error fetching design:', error)
+    return NextResponse.json({ message: "Error fetching design" }, { status: 500 })
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  const id = params.id
+export async function PUT(request: NextRequest, context: RouteContext) {
+  try {
+    const id = await getParamsId(context);
+    const formData = await request.formData()
+    const fabricsData = JSON.parse(formData.get("fabrics") as string)
 
-  const designIndex = designs.findIndex((d) => d.id === id)
+    const { data, error } = await supabase
+      .from('designs')
+      .update({
+        title: formData.get("title"),
+        description: formData.get("description"),
+        fabrics: fabricsData
+      })
+      .eq('id', id)
+      .select()
+      .single()
 
-  if (designIndex !== -1) {
-    designs.splice(designIndex, 1)
+    if (error) {
+      console.error('Error updating design:', error)
+      return NextResponse.json({ message: "Design not found" }, { status: 404 })
+    }
+
+    return NextResponse.json({ message: "Design updated successfully", design: data })
+  } catch (error) {
+    console.error('Error updating design:', error)
+    return NextResponse.json({ message: "Error updating design" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const id = await getParamsId(context);
+    
+    const { error } = await supabase
+      .from('designs')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting design:', error)
+      return NextResponse.json({ message: "Design not found" }, { status: 404 })
+    }
+
     return NextResponse.json({ message: "Design deleted successfully" })
-  } else {
-    return NextResponse.json({ message: "Design not found" }, { status: 404 })
+  } catch (error) {
+    console.error('Error deleting design:', error)
+    return NextResponse.json({ message: "Error deleting design" }, { status: 500 })
   }
 }
 

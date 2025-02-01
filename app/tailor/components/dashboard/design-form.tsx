@@ -21,6 +21,7 @@ interface DesignFormProps {
     fabrics: {
       name: string
       image: string
+      price: number
       colors: { name: string; image: string }[]
     }[]
   }
@@ -34,6 +35,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     initialData?.fabrics.map((f) => ({
       name: f.name,
       image: null,
+      price: f.price || 0,
       colors: f.colors.map(c => ({ name: c.name, image: null }))
     })) || []
   )
@@ -45,6 +47,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       setFabrics(initialData.fabrics.map((f) => ({
         name: f.name,
         image: null,
+        price: f.price || 0,
         colors: f.colors.map(c => ({ name: c.name, image: null }))
       })))
     }
