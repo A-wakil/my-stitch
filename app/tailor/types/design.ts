@@ -5,7 +5,10 @@ export interface Color {
 
 export interface Fabric {
   name: string
-  image: File | null
+  image: string | File | null
   price: number
-  colors: Color[]
+  colors: Array<{
+    name: string
+    image: string | File | null
+  }>
 } 

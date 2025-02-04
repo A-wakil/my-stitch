@@ -18,12 +18,12 @@ interface DesignFormProps {
     title: string
     description: string
     images: string[]
-    fabrics: {
+    fabrics: Array<{
       name: string
-      image: string
+      image: string | File | null
       price: number
-      colors: { name: string; image: string }[]
-    }[]
+      colors: Array<{ name: string; image: string | File | null }>
+    }>
   }
 }
 
@@ -31,27 +31,35 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [images, setImages] = useState<File[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
   const [fabrics, setFabrics] = useState<Fabric[]>(
     initialData?.fabrics.map((f) => ({
       name: f.name,
-      image: null,
+      image: f.image,
       price: f.price || 0,
-      colors: f.colors.map(c => ({ name: c.name, image: null }))
+      colors: f.colors.map(c => ({ name: c.name, image: c.image }))
     })) || []
   )
 
   useEffect(() => {
     if (initialData) {
+      console.log('Initial fabrics data:', initialData.fabrics)
       setTitle(initialData.title)
       setDescription(initialData.description)
-      setFabrics(initialData.fabrics.map((f) => ({
-        name: f.name,
-        image: null,
-        price: f.price || 0,
-        colors: f.colors.map(c => ({ name: c.name, image: null }))
-      })))
+      setExistingImages(initialData.images || [])
+      setFabrics(initialData.fabrics.map((f) => {
+        console.log('Processing fabric:', f.name, 'Image:', f.image)
+        return {
+          name: f.name,
+          image: f.image,
+          price: f.price || 0,
+          colors: f.colors.map(c => ({ name: c.name, image: c.image }))
+        }
+      }))
     }
   }, [initialData])
+
+  console.log('Current fabrics state:', fabrics)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,24 +67,29 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     const formData = new FormData()
     formData.append("title", title)
     formData.append("description", description)
+    formData.append("existingImages", JSON.stringify(existingImages))
     
-    // Append images
-    images.forEach((image, index) => {
-      formData.append(`images`, image) // Changed from images[${index}]
+    // Append new images
+    images.forEach((image) => {
+      formData.append("images", image)
     })
     
-    // Convert fabrics array to JSON string and append as a single field
+    // Convert fabrics array to JSON string
     const fabricsData = fabrics.map(fabric => ({
       name: fabric.name,
-      image: null, // Handle image separately
-      colors: fabric.colors
+      image: fabric.image instanceof File ? null : fabric.image,
+      price: fabric.price,
+      colors: fabric.colors.map(c => ({
+        name: c.name,
+        image: c.image instanceof File ? null : c.image
+      }))
     }))
     formData.append('fabrics', JSON.stringify(fabricsData))
     
-    // Append fabric images separately if they exist
-    fabrics.forEach((fabric, index) => {
-      if (fabric.image) {
-        formData.append(`fabricImages[${index}]`, fabric.image)
+    // Append fabric images
+    fabrics.forEach((fabric) => {
+      if (fabric.image instanceof File) {
+        formData.append(`fabricImages`, fabric.image)
       }
     })
 
@@ -124,7 +137,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         <ImageUpload 
           images={images} 
           setImages={setImages} 
-          initialImages={initialData?.images} 
+          initialImages={existingImages} 
         />
       </div>
       <div className={styles.fabricSection}>
