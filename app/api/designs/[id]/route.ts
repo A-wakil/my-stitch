@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabaseClient'
 import { NextRequest, NextResponse } from "next/server"
+import { processFabricsWithImages } from '../route'
 
 interface RouteContext {
   params: {
@@ -38,12 +39,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
 
+    // Process fabrics and their images
+    const processedFabrics = await processFabricsWithImages(fabricsData, formData)
+
     const { data, error } = await supabase
       .from('designs')
       .update({
         title: formData.get("title"),
         description: formData.get("description"),
-        fabrics: fabricsData
+        fabrics: processedFabrics
       })
       .eq('id', id)
       .select()

@@ -10,43 +10,25 @@ import { AuthDialog } from "./AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
 
-
-const sampleAttires = [
-  { src: '/syari_1.jpg', alt: 'Tailored Pants 1' },
-  { src: '/syari_2.jpg', alt: 'Tailored Skirt 1' },
-  { src: '/syari_3.jpg', alt: 'Tailored Suit 1' },
-  { src: '/skaftan_1.jpg', alt: 'Tailored Dress 1' },
-  { src: '/skaftan_2.jpg', alt: 'Tailored Shirt 1' },
-  { src: '/skaftan_3.jpg', alt: 'Tailored Coat 1' },
-  { src: '/image_2.webp', alt: 'Tailored Dress 1' },
-  { src: '/syari_1.jpg', alt: 'Tailored Pants 1' },
-  { src: '/syari_2.jpg', alt: 'Tailored Skirt 1' },
-  { src: '/syari_3.jpg', alt: 'Tailored Suit 1' },
-  { src: '/skaftan_1.jpg', alt: 'Tailored Dress 1' },
-  { src: '/skaftan_2.jpg', alt: 'Tailored Shirt 1' },
-  { src: '/skaftan_3.jpg', alt: 'Tailored Coat 1' },
-  { src: '/syari_1.jpg', alt: 'Tailored Pants 1' },
-  { src: '/syari_2.jpg', alt: 'Tailored Skirt 1' },
-  { src: '/syari_3.jpg', alt: 'Tailored Suit 1' },
-  { src: '/skaftan_1.jpg', alt: 'Tailored Dress 1' },
-  { src: '/skaftan_2.jpg', alt: 'Tailored Shirt 1' },
-  { src: '/skaftan_3.jpg', alt: 'Tailored Coat 1' },
-  { src: '/image_2.webp', alt: 'Tailored Dress 1' },
-  { src: '/syari_1.jpg', alt: 'Tailored Pants 1' },
-  { src: '/syari_2.jpg', alt: 'Tailored Skirt 1' },
-  { src: '/syari_3.jpg', alt: 'Tailored Suit 1' },
-  { src: '/skaftan_1.jpg', alt: 'Tailored Dress 1' },
-  { src: '/skaftan_2.jpg', alt: 'Tailored Shirt 1' },
-  { src: '/skaftan_3.jpg', alt: 'Tailored Coat 1' },
-  { src: '/image_1.webp', alt: 'Tailored Skirt 1' },
-]
-
+type Design = {
+  id?: string
+  title: string
+  description: string
+  images: string[]
+  fabrics: Array<{
+    name: string
+    image: string | File | null
+    price: number
+    colors: Array<{ name: string; image: string | File | null }>
+  }>
+}
 
 export default function Home() {
-  const [attires, setAttires] = useState(sampleAttires)
+  const [designs, setDesigns] = useState<Design[]>([])
   const [page, setPage] = useState(1)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -56,7 +38,25 @@ export default function Home() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const handleAttireClick = () => {
+  const fetchDesigns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('designs')
+        .select('*')
+
+      if (error) throw error
+
+      setDesigns(data)
+    } catch (error) {
+      console.error('Error fetching designs:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchDesigns()
+  }, [])
+
+  const handleDesignClick = () => {
     if (!user) {
       setIsAuthDialogOpen(true)
     }
@@ -112,32 +112,39 @@ export default function Home() {
     }
   }
 
-  const loadMoreAttires = useCallback(() => {
-    // Simulate loading more images
+  const loadMoreDesigns = useCallback(() => {
+    if (!hasMore) return;
+    
     setTimeout(() => {
-      setAttires(prevAttires => [...prevAttires, ...sampleAttires])
-      setPage(prevPage => prevPage + 1)
-      setIsFetching(false)
-    }, 1000)
-  }, [])
+      setDesigns(prevDesigns => {
+        if (prevDesigns.length >= 20) {
+          setHasMore(false);
+          return prevDesigns;
+        }
+        return [...prevDesigns];
+      });
+      setPage(prevPage => prevPage + 1);
+      setIsFetching(false);
+    }, 1000);
+  }, [hasMore]);
 
-  const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreAttires)
+  const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreDesigns);
 
   return (
     <div className="min-h-screen">
       <Header />
       <main className="main-content container">
         <div className="gallery-grid">
-          {attires.map((attire, index) => (
+          {designs.map((design, index) => (
             <GalleryImage
-              key={`${attire.alt}-${index}`}
-              src={attire.src}
-              alt={attire.alt}
-              onClick={handleAttireClick}
+              key={`${design.title}-${index}`}
+              images={design.images}
+              alt={design.title}
+              onClick={handleDesignClick}
             />
           ))}
         </div>
-        {isFetching && <p className="loading-message">Loading more...</p>}
+        {isFetching && hasMore && <p className="loading-message">Loading more...</p>}
       </main>
       <AuthDialog
         isOpen={isAuthDialogOpen}

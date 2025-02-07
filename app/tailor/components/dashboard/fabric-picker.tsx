@@ -34,11 +34,17 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
   const addColor = (fabricIndex: number) => {
     if (colorName) {
       setFabrics((prevFabrics) => {
-        const newFabrics = JSON.parse(JSON.stringify(prevFabrics));
-        newFabrics[fabricIndex].colors.push({
-          name: colorName,
-          image: null
-        });
+        const newFabrics = [...prevFabrics];
+        newFabrics[fabricIndex] = {
+          ...newFabrics[fabricIndex],
+          colors: [
+            ...newFabrics[fabricIndex].colors,
+            {
+              name: colorName,
+              image: null
+            }
+          ]
+        };
         return newFabrics;
       });
       setColorName("#000000");
@@ -47,8 +53,11 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
 
   const removeColor = (fabricIndex: number, colorIndex: number) => {
     setFabrics((prevFabrics) => {
-      const newFabrics = JSON.parse(JSON.stringify(prevFabrics));
-      newFabrics[fabricIndex].colors = newFabrics[fabricIndex].colors.filter((_: any, i: number) => i !== colorIndex);
+      const newFabrics = [...prevFabrics];
+      newFabrics[fabricIndex] = {
+        ...newFabrics[fabricIndex],
+        colors: newFabrics[fabricIndex].colors.filter((_, i) => i !== colorIndex)
+      };
       return newFabrics;
     });
   }

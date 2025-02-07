@@ -12,7 +12,9 @@
   background-color: white;
   border-radius: 0.75rem;
   border: 1px solid #eee;
-  height: 33rem;
+  height: 38rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-image {
@@ -20,13 +22,13 @@
   height: 16rem;
   background-color: #f3f4f6;
   border-radius: 0.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .card-title {
   font-size: 1.5rem;
   font-weight: 500;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: #000;
 }
 
@@ -40,6 +42,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  background-color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #eee;
 }
 
 .color-swatch {
@@ -54,17 +60,22 @@
 
 .fabric-container {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 15rem;
+  background-color: white;
 }
 
 .fabric-item {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border-radius: 0.25rem;
-  background-color: #f9f9f9;
+  background-color: white;
 }
 
 .fabric-name {
@@ -77,9 +88,17 @@
   gap: 0.25rem;
 }
 
+.color-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .card-footer {
   display: flex;
   gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
 .edit-button {

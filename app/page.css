@@ -1,6 +1,3 @@
-main {
-}
-
 
 .top-ribbon {
     display: flex;
@@ -15,15 +12,25 @@ main {
 
 .main-content {
     padding-top: 6rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
   }
   
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
   
   .loading-message {
     text-align: center;
     margin-top: 1rem;
   }
+
+
+ .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 16px; 
+}
+
+.gallery-grid img {
+  width: 100%;
+  height: 66vh; /* 2/3 of the viewport height */
+  object-fit: cover; /* Ensures the image covers the area */
+}

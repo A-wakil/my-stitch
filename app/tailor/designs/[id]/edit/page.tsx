@@ -21,16 +21,21 @@ export default function EditDesignPage() {
     try {
       setIsLoading(true)
       setError("")
-      const response = await fetch(`/api/designs/${designId}`)
+      const response = await fetch(`/api/designs/${designId}`, {
+        cache: 'no-store'
+      })
       if (response.ok) {
         const data = await response.json()
-        console.log('Fetched design data:', data)
+        if (data.fabric?.image) {
+          data.fabric.image = new URL(data.fabric.image, window.location.origin).toString()
+        }
         setDesign(data)
       } else {
         setError("Failed to fetch design")
       }
     } catch (error) {
       console.error("Error fetching design:", error)
+      setError("An error occurred while fetching the design")
     } finally {
       setIsLoading(false)
     }

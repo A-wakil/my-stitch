@@ -74,24 +74,44 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       formData.append("images", image)
     })
     
-    // Convert fabrics array to JSON string
-    const fabricsData = fabrics.map(fabric => ({
-      name: fabric.name,
-      image: fabric.image instanceof File ? null : fabric.image,
-      price: fabric.price,
-      colors: fabric.colors.map(c => ({
-        name: c.name,
-        image: c.image instanceof File ? null : c.image
-      }))
-    }))
-    formData.append('fabrics', JSON.stringify(fabricsData))
-    
-    // Append fabric images
-    fabrics.forEach((fabric) => {
+    // Convert fabrics array to JSON string and handle fabric images
+    const fabricsData = await Promise.all(fabrics.map(async (fabric, index) => {
+      let fabricImageUrl = fabric.image
+
+      // Upload fabric image to Supabase if it's a File
       if (fabric.image instanceof File) {
-        formData.append(`fabricImages`, fabric.image)
+        const fabricImageKey = `fabrics/${Date.now()}_${fabric.image.name}`
+        formData.append('fabricImages', fabric.image)
+        formData.append('fabricImageKeys', fabricImageKey)
+        fabricImageUrl = fabricImageKey // The API will handle the actual upload
       }
-    })
+
+      // Handle color images
+      const colors = await Promise.all(fabric.colors.map(async (color, colorIndex) => {
+        let colorImageUrl = color.image
+
+        if (color.image instanceof File) {
+          const colorImageKey = `colors/${Date.now()}_${color.image.name}`
+          formData.append('colorImages', color.image)
+          formData.append('colorImageKeys', colorImageKey)
+          colorImageUrl = colorImageKey // The API will handle the actual upload
+        }
+
+        return {
+          name: color.name,
+          image: colorImageUrl
+        }
+      }))
+
+      return {
+        name: fabric.name,
+        image: fabricImageUrl,
+        price: fabric.price,
+        colors
+      }
+    }))
+    
+    formData.append('fabrics', JSON.stringify(fabricsData))
 
     try {
       const url = initialData?.id ? `/api/designs/${initialData.id}` : "/api/designs"

@@ -1,26 +1,77 @@
 import { useState } from 'react'
 import Image from 'next/image'
-import { CustomButton, CustomInput } from '../custom-components/custom-components'
 import './GalleryImage.css'
 
 interface GalleryImageProps {
-  src: string
+  images: string[]
   alt: string
   onClick: () => void
 }
 
-export function GalleryImage({ src, alt, onClick }: GalleryImageProps) {
+export function GalleryImage({ images, alt, onClick }: GalleryImageProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('');
+
+  const hasMultipleImages = images.length > 1;
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSlideDirection('slide-left');
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSlideDirection('slide-right');
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const goToSlide = (index: number) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSlideDirection(index > currentImageIndex ? 'slide-left' : 'slide-right');
+    setCurrentImageIndex(index);
+  };
+
   return (
     <div className="gallery-image-container" onClick={onClick}>
-      <Image
-        src={src}
-        alt={alt}
-        width={400}
-        height={600}
-        className="gallery-image w-full h-full object-cover"
-      />
-      <div className="gallery-image-overlay">
-        <span className="gallery-image-text">Order Now</span>
+      <div className="image-wrapper">
+        <Image
+          key={currentImageIndex}
+          src={images[currentImageIndex]}
+          alt={alt}
+          width={400}
+          height={600}
+          className={`gallery-image w-full h-full object-cover ${slideDirection}`}
+          onAnimationEnd={() => setSlideDirection('')}
+        />
+      </div>
+      {hasMultipleImages && (
+        <div className="gallery-controls">
+          <button 
+            className="minimal-button left" 
+            onClick={prevImage}
+            aria-label="Previous image"
+          >
+            ‹
+          </button>
+          <button 
+            className="minimal-button right" 
+            onClick={nextImage}
+            aria-label="Next image"
+          >
+            ›
+          </button>
+        </div>
+      )}
+      <div className="dot-indicators">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            className={`dot ${index === currentImageIndex ? 'active' : ''}`}
+            onClick={goToSlide(index)}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
       </div>
     </div>
   )
