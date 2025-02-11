@@ -90,7 +90,10 @@ export function DesignGrid() {
             const currentIndex = getCurrentImageIndex(design.id)
             
             return (
-              <div key={design.id} className={styles['card-content']}>
+              <div 
+                key={design.id} 
+                className={styles['card-content']}
+              >
                 <div className={styles['carousel-container']}>
                   <img 
                     src={design.images?.[currentIndex] || "/placeholder.svg"} 
@@ -160,14 +163,20 @@ export function DesignGrid() {
                 <div className={styles['card-footer']}>
                   <button 
                     className={styles['edit-button']}
-                    onClick={() => handleEdit(design.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(design.id);
+                    }}
                   >
                     <Pencil size={20} />
                     Edit
                   </button>
                   <button 
                     className={styles['delete-button']}
-                    onClick={() => handleDelete(design.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(design.id);
+                    }}
                   >
                     <Trash2 size={20} />
                     Delete

@@ -1,0 +1,122 @@
+'use client'
+
+import { useState, useEffect, use } from 'react'
+import { supabase } from '../../lib/supabaseClient'
+import styles from './DesignDetail.module.css'
+
+interface DesignDetail {
+  id: string
+  title: string
+  description: string
+  images: string[]
+  fabrics: Array<{
+    name: string
+    image: string
+    price: number
+    colors: Array<{ name: string; image: string }>
+  }>
+}
+
+export default function DesignDetail({ params }: { params: { id: string } }) {
+  const resolvedParams = use(params)
+  const [design, setDesign] = useState<DesignDetail | null>(null)
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedFabric, setSelectedFabric] = useState(0)
+
+  useEffect(() => {
+    async function fetchDesign() {
+      const { data, error } = await supabase
+        .from('designs')
+        .select('*')
+        .eq('id', resolvedParams.id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching design:', error)
+        return
+      }
+
+      setDesign(data)
+    }
+
+    fetchDesign()
+  }, [resolvedParams.id])
+
+  if (!design) {
+    return <div>Loading...</div>
+  }
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.productGrid}>
+        {/* Left side - Image gallery */}
+        <div className={styles.imageSection}>
+          <div className={styles.mainImage}>
+            <img 
+              src={design.images[selectedImage]} 
+              alt={design.title}
+              className={styles.primaryImage}
+            />
+          </div>
+          <div className={styles.thumbnails}>
+            {design.images.map((image, index) => (
+              <img
+                key={index}
+                src={image}
+                alt={`${design.title} view ${index + 1}`}
+                className={`${styles.thumbnail} ${selectedImage === index ? styles.selected : ''}`}
+                onClick={() => setSelectedImage(index)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Right side - Product details */}
+        <div className={styles.detailsSection}>
+          <h1 className={styles.title}>{design.title}</h1>
+          <p className={styles.price}>${design.fabrics[selectedFabric].price.toFixed(2)}</p>
+
+          <div className={styles.fabricSelection}>
+            <h3>Fabrics</h3>
+            <div className={styles.fabricOptions}>
+              {design.fabrics.map((fabric, index) => (
+                <div
+                  key={index}
+                  className={`${styles.fabricOption} ${selectedFabric === index ? styles.selectedFabric : ''}`}
+                  onClick={() => setSelectedFabric(index)}
+                >
+                  <img src={fabric.image} alt={fabric.name} />
+                  <span>{fabric.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.colorSelection}>
+            <h3>Colors</h3>
+            <div className={styles.colorOptions}>
+              {design.fabrics[selectedFabric].colors.map((color, index) => (
+                <div
+                  key={index}
+                  className={styles.colorOption}
+                >
+                  <img src={color.image} alt={color.name} />
+                  <span>{color.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button className={styles.addToCartButton}>
+            Add to Cart
+          </button>
+
+          <div className={styles.description}>
+            <h3>Description</h3>
+            <p>{design.description}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+} 

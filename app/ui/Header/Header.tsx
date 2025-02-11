@@ -261,7 +261,7 @@ export function Header() {
             </div>
 
           </div>
-          <div className="header-content">
+          <div className="header-content center">
             <div className="header-title-wrapper">
               <div className="header-line"></div>
               <h1 className="header-title">Tailored Elegance</h1>

@@ -9,6 +9,7 @@ import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { AuthDialog } from "./AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 type Design = {
   id?: string
@@ -29,6 +30,7 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -43,12 +45,15 @@ export default function Home() {
       const { data, error } = await supabase
         .from('designs')
         .select('*')
+        .range(0, 9)
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
+      if (error) throw error;
 
-      setDesigns(data)
+      setDesigns(data);
+      setHasMore(data.length === 10);
     } catch (error) {
-      console.error('Error fetching designs:', error)
+      console.error('Error fetching designs:', error);
     }
   }
 
@@ -56,11 +61,14 @@ export default function Home() {
     fetchDesigns()
   }, [])
 
-  const handleDesignClick = () => {
+  const handleDesignClick = (design: Design) => {
     if (!user) {
       setIsAuthDialogOpen(true)
+      return;
     }
-    // Handle logged in user click here
+    
+    // Navigate to design detail page
+    router.push(`/designs/${design.id}`)
   }
 
   const closeAuthDialog = () => {
@@ -128,7 +136,7 @@ export default function Home() {
     }, 1000);
   }, [hasMore]);
 
-  const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreDesigns);
+  const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreDesigns, hasMore);
 
   return (
     <div className="min-h-screen">
@@ -140,7 +148,7 @@ export default function Home() {
               key={`${design.title}-${index}`}
               images={design.images}
               alt={design.title}
-              onClick={handleDesignClick}
+              onClick={() => handleDesignClick(design)}
             />
           ))}
         </div>
