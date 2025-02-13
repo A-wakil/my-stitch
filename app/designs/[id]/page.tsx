@@ -18,17 +18,19 @@ interface DesignDetail {
 }
 
 export default function DesignDetail({ params }: { params: { id: string } }) {
-  const resolvedParams = use(params)
   const [design, setDesign] = useState<DesignDetail | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFabric, setSelectedFabric] = useState(0)
+  const [selectedColor, setSelectedColor] = useState(0)
+
+  const id = params.id
 
   useEffect(() => {
     async function fetchDesign() {
       const { data, error } = await supabase
         .from('designs')
         .select('*')
-        .eq('id', resolvedParams.id)
+        .eq('id', id)
         .single()
 
       if (error) {
@@ -40,7 +42,7 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
     }
 
     fetchDesign()
-  }, [resolvedParams.id])
+  }, [id])
 
   if (!design) {
     return <div>Loading...</div>
@@ -83,7 +85,10 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
                 <div
                   key={index}
                   className={`${styles.fabricOption} ${selectedFabric === index ? styles.selectedFabric : ''}`}
-                  onClick={() => setSelectedFabric(index)}
+                  onClick={() => {
+                    setSelectedFabric(index);
+                    setSelectedColor(0);
+                  }}
                 >
                   <img src={fabric.image} alt={fabric.name} />
                   <span>{fabric.name}</span>
@@ -99,9 +104,13 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
                 <div
                   key={index}
                   className={styles.colorOption}
+                  onClick={() => setSelectedColor(index)}
                 >
-                  <img src={color.image} alt={color.name} />
-                  <span>{color.name}</span>
+                  <div 
+                    className={`${styles.colorPill} ${selectedColor === index ? styles.selectedColor : ''}`}
+                    style={{ backgroundColor: color.name }}
+                    title={color.name}
+                  />
                 </div>
               ))}
             </div>

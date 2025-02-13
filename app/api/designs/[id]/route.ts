@@ -38,6 +38,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const id = await getParamsId(context);
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
+    const created_by = formData.get("created_by") as string
 
     // Process fabrics and their images
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
@@ -47,7 +48,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       .update({
         title: formData.get("title"),
         description: formData.get("description"),
-        fabrics: processedFabrics
+        fabrics: processedFabrics,
+        created_by: created_by
       })
       .eq('id', id)
       .select()

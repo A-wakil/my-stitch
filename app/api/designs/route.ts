@@ -111,17 +111,16 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
+    const created_by = formData.get("created_by") as string
     
     console.log('Processing design submission...')
-    console.log('Fabrics data:', fabricsData)
+    console.log('Created by:', created_by)
     
     // Process design images
     const imageUrls = await processImages(formData, 'design-images')
-    console.log('Processed design images:', imageUrls)
     
     // Process fabrics and their images
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
-    console.log('Processed fabrics:', processedFabrics)
 
     const { data, error } = await supabase
       .from('designs')
@@ -129,7 +128,8 @@ export async function POST(request: Request) {
         title: formData.get("title"),
         description: formData.get("description"),
         images: imageUrls,
-        fabrics: processedFabrics
+        fabrics: processedFabrics,
+        created_by: created_by
       })
       .select()
       .single()
@@ -157,6 +157,7 @@ export async function PUT(request: Request) {
     const formData = await request.formData()
     const designId = formData.get("id")
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
+    const created_by = formData.get("created_by") as string
     
     const imageUrls = await processImages(formData, 'design-images')
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
@@ -167,7 +168,8 @@ export async function PUT(request: Request) {
         title: formData.get("title"),
         description: formData.get("description"),
         images: imageUrls,
-        fabrics: processedFabrics
+        fabrics: processedFabrics,
+        created_by: created_by
       })
       .eq('id', designId)
       .select()

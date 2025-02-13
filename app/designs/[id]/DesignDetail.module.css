@@ -118,6 +118,32 @@
   margin-top: 2rem;
 }
 
+.colorPill {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #e5e5e5;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.colorPill:hover {
+  transform: scale(1.1);
+}
+
+.selectedColor {
+  border-color: #000;
+  transform: scale(1.1);
+}
+
+.colorOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .productGrid {
     grid-template-columns: 1fr;

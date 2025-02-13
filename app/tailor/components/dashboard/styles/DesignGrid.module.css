@@ -5,6 +5,7 @@
   padding: 0 3rem;
   margin-left: 17px;
   height: 100%;
+
 }
 
 .card-content {
@@ -15,6 +16,7 @@
   height: 38rem;
   display: flex;
   flex-direction: column;
+
 }
 
 .card-image {
@@ -23,6 +25,7 @@
   background-color: #f3f4f6;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
+
 }
 
 .card-title {

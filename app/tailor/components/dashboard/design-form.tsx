@@ -9,7 +9,8 @@ import { ColorPicker } from "../../components/dashboard/color-picker"
 import { FabricPicker } from "../../components/dashboard/fabric-picker"
 import { ImageUpload } from "../../components/dashboard/image-upload"
 import styles from "./styles/DesignForm.module.css"
-import { Color, Fabric } from "../../types/design"
+import { Fabric } from "../../types/design"
+import { supabase } from "../../../lib/supabaseClient"
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -112,6 +113,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     }))
     
     formData.append('fabrics', JSON.stringify(fabricsData))
+
+    // Add the user ID to the form data
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+    console.log('User ID:', user.id)
+    formData.append('created_by', user.id)
 
     try {
       const url = initialData?.id ? `/api/designs/${initialData.id}` : "/api/designs"
