@@ -3,8 +3,8 @@
 
 import "./page.css"
 import { useState, useCallback, useEffect } from 'react'
-import { Header } from "./ui/Header/Header";
-import { GalleryImage } from "./ui/GalleryImage/GalleryImage";
+import { Header } from "./customer/ui/Header/Header"
+import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { AuthDialog } from "./AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
@@ -68,7 +68,7 @@ export default function Home() {
     }
     
     // Navigate to design detail page
-    router.push(`/designs/${design.id}`)
+    router.push(`customer/designs/${design.id}`)
   }
 
   const closeAuthDialog = () => {

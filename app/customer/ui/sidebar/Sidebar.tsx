@@ -2,6 +2,7 @@
 
 import './Sidebar.css'
 import { IoClose } from 'react-icons/io5'
+import { useRouter } from 'next/navigation'
 
 interface SidebarProps {
   isOpen: boolean
@@ -9,18 +10,19 @@ interface SidebarProps {
 }
 
 const mainNavItems = [
-  'Men',
-  'Women',
-  'Boys & Girls',
-
+  { name: 'My Profile', path: '/customer/measurements' },
+  { name: 'Saved Designs', path: '#' },
+  { name: 'My Orders', path: '#' },
 ]
 
 const secondaryNavItems = [
-  'Create a Tailor Account',
-  'Contact Us'
+  { name: 'Create a Tailor Account', path: '#' },
+  { name: 'Contact Us', path: '#' }
 ]
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const router = useRouter()
+
   return (
     <div className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-header">
@@ -33,8 +35,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       <nav>
         <ul className="nav-list">
           {mainNavItems.map((item) => (
-            <li key={item} className="nav-item">
-              <a href="#" className="nav-link">{item}</a>
+            <li key={item.name} className="nav-item">
+              <a 
+                href={item.path}
+                className="nav-link"
+                onClick={(e) => {
+                  e.preventDefault()
+                  onClose()
+                  router.push(item.path)
+                }}
+              >
+                {item.name}
+              </a>
             </li>
           ))}
         </ul>
@@ -42,8 +54,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="secondary-nav">
           <ul className="nav-list">
             {secondaryNavItems.map((item) => (
-              <li key={item} className="nav-item">
-                <a href="#" className="nav-link">{item}</a>
+              <li key={item.name} className="nav-item">
+                <a href={item.path} className="nav-link">{item.name}</a>
               </li>
             ))}
           </ul>

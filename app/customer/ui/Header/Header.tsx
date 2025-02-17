@@ -5,14 +5,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CustomButton } from '../custom-components/custom-components'
 import './Header.css'
-import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp } from "react-icons/io5";
+import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp, IoReceiptOutline } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
-import { AuthDialog } from '../../AuthDialog/AuthDialog'
-import { supabase } from '../../lib/supabaseClient'
+import { AuthDialog } from '../../../AuthDialog/AuthDialog'
+import { supabase } from '../../../lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"
-import { Button } from "../../tailor/components/ui/button"
-import { SecDialog } from '../../AuthDialog/SecDialog'
+import { Button } from "../../../tailor/components/ui/button"
+import { SecDialog } from '../../../AuthDialog/SecDialog'
 
 
 interface SidebarProps {
@@ -250,10 +250,10 @@ export function Header() {
               <IoMenu />
               Menu
             </div>
-            <div className='left-sub' style={{ cursor: 'pointer' }}>
-              <IoSearch />
-              Search
-            </div>
+            <Link href="/orders" className='left-sub' style={{ cursor: 'pointer' }}>
+              <IoReceiptOutline />
+              Orders
+            </Link>
 
             <div className='left-sub' onClick={tailorFirewall} style={{ cursor: 'pointer' }}>
               Become a Tailor

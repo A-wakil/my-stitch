@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase } from '../../../lib/supabaseClient'
 import styles from './DesignDetail.module.css'
+import { useRouter } from 'next/navigation'
 
 interface DesignDetail {
   id: string
@@ -15,6 +16,7 @@ interface DesignDetail {
     price: number
     colors: Array<{ name: string; image: string }>
   }>
+  created_by: string
 }
 
 export default function DesignDetail({ params }: { params: { id: string } }) {
@@ -22,6 +24,8 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFabric, setSelectedFabric] = useState(0)
   const [selectedColor, setSelectedColor] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const id = params.id
 
@@ -43,6 +47,51 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
 
     fetchDesign()
   }, [id])
+
+  const handleAddToCart = async () => {
+    setLoading(true)
+    try {
+      if (!design) {
+        throw new Error('Design not found')
+      }
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/login')
+        return
+      }
+
+      // Create a new order with tailor_id
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          tailor_id: design.created_by,
+          status: 'pending',
+          total_amount: design.fabrics[selectedFabric].price,
+          shipping_address: null
+        })
+        .select()
+        .single()
+
+      if (orderError) throw orderError
+
+
+      // Show success message or redirect to cart
+      alert('Added to cart successfully!')
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      if (error instanceof Error && error.message === 'Design not found') {
+        alert('Sorry, this design could not be found')
+      } else {
+        alert('Failed to add to cart')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!design) {
     return <div>Loading...</div>
@@ -116,8 +165,12 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
             </div>
           </div>
 
-          <button className={styles.addToCartButton}>
-            Add to Cart
+          <button 
+            className={styles.addToCartButton}
+            onClick={handleAddToCart}
+            disabled={loading}
+          >
+            {loading ? 'Adding...' : 'Place Order'}
           </button>
 
           <div className={styles.description}>

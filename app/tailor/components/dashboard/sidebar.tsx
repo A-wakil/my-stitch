@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Home, Scissors, User, Settings } from "lucide-react"
+import { Home, Scissors, User, Settings, ShoppingBag } from "lucide-react"
 import styles from "./sidebar.module.css"
 
 export function Sidebar() {
@@ -29,9 +29,9 @@ export function Sidebar() {
             </Link>
           </li>
           <li>
-            <Link href="/tailor/settings" className={styles['sidebar-link']}>
-              <Settings className={styles['sidebar-icon']} size={20} />
-              Settings
+            <Link href="/tailor/orders" className={styles['sidebar-link']}>
+              <ShoppingBag className={styles['sidebar-icon']} size={20} />
+              Orders
             </Link>
           </li>
         </ul>
