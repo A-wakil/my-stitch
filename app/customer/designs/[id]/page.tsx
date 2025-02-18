@@ -19,15 +19,16 @@ interface DesignDetail {
   created_by: string
 }
 
-export default function DesignDetail({ params }: { params: { id: string } }) {
+export default function DesignDetail({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap the promise to get the actual params
+  const { id } = use(params)
+
   const [design, setDesign] = useState<DesignDetail | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFabric, setSelectedFabric] = useState(0)
   const [selectedColor, setSelectedColor] = useState(0)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-
-  const id = params.id
 
   useEffect(() => {
     async function fetchDesign() {
@@ -78,8 +79,6 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
 
       if (orderError) throw orderError
 
-
-      // Show success message or redirect to cart
       alert('Added to cart successfully!')
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -181,4 +180,4 @@ export default function DesignDetail({ params }: { params: { id: string } }) {
       </div>
     </div>
   )
-} 
+}
