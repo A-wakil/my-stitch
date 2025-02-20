@@ -55,3 +55,30 @@ export interface Measurement {
     created_at: string;
     updated_at: string;
   } 
+
+  export interface Design {
+    id: string
+    created_at: string
+    created_by: string
+    title: string
+    description: string
+    images: string[]
+    fabrics: string[]
+  }
+  
+  export interface Order {
+    id: string
+    user_id: string
+    tailor_id: string
+    status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled'
+    total_amount: number
+    created_at: string
+    updated_at: string
+    estimated_completion_date: string | null
+    design_id: string | null
+    measurements: Record<string, any> | null
+    shipping_address: Record<string, any> | null
+    fabric_name: string | null
+    color_name: string | null
+    design?: Design | null
+  }

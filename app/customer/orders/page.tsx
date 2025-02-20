@@ -4,33 +4,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './Orders.module.css'
 import { useRouter } from 'next/navigation'
+import { Order } from '../../lib/types'
 
-interface Design {
-  id: string
-  created_at: string
-  created_by: string
-  title: string
-  description: string
-  images: string[]
-  fabrics: string[]
-}
-
-interface Order {
-  id: string
-  user_id: string
-  tailor_id: string
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  total_amount: number
-  created_at: string
-  updated_at: string
-  estimated_completion_date: string | null
-  design_id: string | null
-  measurements: Record<string, any> | null
-  shipping_address: Record<string, any> | null
-  fabric_name: string | null
-  color_name: string | null
-  design?: Design | null
-}
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])

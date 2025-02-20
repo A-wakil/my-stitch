@@ -1,3 +1,11 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  margin-left: 250px;
+  width: calc(100% - 250px);
+}
+
 .dashboard {
   padding: 2rem;
   max-width: 1200px;
@@ -92,4 +100,79 @@
 
 .actions button:hover {
   background-color: #0056b3;
+}
+
+.email {
+  font-size: 0.875rem;
+  color: #565959;
+}
+
+.statusActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.acceptButton,
+.progressButton,
+.readyButton,
+.shipButton {
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.acceptButton:hover,
+.progressButton:hover,
+.readyButton:hover,
+.shipButton:hover {
+  background-color: #333333;
+}
+
+.rejectButton {
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #d5d5d5;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.rejectButton:hover {
+  background-color: #f5f5f5;
+}
+
+.status {
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.status[data-status="pending"] {
+  color: #ff9900;
+}
+
+.status[data-status="accepted"] {
+  color: #007600;
+}
+
+.status[data-status="in_progress"] {
+  color: #0066c0;
+}
+
+.status[data-status="ready_to_ship"] {
+  color: #7c4dff;
+}
+
+.status[data-status="shipped"] {
+  color: #007600;
+}
+
+.status[data-status="rejected"] {
+  color: #c40000;
 } 

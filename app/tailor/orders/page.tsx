@@ -2,74 +2,66 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import styles from './orders.module.css'
+import styles from './Orders.module.css'
+import { Order } from '../../lib/types'
 
-interface OrderItem {
-  id: string
-  fabric_id: string
-  color_id: string
-  design: {
-    title: string
-    images: string[]
-  }
-}
-
-interface Order {
-  id: string
-  status: string
-  total_amount: number
-  created_at: string
-  estimated_completion_date?: string
-  customer: {
-    full_name: string
-    email: string
-  } | null
-  order_items: OrderItem[]
-}
-
-export default function TailorOrdersDashboard() {
+export default function TailorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    fetchTailorOrders()
-  }, [])
-
-  const fetchTailorOrders = async () => {
+  const fetchOrders = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) return
 
-    const { data, error } = await supabase
+    // First fetch orders
+    const { data: ordersData, error: ordersError } = await supabase
       .from('orders')
-      .select(`
-        *,
-        customer:users!user_id(email, full_name),
-        order_items (
-          *,
-          design:designs(*)
-        )
-      `)
+      .select('*')
       .eq('tailor_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching orders:', error.message)
+    if (ordersError) {
+      console.error('Error fetching orders:', ordersError)
       return
     }
 
-    setOrders(data || [])
-    setLoading(false)
+    // Then fetch design details for each order that has a design_id
+    const ordersWithDesigns = await Promise.all(
+      (ordersData || []).map(async (order) => {
+        if (!order.design_id) return { ...order, design: null }
+
+        const { data: designData, error: designError } = await supabase
+          .from('designs')
+          .select('*')
+          .eq('id', order.design_id)
+          .single()
+
+        if (designError) {
+          console.error(`Error fetching design ${order.design_id}:`, designError)
+          return { ...order, design: null }
+        }
+
+        return { ...order, design: designData }
+      })
+    )
+
+    setOrders(ordersWithDesigns)
+    setIsLoading(false)
   }
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     const { error } = await supabase
       .from('orders')
       .update({ 
         status: newStatus,
         updated_at: new Date().toISOString(),
         ...(newStatus === 'accepted' && {
-          estimated_completion_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days from now
+          estimated_completion_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
         })
       })
       .eq('id', orderId)
@@ -80,79 +72,158 @@ export default function TailorOrdersDashboard() {
     }
 
     // Refresh orders
-    fetchTailorOrders()
+    fetchOrders()
   }
 
-  if (loading) return <div>Loading...</div>
+  if (isLoading) {
+    return <div className={styles.loading}>Loading orders...</div>
+  }
 
   return (
-    <div className={styles.dashboard}>
-      <h1>Order Management</h1>
+    <div className={styles.container}>
+      <h1 className={styles.pageTitle}>Order Management</h1>
       
-      <div className={styles.ordersList}>
-        {orders.map(order => (
-          <div key={order.id} className={styles.orderCard}>
-            <div className={styles.orderHeader}>
-              <h3>Order #{order.id}</h3>
-              <span className={styles.status}>{order.status}</span>
-            </div>
-
-            <div className={styles.orderDetails}>
-              <p>Customer: {order.customer?.full_name || 'Unknown'}</p>
-              <p>Total: ${order.total_amount}</p>
-              <p>Date: {new Date(order.created_at).toLocaleDateString()}</p>
-              
-              {order.estimated_completion_date && (
-                <p>Estimated Completion: {new Date(order.estimated_completion_date).toLocaleDateString()}</p>
-              )}
-            </div>
-
-            <div className={styles.orderItems}>
-              {order.order_items.map(item => (
-                <div key={item.id} className={styles.orderItem}>
-                  <img src={item.design.images[0]} alt={item.design.title} />
-                  <div>
-                    <h4>{item.design.title}</h4>
-                    <p>Fabric: {item.fabric_id}</p>
-                    <p>Color: {item.color_id}</p>
+      {orders.map(order => (
+        <div key={order.id} className={styles.orderCard}>
+          <div className={styles.orderHeader}>
+            <div className={styles.orderInfo}>
+              <div className={styles.orderMeta}>
+                <div>
+                  <div className={styles.label}>ORDER PLACED</div>
+                  <div>{new Date(order.created_at).toLocaleDateString()}</div>
+                </div>
+                <div>
+                  <div className={styles.label}>TOTAL</div>
+                  <div>${order.total_amount.toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className={styles.label}>SHIPPING ADDRESS</div>
+                  <div className={styles.shipTo}>
+                    {(() => {
+                      try {
+                        const address = typeof order.shipping_address === 'string' 
+                          ? JSON.parse(order.shipping_address)
+                          : order.shipping_address;
+                        
+                        return [
+                          address?.street_address,
+                          address?.city
+                        ]
+                          .filter(Boolean)
+                          .join(', ');
+                      } catch (e) {
+                        return 'Address not available';
+                      }
+                    })()}
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className={styles.orderNumber}>
+                <div className={styles.label}>ORDER # {order.id}</div>
+              </div>
             </div>
+          </div>
 
-            <div className={styles.actions}>
+          <div className={styles.orderStatus}>
+            <div className={styles.status} data-status={order.status}>
+              {order.status}
+            </div>
+            <div className={styles.statusActions}>
               {order.status === 'pending' && (
                 <>
-                  <button onClick={() => updateOrderStatus(order.id, 'accepted')}>
+                  <button 
+                    className={styles.acceptButton}
+                    onClick={() => updateOrderStatus(order.id, 'accepted')}
+                  >
                     Accept Order
                   </button>
-                  <button onClick={() => updateOrderStatus(order.id, 'rejected')}>
+                  <button 
+                    className={styles.rejectButton}
+                    onClick={() => updateOrderStatus(order.id, 'rejected')}
+                  >
                     Reject Order
                   </button>
                 </>
               )}
               
               {order.status === 'accepted' && (
-                <button onClick={() => updateOrderStatus(order.id, 'in_progress')}>
+                <button 
+                  className={styles.progressButton}
+                  onClick={() => updateOrderStatus(order.id, 'in_progress')}
+                >
                   Start Production
                 </button>
               )}
 
               {order.status === 'in_progress' && (
-                <button onClick={() => updateOrderStatus(order.id, 'ready_to_ship')}>
+                <button 
+                  className={styles.readyButton}
+                  onClick={() => updateOrderStatus(order.id, 'ready_to_ship')}
+                >
                   Mark Ready to Ship
                 </button>
               )}
 
               {order.status === 'ready_to_ship' && (
-                <button onClick={() => updateOrderStatus(order.id, 'shipped')}>
+                <button 
+                  className={styles.shipButton}
+                  onClick={() => updateOrderStatus(order.id, 'shipped')}
+                >
                   Mark as Shipped
                 </button>
               )}
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className={styles.orderItems}>
+            <div className={styles.orderItem}>
+              {order.design && (
+                <div className={styles.itemImageContainer}>
+                  <div className={styles.mainImage}>
+                    {order.design.images?.[0] && (
+                      <img 
+                        src={order.design.images[0]} 
+                        alt={order.design.title} 
+                        className={styles.designImage}
+                      />
+                    )}
+                  </div>
+                  <div className={styles.thumbnails}>
+                    {order.design.images?.slice(1).map((image, index) => (
+                      <img 
+                        key={index}
+                        src={image}
+                        alt={`${order.design?.title} view ${index + 2}`}
+                        className={styles.thumbnail}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className={styles.itemDetails}>
+                <h3 className={styles.itemTitle}>
+                  {order.design?.title || `Design #${order.design_id}`}
+                </h3>
+                {order.design?.description && (
+                  <p className={styles.designDescription}>{order.design.description}</p>
+                )}
+                <div className={styles.itemMeta}>
+                  {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
+                  {order.color_name && (
+                    <div className={styles.colorPill}>
+                      <span 
+                        className={styles.colorDot} 
+                        style={{ backgroundColor: order.color_name.toLowerCase() }} 
+                      />
+                      <span>Color: {order.color_name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
