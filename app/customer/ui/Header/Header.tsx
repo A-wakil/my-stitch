@@ -250,7 +250,7 @@ export function Header() {
               <IoMenu />
               Menu
             </div>
-            <Link href="/orders" className='left-sub' style={{ cursor: 'pointer' }}>
+            <Link href="/customer/orders" className='left-sub' style={{ cursor: 'pointer' }}>
               <IoReceiptOutline />
               Orders
             </Link>

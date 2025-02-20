@@ -265,7 +265,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       toast.success('Order placed successfully!');
       setIsModalOpen(false);
-      router.push('/orders');
+      router.push('/customer/orders');
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error('Failed to place order. Please try again.');
