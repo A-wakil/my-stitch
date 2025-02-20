@@ -4,7 +4,7 @@
     left: 0;
     width: 100%;
     height: 100vh;
-    background: white;
+    background: #1a1a1a; /* Dark background */
     z-index: 1000;
     overflow-y: auto;
     transform: translateX(-100%);
@@ -20,6 +20,7 @@
     padding: 1rem;
     display: flex;
     justify-content: flex-end;
+    border-bottom: 1px solid #333; /* Dark grey border */
   }
   
   .close-button {
@@ -31,6 +32,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: #ffffff; /* White text */
   }
   
   .nav-list {
@@ -45,29 +47,45 @@
   }
   
   .nav-link {
-    color: black;
+    color: #ffffff; /* White text */
     text-decoration: none;
     font-size: 1rem;
     font-weight: 400;
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 0.25rem 0;
+    transition: color 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    color: #808080; /* Grey on hover */
   }
   
   .secondary-nav {
     margin-top: 3rem;
     padding-top: 2rem;
-    border-top: 1px solid #e5e5e5;
+    border-top: 1px solid #333; /* Dark grey border */
   }
   
   .contact-info {
     margin-top: 1rem;
     font-size: 0.875rem;
+    color: #808080; /* Grey text */
   }
   
   @media (min-width: 768px) {
     .sidebar {
       width: 400px;
     }
+  }
+  
+  .nav-icon {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+    width: 20px;
+    justify-content: center;
+    color: #808080; /* Grey icons */
   }
   
   

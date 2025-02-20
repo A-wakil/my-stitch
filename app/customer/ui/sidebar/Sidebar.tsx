@@ -3,6 +3,9 @@
 import './Sidebar.css'
 import { IoClose } from 'react-icons/io5'
 import { useRouter } from 'next/navigation'
+import { IoPersonOutline } from 'react-icons/io5'
+import { LuRuler } from 'react-icons/lu'
+import { HiOutlineShoppingBag } from 'react-icons/hi'
 
 interface SidebarProps {
   isOpen: boolean
@@ -10,9 +13,9 @@ interface SidebarProps {
 }
 
 const mainNavItems = [
-  { name: 'My Profile', path: '/customer/measurements' },
-  { name: 'Saved Designs', path: '#' },
-  { name: 'My Orders', path: '#' },
+  { name: 'My Account', path: '/customer/profile', icon: <IoPersonOutline size={20} /> },
+  { name: 'Saved Measurements', path: '/customer/measurements', icon: <LuRuler size={20} /> },
+  { name: 'My Orders', path: '#', icon: <HiOutlineShoppingBag size={20} /> },
 ]
 
 const secondaryNavItems = [
@@ -45,6 +48,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   router.push(item.path)
                 }}
               >
+                <span className="nav-icon">{item.icon}</span>
                 {item.name}
               </a>
             </li>

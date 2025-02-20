@@ -4,6 +4,9 @@ import { useState, useEffect, use } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import styles from './DesignDetail.module.css'
 import { useRouter } from 'next/navigation'
+import { toast } from 'react-hot-toast'
+import OrderConfirmationModal from '../../ui/orderConfirmationModal/OrderConfirmationModal'
+import { Measurement } from '../../../lib/types'
 
 interface DesignDetail {
   id: string
@@ -17,6 +20,30 @@ interface DesignDetail {
     colors: Array<{ name: string; image: string }>
   }>
   created_by: string
+  brand_name: string
+}
+
+interface PaymentMethod {
+  cardNumber: string;
+  expirationDate: string;
+}
+
+interface OrderDetails {
+  design: {
+    title: string;
+    fabrics: Array<{
+      name: string;
+      price: number;
+      colors: Array<{ name: string }>;
+    }>;
+    brand_name: string;
+  };
+  selectedFabric: number;
+  selectedColor: number | null;
+  shippingAddress: string;
+  paymentMethod: string;
+  total: number;
+  measurement?: Measurement;
 }
 
 export default function DesignDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -26,9 +53,22 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [design, setDesign] = useState<DesignDetail | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedFabric, setSelectedFabric] = useState(0)
-  const [selectedColor, setSelectedColor] = useState(0)
+  const [selectedColor, setSelectedColor] = useState<number>(0)
   const [loading, setLoading] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [brandName, setBrandName] = useState<string>('')
+  const [tailorId, setTailorId] = useState<string | null>(null)
   const router = useRouter()
+  const [selectedAddress, setSelectedAddress] = useState<string>("")
+  const [savedAddresses, setSavedAddresses] = useState<string[]>([])
+  const [orderShippingAddress, setOrderShippingAddress] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<PaymentMethod[]>([])
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("")
+  const [isLoadingPayment, setIsLoadingPayment] = useState(true)
+  const [savedMeasurements, setSavedMeasurements] = useState<Measurement[]>([])
+  const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | undefined>(undefined)
+  const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(true)
 
   useEffect(() => {
     async function fetchDesign() {
@@ -37,60 +77,212 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         .select('*')
         .eq('id', id)
         .single()
-
       if (error) {
         console.error('Error fetching design:', error)
+          return
+        }
+
+      const { data: brandData, error: brandError } = await supabase
+        .from('designs')
+        .select('created_by')
+        .eq('id', id)
+        .single()
+
+      if (brandError) {
+        console.error('Error fetching brand:', brandError)
         return
       }
 
-      setDesign(data)
+      setTailorId(brandData.created_by)
+
+      const { data: brandName, error: brandNameError } = await supabase
+        .from('tailor_profiles')
+        .select('brand_name')
+        .eq('id', brandData.created_by)
+        .single()
+
+      if (brandNameError) {
+        console.error('Error fetching brand:', brandNameError)
+        return
+      }
+
+      setBrandName(brandName.brand_name)
+
+      // Merge the brand_name into the design object
+      const design = {
+        ...data
+      }
+      setDesign(design)
     }
 
     fetchDesign()
   }, [id])
 
-  const handleAddToCart = async () => {
-    setLoading(true)
-    try {
-      if (!design) {
-        throw new Error('Design not found')
+  useEffect(() => {
+    async function fetchUserAddress() {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('account_details')
+          .select('street_address, city, state, postal_code, country')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data && !error) {
+          // Only add the address if all required fields exist
+          if (data.street_address && data.city && data.state && data.postal_code) {
+            const formattedAddress = `${data.street_address}, ${data.city}, ${data.state} ${data.postal_code}, ${data.country || 'United States'}`;
+            setSavedAddresses([formattedAddress]);
+          } else {
+            setSavedAddresses([]);
+          }
+        }
       }
+      setIsLoading(false);
+    }
 
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+    fetchUserAddress();
+  }, []);
+
+  useEffect(() => {
+    async function fetchPaymentMethod() {
+      setIsLoadingPayment(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('account_details')
+          .select('card_number, expiration_date')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data && !error && data.card_number) {
+          setSavedPaymentMethods([{
+            cardNumber: data.card_number,
+            expirationDate: data.expiration_date
+          }]);
+          setSelectedPaymentMethod(`•••• ${data.card_number.slice(-4)}`);
+        } else {
+          setSavedPaymentMethods([]);
+        }
+      }
+      setIsLoadingPayment(false);
+    }
+
+    fetchPaymentMethod();
+  }, []);
+
+  useEffect(() => {
+    async function fetchMeasurements() {
+      setIsLoadingMeasurements(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('measurements')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (data && !error) {
+          setSavedMeasurements(data);
+        }
+      }
+      setIsLoadingMeasurements(false);
+    }
+
+    fetchMeasurements();
+  }, []);
+
+  const handleAddToCart = async () => {
+    // Validate color selection first
+    if (selectedColor === null) {
+      toast.error('Please select a color')
+      return
+    }
+
+    // Show confirmation modal instead of proceeding directly
+    setIsModalOpen(true)
+  }
+
+  const handleConfirmOrder = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        router.push('/login')
-        return
+        toast.error('You must be logged in to place an order');
+        return;
       }
 
-      // Create a new order with tailor_id
-      const { data: order, error: orderError } = await supabase
+      // Get tailor_id from the design
+      const { data: designData } = await supabase
+        .from('designs')
+        .select('created_by')
+        .eq('id', id)
+        .single();
+
+      if (!designData?.created_by) {
+        toast.error('Invalid design data');
+        return;
+      }
+
+      // Format shipping address as a proper JSON string
+      const shippingAddressJson = JSON.stringify({
+        street_address: orderShippingAddress.split(',')[0].trim(),
+        city: orderShippingAddress.split(',')[1].trim(),
+        state: orderShippingAddress.split(',')[2].split(' ')[1],
+        zip_code: orderShippingAddress.split(',')[2].split(' ')[2],
+        country: orderShippingAddress.split(',')[3].trim()
+      });
+
+      // Format measurements as a proper JSON string
+      const measurementsJson = JSON.stringify(selectedMeasurement || {});
+
+      const orderData = {
+        user_id: user.id,
+        tailor_id: designData.created_by,
+        design_id: id,
+        status: 'pending',
+        total_amount: design?.fabrics[selectedFabric].price || 0,
+        measurements: measurementsJson,
+        shipping_address: shippingAddressJson,
+        fabric_name: design?.fabrics[selectedFabric].name,
+        color_name: selectedColor !== null ? design?.fabrics[selectedFabric].colors[selectedColor].name : '',
+        estimated_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      const { data, error } = await supabase
         .from('orders')
-        .insert({
-          user_id: user.id,
-          tailor_id: design.created_by,
-          status: 'pending',
-          total_amount: design.fabrics[selectedFabric].price,
-          shipping_address: null
-        })
+        .insert([orderData])
         .select()
-        .single()
+        .single();
 
-      if (orderError) throw orderError
-
-      alert('Added to cart successfully!')
-    } catch (error) {
-      console.error('Error adding to cart:', error)
-      if (error instanceof Error && error.message === 'Design not found') {
-        alert('Sorry, this design could not be found')
-      } else {
-        alert('Failed to add to cart')
+      if (error) {
+        console.error('Order insertion error:', error);
+        throw error;
       }
-    } finally {
-      setLoading(false)
+
+      toast.success('Order placed successfully!');
+      setIsModalOpen(false);
+      router.push('/orders');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error('Failed to place order. Please try again.');
     }
+  };
+
+  const handleAddressUpdate = (address: string) => {
+    setOrderShippingAddress(address)
   }
+
+  const handlePaymentMethodUpdate = (paymentMethod: string) => {
+    setSelectedPaymentMethod(paymentMethod);
+  };
+
+  const handleMeasurementUpdate = (measurement: Measurement | undefined) => {
+    setSelectedMeasurement(measurement);
+  };
 
   if (!design) {
     return <div>Loading...</div>
@@ -178,6 +370,33 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           </div>
         </div>
       </div>
+
+      <OrderConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmOrder}
+        orderDetails={{
+          design: {
+            ...design,
+            brand_name: brandName
+          },
+          selectedFabric,
+          selectedColor,
+          shippingAddress: orderShippingAddress,
+          paymentMethod: selectedPaymentMethod,
+          total: design?.fabrics[selectedFabric].price || 0,
+          measurement: selectedMeasurement
+        }}
+        savedAddresses={savedAddresses}
+        savedPaymentMethods={savedPaymentMethods}
+        savedMeasurements={savedMeasurements}
+        onAddressChange={handleAddressUpdate}
+        onPaymentMethodChange={handlePaymentMethodUpdate}
+        onMeasurementChange={handleMeasurementUpdate}
+        isLoading={isLoading}
+        isLoadingPayment={isLoadingPayment}
+        isLoadingMeasurements={isLoadingMeasurements}
+      />
     </div>
   )
 }
