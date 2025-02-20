@@ -169,7 +169,7 @@
 .addressInput:focus {
   outline: none;
   border-color: #2563eb;
-  ring: 2px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .formButtons {
@@ -243,7 +243,7 @@
 .addressSelect:focus {
   outline: none;
   border-color: #2563eb;
-  ring: 2px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .loading {
@@ -269,7 +269,7 @@
 .paymentSelect:focus {
   outline: none;
   border-color: #2563eb;
-  ring: 2px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .newPaymentForm {
@@ -290,7 +290,7 @@
 .paymentInput:focus {
   outline: none;
   border-color: #2563eb;
-  ring: 2px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .savedInfo {
@@ -374,5 +374,20 @@
 .select:focus {
   outline: none;
   border-color: #2563eb;
-  ring: 2px solid rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.colorDetail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorPill {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  vertical-align: middle;
 } 

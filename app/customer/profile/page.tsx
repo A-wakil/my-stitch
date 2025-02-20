@@ -5,65 +5,175 @@ import { useRouter } from 'next/navigation'
 import { IoArrowBack } from 'react-icons/io5'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './profile.module.css'
-import { AccountDetails } from '../../lib/types'
+// import { AccountDetails } from '../../lib/types'
 import { toast } from 'react-hot-toast'
+
+interface AccountDetails {
+    id: string;
+    user_id: string;
+    full_name: string;
+    phone_number: string;
+    street_address: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+    card_number: string;
+    expiration_date: string;
+    email: string;
+    language: string;
+    currency: string;
+    email_notifications: boolean;
+    sms_notifications: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    cvv: string;
+}
+
+// Add these helper functions at the top of the file
+const formatCardNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    // Add space after every 4 digits
+    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+    // Limit to 19 characters (16 digits + 3 spaces)
+    return formatted.slice(0, 19);
+};
+
+const formatExpirationDate = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    // Add slash after first 2 digits
+    if (digits.length >= 2) {
+        return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+    }
+    return digits;
+};
+
+const validateExpirationDate = (value: string): boolean => {
+    if (!value.includes('/')) return false;
+    
+    const [month, year] = value.split('/');
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100; // Get last 2 digits
+    const currentMonth = currentDate.getMonth() + 1; // Months are 0-based
+    
+    const numMonth = parseInt(month, 10);
+    const numYear = parseInt(year, 10);
+    
+    if (numMonth < 1 || numMonth > 12) return false;
+    if (numYear < currentYear) return false;
+    if (numYear === currentYear && numMonth < currentMonth) return false;
+    
+    return true;
+};
+
+const formatCVV = (value: string): string => {
+    // Remove all non-digit characters
+    const digits = value.replace(/\D/g, '');
+    // Limit to 4 digits (some cards have 4-digit CVV)
+    return digits.slice(0, 4);
+};
 
 export default function UserAccountDetails() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
-    const [accountDetails, setAccountDetails] = useState<Partial<AccountDetails>>({
+    const [accountDetails, setAccountDetails] = useState<AccountDetails>({
+        id: '',
+        user_id: '',
         full_name: '',
-        email: '',
         phone_number: '',
-        card_number: '',
-        expiration_date: '',
-        cvv: '',
         street_address: '',
         city: '',
         state: '',
         postal_code: '',
         country: '',
+        card_number: '',
+        expiration_date: '',
+        email: '',
         language: 'en',
         currency: 'usd',
-        email_notifications: true,
-        sms_notifications: true,
+        email_notifications: false,
+        sms_notifications: false,
+        created_at: null,
+        updated_at: null,
+        cvv: ''
     })
 
     // Fetch user details on component mount
     useEffect(() => {
+        async function fetchUserDetails() {
+            setIsLoading(true)
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                
+                if (!user) {
+                    throw new Error('No user found')
+                }
+
+                const { data, error } = await supabase
+                    .from('account_details')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle()
+
+                if (error) {
+                    throw error
+                }
+
+                if (data) {
+                    setAccountDetails(data)
+                } else {
+                    // Initialize with empty default values
+                    setAccountDetails({
+                        id: '',
+                        user_id: user.id,
+                        full_name: '',
+                        phone_number: '',
+                        street_address: '',
+                        city: '',
+                        state: '',
+                        postal_code: '',
+                        country: '',
+                        card_number: '',
+                        expiration_date: '',
+                        email: user.email || '', // Set from auth user
+                        language: 'en',          // Default value
+                        currency: 'usd',         // Default value
+                        email_notifications: false,
+                        sms_notifications: false,
+                        created_at: null,
+                        updated_at: null,
+                        cvv: ''
+                    })
+                }
+            } catch (error: any) {
+                console.error('Error fetching user details:', error.message || error)
+                toast.error('Failed to load account details')
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
         fetchUserDetails()
     }, [])
 
-    const fetchUserDetails = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('No user found')
-
-            const { data, error } = await supabase
-                .from('account_details')
-                .select('*')
-                .eq('user_id', user.id)
-                .single()
-
-            if (error) throw error
-
-            if (data) {
-                setAccountDetails(data)
-            }
-            
-        } catch (error) {
-            console.error('Error fetching user details:', error)
-            toast.error('Failed to load account details')
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
     const handleInputChange = (field: keyof AccountDetails, value: any) => {
+        let formattedValue = value;
+
+        // Apply formatting based on field
+        if (field === 'card_number') {
+            formattedValue = formatCardNumber(value);
+        } else if (field === 'expiration_date') {
+            formattedValue = formatExpirationDate(value);
+        } else if (field === 'cvv') {
+            formattedValue = formatCVV(value);
+        }
+
         setAccountDetails(prev => ({
             ...prev,
-            [field]: value
+            [field]: formattedValue
         }))
     }
 
@@ -73,41 +183,42 @@ export default function UserAccountDetails() {
 
         try {
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('No user found')
+            
+            if (!user) {
+                throw new Error('No user found')
+            }
 
-            // Check if user already has account details
+            // Remove id field when saving as it's auto-generated
+            const { id, created_at, updated_at, ...dataToSave } = accountDetails;
+
+            // Check if account details already exist
             const { data: existingData } = await supabase
                 .from('account_details')
                 .select('id')
                 .eq('user_id', user.id)
-                .single()
+                .maybeSingle()
 
-            let error
             if (existingData) {
                 // Update existing record
-                ({ error } = await supabase
+                const { error } = await supabase
                     .from('account_details')
-                    .update({
-                        ...accountDetails,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('user_id', user.id))
+                    .update(dataToSave)
+                    .eq('user_id', user.id)
+
+                if (error) throw error
             } else {
                 // Insert new record
-                ({ error } = await supabase
+                const { error } = await supabase
                     .from('account_details')
-                    .insert({
-                        ...accountDetails,
-                        user_id: user.id
-                    }))
+                    .insert([{ ...dataToSave, user_id: user.id }])
+
+                if (error) throw error
             }
 
-            if (error) throw error
-
-            toast.success('Account details saved successfully')
-        } catch (error) {
-            console.error('Error saving account details:', error)
-            toast.error('Failed to save account details')
+            toast.success('Profile updated successfully')
+        } catch (error: any) {
+            console.error('Error saving profile:', error.message || error)
+            toast.error('Failed to update profile')
         } finally {
             setIsSaving(false)
         }
@@ -176,7 +287,13 @@ export default function UserAccountDetails() {
                                         value={accountDetails.card_number || ''}
                                         onChange={(e) => handleInputChange('card_number', e.target.value)}
                                         className={styles.input}
+                                        placeholder="1234 5678 9012 3456"
+                                        maxLength={19}
+                                        inputMode="numeric"
                                     />
+                                    <span className={styles.fieldHint}>
+                                        16-digit card number
+                                    </span>
                                 </label>
                                 <div className={styles.formRow}>
                                     <label className={styles.label}>
@@ -185,17 +302,38 @@ export default function UserAccountDetails() {
                                             type="text"
                                             value={accountDetails.expiration_date || ''}
                                             onChange={(e) => handleInputChange('expiration_date', e.target.value)}
-                                            className={styles.input}
+                                            className={`${styles.input} ${
+                                                accountDetails.expiration_date && 
+                                                !validateExpirationDate(accountDetails.expiration_date) 
+                                                    ? styles.inputError 
+                                                    : ''
+                                            }`}
+                                            placeholder="MM/YY"
+                                            maxLength={5}
+                                            inputMode="numeric"
                                         />
+                                        {accountDetails.expiration_date && 
+                                         !validateExpirationDate(accountDetails.expiration_date) && (
+                                            <span className={styles.errorText}>
+                                                Please enter a valid future date (MM/YY)
+                                            </span>
+                                        )}
                                     </label>
                                     <label className={styles.label}>
                                         CVV
                                         <input
-                                            type="text"
+                                            type="password"
                                             value={accountDetails.cvv || ''}
-                                            onChange={(e) => handleInputChange('cvv', e.target.value)}
+                                            onChange={(e) => handleInputChange('cvv', formatCVV(e.target.value))}
                                             className={styles.input}
+                                            placeholder="123"
+                                            maxLength={4}
+                                            inputMode="numeric"
+                                            autoComplete="cc-csc"
                                         />
+                                        <span className={styles.fieldHint}>
+                                            3-4 digits on back of card
+                                        </span>
                                     </label>
                                 </div>
                             </div>

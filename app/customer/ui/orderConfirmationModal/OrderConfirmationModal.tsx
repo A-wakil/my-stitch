@@ -627,10 +627,10 @@ export default function OrderConfirmationModal({
                     </select>
                     {orderDetails.measurement && (
                       <div className={styles.measurementDetails}>
-                        <h5>Selected Measurement Details:</h5>
+                        <h5>Selected Measurement: {orderDetails.measurement.name}</h5>
                         <div className={styles.measurementGrid}>
                           {Object.entries(orderDetails.measurement)
-                            .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at'].includes(key))
+                            .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key))
                             .map(([key, value]) => (
                               <div key={key} className={styles.measurementItem}>
                                 <span className={styles.measurementLabel}>
@@ -659,7 +659,22 @@ export default function OrderConfirmationModal({
             <div className={styles.orderDetails}>
               <p>Design: {orderDetails.design.title}</p>
               <p>Fabric: {orderDetails.design.fabrics[orderDetails.selectedFabric].name}</p>
-              <p>Color: {selectedColor}</p>
+              <p className={styles.colorDetail}>
+                Color: 
+                <span 
+                  className={styles.colorPill}
+                  style={{ 
+                    backgroundColor: selectedColor,
+                    display: 'inline-block',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    marginLeft: '8px',
+                    verticalAlign: 'middle',
+                    border: '1px solid #ddd'
+                  }}
+                />
+              </p>
             </div>
           </div>
 
