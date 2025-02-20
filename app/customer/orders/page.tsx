@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient'
 import styles from './Orders.module.css'
 import { useRouter } from 'next/navigation'
 import { Order } from '../../lib/types'
+import { IoArrowBack } from 'react-icons/io5'
 
 
 export default function OrdersPage() {
@@ -15,7 +16,7 @@ export default function OrdersPage() {
   useEffect(() => {
     async function fetchOrders() {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) return
 
       // First fetch orders
@@ -59,7 +60,7 @@ export default function OrdersPage() {
 
   const handleBuyAgain = (order: Order) => {
     if (!order.design_id) return;
-    
+
     // Redirect to the design page with pre-selected options
     router.push(`/customer/designs/${order.design_id}?`)
   }
@@ -70,8 +71,14 @@ export default function OrdersPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>Your Orders</h1>
-      
+      <div className={styles.pageHeader}>
+        <button onClick={() => router.back()} className={styles.backButton}>
+          <IoArrowBack size={24} />
+          <span>Back</span>
+        </button>
+        <h1 className={styles.pageTitle}>Your Orders</h1>
+      </div>
+
       {orders.map(order => (
         <div key={order.id} className={styles.orderCard}>
           <div className={styles.orderHeader}>
@@ -90,10 +97,10 @@ export default function OrdersPage() {
                   <div className={styles.shipTo}>
                     {(() => {
                       try {
-                        const address = typeof order.shipping_address === 'string' 
+                        const address = typeof order.shipping_address === 'string'
                           ? JSON.parse(order.shipping_address)
                           : order.shipping_address;
-                        
+
                         return [
                           address?.street_address,
                           address?.city
@@ -131,16 +138,16 @@ export default function OrdersPage() {
                 <div className={styles.itemImageContainer}>
                   <div className={styles.mainImage}>
                     {order.design.images?.[0] && (
-                      <img 
-                        src={order.design.images[0]} 
-                        alt={order.design.title} 
+                      <img
+                        src={order.design.images[0]}
+                        alt={order.design.title}
                         className={styles.designImage}
                       />
                     )}
                   </div>
                   <div className={styles.thumbnails}>
                     {order.design.images?.slice(1).map((image, index) => (
-                      <img 
+                      <img
                         key={index}
                         src={image}
                         alt={`${order.design?.title} view ${index + 2}`}
@@ -161,16 +168,16 @@ export default function OrdersPage() {
                   {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
                   {order.color_name && (
                     <div className={styles.colorPill}>
-                      <span 
-                        className={styles.colorDot} 
-                        style={{ backgroundColor: order.color_name.toLowerCase() }} 
+                      <span
+                        className={styles.colorDot}
+                        style={{ backgroundColor: order.color_name.toLowerCase() }}
                       />
                       <span>Color: {order.color_name}</span>
                     </div>
                   )}
                 </div>
                 <div className={styles.itemActions}>
-                  <button 
+                  <button
                     className={styles.buyAgainButton}
                     onClick={() => handleBuyAgain(order)}
                     disabled={!order.design_id}
