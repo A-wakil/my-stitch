@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import styles from './Orders.module.css'
+import styles from './orders.module.css'
 import { useRouter } from 'next/navigation'
 import { Order } from '../../lib/types'
 import { IoArrowBack } from 'react-icons/io5'
