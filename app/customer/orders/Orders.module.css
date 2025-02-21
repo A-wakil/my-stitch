@@ -2,284 +2,14 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-}
-
-.pageTitle {
-  font-size: 2rem;
-  font-weight: 400;
-  color: #333;
-  margin: 0;
-  text-align: center;
-  grid-column: 2;
-}
-.backButton {
-    display: flex;
-    align-items: center;
-    /* gap: 0.5rem; */
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
-    color: #333333;
-    font-size: 1rem;
-}
-
-.backButton:hover {
-    color: #666666;
-}
-
-.orderCard {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  overflow: hidden;
-}
-
-.orderHeader {
-  background: #f6f6f6;
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-}
-
-.orderInfo {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.orderMeta {
-  display: flex;
-  gap: 3rem;
-}
-
-.label {
-  color: #565959;
-  font-size: 0.75rem;
-  margin-bottom: 0.25rem;
-}
-
-.shipTo {
-  max-width: 200px;
-}
-
-.orderNumber {
-  text-align: right;
-}
-
-.orderActions {
-  margin-top: 0.25rem;
-}
-
-.link {
-  color: #007185;
-  text-decoration: none;
-  font-size: 0.875rem;
-}
-
-.link:hover {
-  color: #c7511f;
-  text-decoration: underline;
-}
-
-.separator {
-  margin: 0 0.5rem;
-  color: #565959;
-}
-
-.orderStatus {
-  padding: 1rem;
-  background: #f0f2f2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.status {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #007600;
-}
-
-.trackButton {
-  background: #ffd814;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.trackButton:hover {
-  background: #f7ca00;
-}
-
-.orderItems {
-  padding: 1rem;
-}
-
-.orderItem {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.orderItem:last-child {
-  border-bottom: none;
-}
-
-.itemImage {
-  width: 100px;
-  height: 100px;
-}
-
-.itemImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.itemDetails {
-  flex: 1;
-}
-
-.itemTitle {
-  font-size: 1rem;
-  margin-bottom: 1rem;
-  color: #007185;
-  text-decoration: none;
-}
-
-.itemTitle:hover {
-  color: #c7511f;
-  text-decoration: underline;
-}
-
-.itemActions {
-  display: flex;
-  gap: 1rem;
-}
-
-.buyAgainButton {
-  background-color: #000000;
-  color: #ffffff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background-color 0.2s;
-}
-
-.buyAgainButton:hover {
-  background-color: #333333;
-}
-
-.buyAgainButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.writeReviewButton {
-  background-color: #f5f5f5;
-  color: #333333;
-  border: 1px solid #d5d5d5;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  margin-left: 8px;
-  transition: background-color 0.2s;
-}
-
-.writeReviewButton:hover {
-  background-color: #e5e5e5;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #565959;
-}
-
-.itemImageContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-right: 1.5rem;
-}
-
-.mainImage {
-  width: 200px;
-  height: 200px;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.designImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.thumbnails {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.thumbnail {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.thumbnail:hover {
-  opacity: 0.8;
-}
-
-.designDescription {
-  color: #565959;
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
-}
-
-.itemMeta {
-  color: #565959;
-  font-size: 0.875rem;
-  margin: 1rem 0;
-}
-
-.itemMeta p {
-  margin: 0.25rem 0;
-}
-
-.colorPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: #f5f5f5;
-  border-radius: 16px;
-  font-size: 0.875rem;
-}
-
-.colorDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f9f9f9;
 }
 
 .pageHeader {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .backButton {
@@ -296,4 +26,254 @@
 
 .backButton:hover {
   color: #666;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 400;
+  color: #333;
+  margin: 0;
+  text-align: center;
+  grid-column: 2;
+}
+
+.orderCard {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.orderCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.orderHeader {
+  background: #fff;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.orderInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.orderMeta {
+  display: flex;
+  gap: 4rem;
+}
+
+.label {
+  color: #666;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.shipTo {
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+.orderNumber {
+  text-align: right;
+}
+
+.orderActions {
+  margin-top: 0.5rem;
+}
+
+.link {
+  color: #0066cc;
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.link:hover {
+  color: #004499;
+  text-decoration: underline;
+}
+
+.separator {
+  margin: 0 0.75rem;
+  color: #ddd;
+}
+
+.orderStatus {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #0066cc;
+  text-transform: capitalize;
+}
+
+.trackButton {
+  background: #0066cc;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.trackButton:hover {
+  background: #004499;
+}
+
+.orderItems {
+  padding: 1.5rem;
+}
+
+.orderItem {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.itemImageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mainImage {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.designImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.designImage:hover {
+  transform: scale(1.05);
+}
+
+.thumbnails {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.thumbnail:hover {
+  opacity: 0.8;
+}
+
+.itemDetails {
+  flex: 1;
+}
+
+.itemTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.designDescription {
+  color: #666;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+}
+
+.itemMeta {
+  margin: 1.5rem 0;
+  color: #666;
+}
+
+.colorPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-radius: 20px;
+  font-size: 0.9375rem;
+}
+
+.colorDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.itemActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.buyAgainButton {
+  background: #0066cc;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.buyAgainButton:hover {
+  background: #004499;
+}
+
+.buyAgainButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.writeReviewButton {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.writeReviewButton:hover {
+  background: #eee;
+  border-color: #ccc;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-size: 1.125rem;
 } 
