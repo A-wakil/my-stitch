@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import './AuthDialog.css'
+import styles from './AuthDialog.module.css'
 import { IoClose } from 'react-icons/io5'
 
 interface AuthDialogProps {
@@ -95,91 +95,90 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
     }
 
     return (
-        <div className={`authDialog ${isOpen ? 'open' : ''}`} onClick={handleBackgroundClick}>
-            <div className={`auth-container ${isSignUp ? 'flipped' : ''}`}>
-                <div className={`auth-card ${isSignUp ? 'sign-up' : 'sign-in'}`}>
-                    <div className="auth-header">
-                        <h1 className="auth-title">{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
-                        <p className="auth-subtitle">
+        <div className={`${styles.dialog} ${isOpen ? styles.open : ''}`} onClick={handleBackgroundClick}>
+            <div className={`${styles.container} ${isSignUp ? styles.flipped : ''}`}>
+                <div className={`${styles.card} ${isSignUp ? styles.signUp : styles.signIn}`}>
+                    <div className={styles.header}>
+                        <h1 className={styles.title}>{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
+                        <p className={styles.subtitle}>
                             {!isSignUp
                                 ? 'Enter your details to continue'
                                 : 'Enter your details to create an account'}
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        
-                        <div className="form-group">
-                            <label htmlFor="email" className="form-label">Email</label>
+                    <form onSubmit={handleSubmit} className={styles.form}>
+                        <div className={styles.formGroup}>
+                            <label htmlFor="email" className={styles.label}>Email</label>
                             <input
                                 id="email"
                                 type="email"
-                                className="form-input"
+                                className={styles.input}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading}
                             />
-                            {errors.email && <span className="form-error">{errors.email}</span>}
+                            {errors.email && <span className={styles.error}>{errors.email}</span>}
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="password" className="form-label">Password</label>
+                        <div className={styles.formGroup}>
+                            <label htmlFor="password" className={styles.label}>Password</label>
                             <input
                                 id="password"
                                 type="password"
-                                className="form-input"
+                                className={styles.input}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
                             />
-                            {errors.password && <span className="form-error">{errors.password}</span>}
+                            {errors.password && <span className={styles.error}>{errors.password}</span>}
                         </div>
 
                         {isSignUp && (
                             <>
-                                <div className="form-group">
-                                    <label htmlFor="firstName" className="form-label">First Name</label>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="firstName" className={styles.label}>First Name</label>
                                     <input
                                         id="firstName"
                                         type="text"
-                                        className="form-input"
+                                        className={styles.input}
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
                                         disabled={isLoading}
                                     />
-                                    {errors.firstName && <span className="form-error">{errors.firstName}</span>}
+                                    {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
                                 </div>
 
-                                <div className="form-group">
-                                    <label htmlFor="lastName" className="form-label">Last Name</label>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor="lastName" className={styles.label}>Last Name</label>
                                     <input
                                         id="lastName"
                                         type="text"
-                                        className="form-input"
+                                        className={styles.input}
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
                                         disabled={isLoading}
                                     />
-                                    {errors.lastName && <span className="form-error">{errors.lastName}</span>}
+                                    {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
                                 </div>
                             </>
                         )}
 
-                        <button type="submit" className="submit-button" disabled={isLoading}>
-                            {isLoading && <Loader2 className="loading-spinner" size={16} />}
+                        <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                            {isLoading && <Loader2 className={styles.loadingSpinner} size={16} />}
                             {!isSignUp ? 'Sign in' : 'Create account'}
                         </button>
                     </form>
 
                     {!isSignUp && (
                         <>
-                            <div className="divider">
+                            <div className={styles.divider}>
                                 <span>or continue with</span>
                             </div>
 
                             <button
                                 type="button"
-                                className="google-button"
+                                className={styles.googleButton}
                                 onClick={handleGoogleSignIn}
                                 disabled={isLoading}
                             >
@@ -206,7 +205,7 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                         </>
                     )}
 
-                    <div className="auth-footer">
+                    <div className={styles.footer}>
                         {!isSignUp ? (
                             <>
                                 Don't have an account?{' '}

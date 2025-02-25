@@ -1,8 +1,11 @@
 .container {
-  max-width: 1200px;
+  /* max-width: 1200px; */
   margin: 0 auto;
   padding: 2rem;
   background: #f9f9f9;
+  padding-left: 10rem;
+  padding-right: 10rem;
+  height: 100vh;
 }
 
 .pageHeader {
@@ -276,4 +279,72 @@
   padding: 3rem;
   color: #666;
   font-size: 1.125rem;
-} 
+}
+
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #ddd;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    color: #565959;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .tab:hover {
+    color: #007185;
+  }
+  
+  .activeTab {
+    color: #007185;
+    border-bottom-color: #007185;
+    font-weight: 500;
+  }
+
+.noOrders {
+  text-align: center;
+  padding: 6rem 2rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  max-width: 600px;
+  margin: 2rem auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.noOrdersIcon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  color: #9ca3af;
+}
+
+.noOrdersTitle {
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.025em;
+}
+
+.noOrdersMessage {
+  color: #6b7280;
+  font-size: 1.125rem;
+  margin: 0;
+  line-height: 1.6;
+}
