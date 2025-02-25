@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { CustomButton } from '../custom-components/custom-components'
 import './Header.css'
 import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp, IoReceiptOutline } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
@@ -12,7 +11,6 @@ import { supabase } from '../../../lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"
 import { Button } from "../../../tailor/components/ui/button"
-import { SecDialog } from '../../../AuthDialog/SecDialog'
 
 
 interface SidebarProps {
@@ -27,7 +25,6 @@ export function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [isSecDialogOpen, setIsSecDialogOpen] = useState(false)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -62,14 +59,6 @@ export function Header() {
 
   const closeAuthDialog = () => {
     setIsAuthDialogOpen(false)
-  }
-
-  const tailorFirewall = () => {
-    if (user) {
-      setIsSecDialogOpen(true)
-    } else {
-      toggleAuthDialog()
-    }
   }
 
   const handleSubmit = async (email: string, password: string) => {
@@ -150,88 +139,6 @@ export function Header() {
     setUser(null)
   }
 
-  const closeSecDialog = () => {
-    setIsSecDialogOpen(false)
-  }
-
-  const handleSecurityQuestions = async (
-    question1: string,
-    answer1: string,
-    question2: string,
-    answer2: string
-  ) => {
-    try {
-      if (!user) {
-        console.error('No user logged in')
-        return
-      }
-
-      // Insert the security questions and answers into Supabase
-      const { data, error } = await supabase
-        .from('secquestions')
-        .upsert([
-          {
-            id: user.id,
-            question1: question1,
-            answer1: answer1,
-            question2: question2,
-            answer2: answer2,
-          }
-        ], {
-          onConflict: 'id'  // This will update if the user already has security questions
-        })
-
-      if (error) {
-        console.error('Error saving security questions:', error)
-        // You might want to show an error message to the user here
-        return
-      }
-
-      console.log('Security questions saved successfully')
-      closeSecDialog()
-    } catch (err) {
-      console.error('Error handling security questions:', err)
-    }
-  }
-
-  const handleSecurityVerification = async (answer1: string, answer2: string) => {
-    try {
-      if (!user) {
-        console.error('No user logged in')
-        return
-      }
-
-      // Fetch the stored security questions and answers
-      const { data, error } = await supabase
-        .from('secquestions')
-        .select('answer1, answer2')
-        .eq('id', user.id)
-        .single()
-
-      if (error) {
-        console.error('Error fetching security answers:', error)
-        return
-      }
-
-      if (!data) {
-        console.error('No security questions found for this user')
-        return
-      }
-
-      // Compare the answers
-      if (data.answer1 === answer1 && data.answer2 === answer2) {
-        console.log('Security answers verified successfully')
-        closeSecDialog()
-        router.push('/tailor')
-      } else {
-        console.error('Incorrect security answers')
-        // You might want to show an error message to the user here
-      }
-    } catch (err) {
-      console.error('Error verifying security answers:', err)
-    }
-  }
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.addEventListener('scroll', controlNavbar)
@@ -255,11 +162,6 @@ export function Header() {
               Orders
             </Link>
 
-            <div className='left-sub' onClick={tailorFirewall} style={{ cursor: 'pointer' }}>
-              Become a Tailor
-              <IoCutSharp />
-            </div>
-
           </div>
           <div className="header-content center">
             <div className="header-title-wrapper">
@@ -272,7 +174,6 @@ export function Header() {
             </nav>
           </div>
           <div className='header-content'>
-            <div>Contact Us</div>
             <div className='right-icons'>
               <div
                 className=''
@@ -286,7 +187,6 @@ export function Header() {
               >
                 <IoPerson />
               </div>
-              <IoBag />
               {user && <Button onClick={handleSignOut} variant="ghost" size="icon">
                 <LogOut size={15} />
               </Button>}
@@ -302,13 +202,6 @@ export function Header() {
         />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      <SecDialog
-        isOpen={isSecDialogOpen}
-        onClose={closeSecDialog}
-        onSubmit={handleSecurityQuestions}
-        onVerify={handleSecurityVerification}
-        userId={user?.id}
-      />
     </>
   )
 }
