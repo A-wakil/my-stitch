@@ -175,7 +175,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         </div>
       )}
       <div className="form-group">
-        <Label htmlFor="brandName">Brand Name</Label>
+        <Label htmlFor="brandName">Fashion House Name</Label>
         <Input 
           id="brandName" 
           value={formData.brandName}
@@ -184,7 +184,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="tailorName">Tailor Name</Label>
+        <Label htmlFor="tailorName">Designer's Name</Label>
         <Input 
           id="tailorName" 
           value={formData.tailorName}
@@ -304,6 +304,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
           variant="outline" 
           onClick={onCancel}
           disabled={isLoading}
+          className="cancel-button"
         >
           Cancel
         </Button>

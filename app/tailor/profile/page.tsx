@@ -4,7 +4,6 @@ import { TailorProfileForm } from "../components/dashboard/tailor-profile-form"
 import { TailorProfileDisplay } from "../components/dashboard/tailor-profile-display"
 import styles from "./page.module.css"
 
-// Initial profile data
 const initialProfile = {
   brandName: "Elegant Stitches",
   tailorName: "Jane Doe",

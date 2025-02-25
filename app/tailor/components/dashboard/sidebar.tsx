@@ -7,6 +7,9 @@ export function Sidebar() {
     <div className={styles.sidebar}>
       <div className={styles['sidebar-header']}>
         <span className={styles['sidebar-title']}>Tailor Dashboard</span>
+        <Link href="/" className={styles['marketplace-link']}>
+          ← Go back to Marketplace
+        </Link>
       </div>
       <nav className={styles['sidebar-nav']}>
         <ul className={styles['sidebar-menu']}>
