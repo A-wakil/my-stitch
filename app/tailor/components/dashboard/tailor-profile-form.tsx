@@ -108,21 +108,31 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
     setError(null)
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      // Validate all required fields including images
+      if (!logo || !banner) {
+        throw new Error('Please upload both a logo and banner image')
+      }
 
-      if (!user) throw new Error('No user found')
+      if (formData.specializations.length === 0) {
+        throw new Error('Please add at least one specialization')
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) throw new Error('Authentication error')
 
       // Upload images if they exist
       let logoUrl = formData.logo
       let bannerUrl = formData.bannerImage
 
-      if (logo) {
-        logoUrl = await uploadImage(logo, 'logos')
-      }
-      if (banner) {
-        bannerUrl = await uploadImage(banner, 'banners')
+      try {
+        if (logo) {
+          logoUrl = await uploadImage(logo, 'logos')
+        }
+        if (banner) {
+          bannerUrl = await uploadImage(banner, 'banners')
+        }
+      } catch (uploadError) {
+        throw new Error('Error uploading images. Please try again.')
       }
 
       const profileData = {
@@ -141,18 +151,13 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         specializations: formData.specializations,
       }
 
-      console.log('Sending profile data:', profileData)
-
-      const { data, error: upsertError } = await supabase
+      const { error: upsertError } = await supabase
         .from('tailor_profiles')
         .upsert(profileData)
 
       if (upsertError) {
-        console.error('Upsert error:', upsertError)
-        throw upsertError
+        throw new Error('Error saving profile. Please try again.')
       }
-
-      console.log('Upsert response:', data)
 
       onComplete({
         ...formData,
@@ -160,10 +165,8 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         bannerImage: bannerUrl,
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      console.error('Error updating profile:', err)
-    } finally {
-      setIsLoading(false)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      setIsLoading(false) // Make sure to reset loading state on error
     }
   }
 
@@ -175,7 +178,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         </div>
       )}
       <div className="form-group">
-        <Label htmlFor="brandName">Fashion House Name</Label>
+        <Label htmlFor="brandName">Fashion House Name *</Label>
         <Input 
           id="brandName" 
           value={formData.brandName}
@@ -184,7 +187,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="tailorName">Designer's Name</Label>
+        <Label htmlFor="tailorName">Designer's Name *</Label>
         <Input 
           id="tailorName" 
           value={formData.tailorName}
@@ -193,25 +196,27 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="logo">Logo</Label>
+        <Label htmlFor="logo">Logo *</Label>
         <Input 
           id="logo" 
           type="file" 
           accept="image/*" 
-          onChange={handleLogoUpload} 
+          onChange={handleLogoUpload}
+          required
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="bannerImage">Banner Image</Label>
+        <Label htmlFor="bannerImage">Banner Image *</Label>
         <Input 
           id="bannerImage" 
           type="file" 
           accept="image/*" 
-          onChange={handleBannerUpload} 
+          onChange={handleBannerUpload}
+          required
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="address">Address</Label>
+        <Label htmlFor="address">Address *</Label>
         <Textarea 
           id="address" 
           value={formData.address}
@@ -220,7 +225,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="phone">Phone Number</Label>
+        <Label htmlFor="phone">Phone Number *</Label>
         <Input 
           id="phone" 
           type="tel" 
@@ -230,7 +235,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email *</Label>
         <Input 
           id="email" 
           type="email" 
@@ -240,25 +245,30 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="website">Website</Label>
+        <Label htmlFor="website">Website *</Label>
         <Input 
           id="website" 
           type="url" 
           value={formData.website}
           onChange={handleChange}
+          required
+          placeholder="https://example.com"
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="experience">Experience</Label>
+        <Label htmlFor="experience">Years of Experience *</Label>
         <Input 
           id="experience" 
+          type="number"
+          min="0"
+          max="100"
           value={formData.experience}
           onChange={handleChange}
           required 
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="specialization">Specializations</Label>
+        <Label htmlFor="specialization">Specializations *</Label>
         <div className="specializations-container">
           <div className="specializations-tags">
             {formData.specializations.map((spec, index) => (
@@ -284,11 +294,12 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         </div>
       </div>
       <div className="form-group">
-        <Label htmlFor="bio">Bio</Label>
+        <Label htmlFor="bio">Bio *</Label>
         <Textarea 
           id="bio" 
           value={formData.bio}
           onChange={handleChange}
+          required
         />
       </div>
       <div className="form-actions">
@@ -301,10 +312,10 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         </Button>
         <Button 
           type="button" 
-          variant="outline" 
+          variant="secondary"
+          className="cancel-button"
           onClick={onCancel}
           disabled={isLoading}
-          className="cancel-button"
         >
           Cancel
         </Button>

@@ -62,3 +62,24 @@
   color: #333;
   text-decoration: underline;
 }
+
+.sidebar-link-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  position: relative;
+}
+
+.sidebar-link-disabled:hover::after {
+  content: attr(title);
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  left: 100%;
+  margin-left: 10px;
+}

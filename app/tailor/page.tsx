@@ -9,23 +9,58 @@ import { supabase } from "../lib/supabaseClient"
 import { User } from '@supabase/supabase-js'
 import { AuthDialog } from "../AuthDialog/AuthDialog"
 import { IoArrowBack } from "react-icons/io5";
+import { TailorProfileForm } from "./components/dashboard/tailor-profile-form"
+import { useProfile } from "../context/ProfileContext"
 
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const [tailorProfile, setTailorProfile] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { hasProfile, refreshProfile } = useProfile()
+  const [showProfileForm, setShowProfileForm] = useState(false)
 
   useEffect(() => {
     // Check auth status when component mounts
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       setIsAuthDialogOpen(!session?.user)
+      
+      if (session?.user) {
+        // Fetch tailor profile when user is authenticated
+        const { data, error } = await supabase
+          .from('tailor_profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 is the "not found" error code
+          console.error('Error fetching tailor profile:', error)
+        }
+        
+        setTailorProfile(data)
+      }
+      setIsLoading(false)
     })
 
     // Initial auth check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setIsAuthDialogOpen(!session?.user)
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      setUser(user)
+      if (user) {
+        const { data, error } = await supabase
+          .from('tailor_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching tailor profile:', error)
+        }
+        
+        setTailorProfile(data)
+      }
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -86,6 +121,15 @@ export default function Dashboard() {
     router.push('/')
   }
 
+  const handleProfileComplete = async (profile: any) => {
+    await refreshProfile()
+    setShowProfileForm(false)
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
   if (!user) {
     return (
       <div className={styles.authContainer}>
@@ -107,13 +151,48 @@ export default function Dashboard() {
     )
   }
 
+  if (!hasProfile) {
+    return (
+      <div className={styles.createProfileContainer}>
+        {showProfileForm ? (
+          <TailorProfileForm
+            onComplete={handleProfileComplete}
+            onCancel={() => setShowProfileForm(false)}
+            initialData={{
+              brandName: '',
+              tailorName: '',
+              logo: '',
+              bannerImage: '',
+              address: '',
+              phone: '',
+              email: '',
+              bio: '',
+              rating: 0,
+              website: '',
+              experience: '',
+              specializations: [],
+            }}
+          />
+        ) : (
+          <>
+            <h1>Create Your Fashion House</h1>
+            <p>To get started, you need to create your designer profile.</p>
+            <Button 
+              onClick={() => setShowProfileForm(true)}
+              className={styles.createProfileButton}
+            >
+              Create Fashion House
+            </Button>
+          </>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className={styles.pageContainer}>
       <main className={styles.mainContent}>
         <div className={styles.mainContentInner}>
-          {/* <header className={styles.header}>
-            <h2 className={styles.pageTitle}>Dashboard</h2>
-          </header> */}
           <div className={styles.cardsGrid}>
             <Card className={styles.card}>
               <h3>Total Designs</h3>

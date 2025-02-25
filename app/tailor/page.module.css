@@ -133,3 +133,39 @@
   justify-content: center;
   gap: 0.2rem;
 }
+
+.createProfileContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.createProfileContainer h1 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #18181b;
+}
+
+.createProfileContainer p {
+  margin-bottom: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.createProfileButton {
+  font-size: 1.1rem;
+  padding: 1rem 2rem;
+  background: #18181b;
+  color: white;
+  border-radius: 2rem;
+  transition: background-color 0.2s;
+}
+
+.createProfileButton:hover {
+  background: #27272a;
+}
