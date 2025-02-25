@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import './Header.css'
-import { IoMenu, IoSearch, IoHeartOutline, IoPerson, IoBag, IoCutSharp, IoReceiptOutline } from "react-icons/io5";
+import { IoMenu, IoPerson, IoReceiptOutline } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../../AuthDialog/AuthDialog'
 import { supabase } from '../../../lib/supabaseClient'

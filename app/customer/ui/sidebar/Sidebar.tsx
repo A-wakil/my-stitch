@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { IoPersonOutline } from 'react-icons/io5'
 import { LuRuler } from 'react-icons/lu'
 import { HiOutlineShoppingBag } from 'react-icons/hi'
-
+import { IoCutSharp } from 'react-icons/io5'
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
@@ -19,8 +19,8 @@ const mainNavItems = [
 ]
 
 const secondaryNavItems = [
-  { name: 'Create a Tailor Account', path: '#' },
-  { name: 'Contact Us', path: '#' }
+  { name: 'Create a Tailor Account', path: '/tailor' },
+  { name: 'Contact Us', path: '#' },
 ]
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
