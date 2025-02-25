@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient'
 import styles from './orders.module.css'
 import { Order } from '../../lib/types'
 import { useRouter } from 'next/navigation'
+import { Spinner } from '../components/ui/spinner'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
@@ -91,7 +92,7 @@ export default function TailorOrdersPage() {
   }, {} as Record<string, number>)
 
   if (isLoading) {
-    return <div className={styles.loading}>Loading orders...</div>
+    return <Spinner />
   }
 
   return (
