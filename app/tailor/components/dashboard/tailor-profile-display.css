@@ -98,8 +98,15 @@
 
 .profile-badges {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+}
+
+.badge-group {
+  display: flex;
   flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
 }
 
 .badge {
@@ -112,11 +119,22 @@
 .badge.experience {
   background-color: #E8EEFF;
   color: #4B6BFB;
+  display: inline-block;
+  width: fit-content;
 }
 
 .badge.specialization {
   background-color: #E8FFF3;
   color: #0A8A50;
+  margin-top: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge.specializations {
+  margin-top: 0.5rem;
+  align-items: center;
+  justify-content: center;
 }
 
 .badge.role {

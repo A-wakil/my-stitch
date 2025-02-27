@@ -5,6 +5,7 @@ import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
 import { Send, Phone, Edit } from "lucide-react"
 import { supabase } from "../../../lib/supabaseClient"
+
 interface TailorProfile {
   brand_name: string;
   tailor_name: string;
@@ -21,10 +22,24 @@ interface TailorProfile {
 
 interface TailorProfileDisplayProps {
   onEdit: () => void;
+  profile: {
+    brandName: string;
+    tailorName: string;
+    logo: string;
+    bannerImage: string;
+    address: string;
+    phone: string;
+    email: string;
+    bio: string;
+    rating: number;
+    website: string;
+    experience: string;
+    specializations: string[];
+  };
 }
 
-export function TailorProfileDisplay({ onEdit }: TailorProfileDisplayProps) {
-  const [profile, setProfile] = useState<TailorProfile | null>(null)
+export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayProps) {
+  const [tailorProfile, setTailorProfile] = useState<TailorProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -43,7 +58,7 @@ export function TailorProfileDisplay({ onEdit }: TailorProfileDisplayProps) {
 
         if (error) throw error
 
-        setProfile(data)
+        setTailorProfile(data)
       } catch (err) {
         console.error('Error fetching profile:', err)
         setError(err instanceof Error ? err.message : 'Failed to load profile')
@@ -59,14 +74,14 @@ export function TailorProfileDisplay({ onEdit }: TailorProfileDisplayProps) {
     return <div>Loading...</div>
   }
 
-  if (error || !profile) {
+  if (error || !tailorProfile) {
     return <div>Error loading profile. Please try again later.</div>
   }
 
   return (
     <Card className="profile-card">
       <div className="profile-banner">
-        <img src={profile.banner_image_url} alt="Profile Banner" className="banner-image" />
+        <img src={tailorProfile.banner_image_url} alt="Profile Banner" className="banner-image" />
         <Button 
           onClick={onEdit} 
           className="edit-button" 
@@ -78,39 +93,28 @@ export function TailorProfileDisplay({ onEdit }: TailorProfileDisplayProps) {
       </div>
       <CardContent className="profile-content">
         <div className="profile-header">
-          <img src={profile.logo_url} alt="Profile" className="profile-image" />
+          <img src={tailorProfile.logo_url} alt="Profile" className="profile-image" />
           <div className="profile-badges">
-            <span className="badge experience">{profile.experience}</span>
-            {profile.specializations.map((specialization, index) => (
-              <span className="badge specialization" key={index}>{specialization}</span>
-            ))}
+            <span className="badge experience">
+              {tailorProfile.experience}+ years of Experience
+            </span>
+            <div className="badge-group">
+              <span className="badge specializations">Specializations: </span>
+              {tailorProfile.specializations.map((specialization, index) => (
+                <span className="badge specialization" key={index}>{specialization}</span>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="profile-info">
-          <h1 className="profile-name">{profile.tailor_name}</h1>
-          <h2 className="profile-title">{profile.brand_name}</h2>
+          <h1 className="profile-name">{tailorProfile.tailor_name}</h1>
+          <h2 className="profile-title">{tailorProfile.brand_name}</h2>
           
-          <p className="profile-bio">{profile.bio}</p>
+          <p className="profile-bio">{tailorProfile.bio}</p>
 
           <div className="social-links">
-            <a href="#" className="social-link">Instagram</a>
-            <a href="#" className="social-link">Twitter</a>
-            <a href="#" className="social-link">Facebook</a>
-            <a href="#" className="social-link">YouTube</a>
-            <a href={`https://${profile.website}`} className="social-link website">{profile.website}</a>
-          </div>
-
-          <div className="action-buttons">
-            <Button className="follow-button">Follow</Button>
-            <Button variant="outline" className="email-button">
-              <Send className="button-icon" />
-              Send Email
-            </Button>
-            <Button variant="outline" className="phone-button">
-              <Phone className="button-icon" />
-              Show Phone Number
-            </Button>
+            <a href={`https://${tailorProfile.website}`} className="social-link website">{tailorProfile.website}</a>
           </div>
         </div>
       </CardContent>

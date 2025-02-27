@@ -12,6 +12,30 @@ import { IoArrowBack } from "react-icons/io5";
 import { TailorProfileForm } from "./components/dashboard/tailor-profile-form"
 import { useProfile } from "../context/ProfileContext"
 
+// Add these interfaces at the top of the file, after the imports
+interface Design {
+  id: string;
+  title: string;
+  created_at: string;
+  // price: number;
+}
+
+interface Order {
+  id: string;
+  created_at: string;
+  total_amount: number;
+  status: string;
+}
+
+interface DashboardStats {
+  totalDesigns: number;
+  totalOrders: number;
+  totalRevenue: number;
+  averageRating: number;
+  recentDesigns: Design[];
+  recentOrders: Order[];
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -20,6 +44,14 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const { hasProfile, refreshProfile } = useProfile()
   const [showProfileForm, setShowProfileForm] = useState(false)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalDesigns: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    averageRating: 0,
+    recentDesigns: [],
+    recentOrders: []
+  })
 
   useEffect(() => {
     // Check auth status when component mounts
@@ -35,11 +67,13 @@ export default function Dashboard() {
           .eq('id', session.user.id)
           .single()
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 is the "not found" error code
+        if (error && error.code !== 'PGRST116') {
           console.error('Error fetching tailor profile:', error)
         }
         
         setTailorProfile(data)
+        // Fetch dashboard stats when user is authenticated
+        await fetchDashboardStats()
       }
       setIsLoading(false)
     })
@@ -59,6 +93,8 @@ export default function Dashboard() {
         }
         
         setTailorProfile(data)
+        // Fetch dashboard stats on initial load
+        await fetchDashboardStats()
       }
       setIsLoading(false)
     })
@@ -124,6 +160,93 @@ export default function Dashboard() {
   const handleProfileComplete = async (profile: any) => {
     await refreshProfile()
     setShowProfileForm(false)
+  }
+
+  const fetchDashboardStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        console.log('No user found')
+        setIsLoading(false)
+        return
+      }
+
+      console.log('Fetching stats for user:', user.id)
+
+      // Fetch total designs count
+      const { data: designs, count: designsCount, error: designsError } = await supabase
+        .from('designs')
+        .select('*', { count: 'exact' })
+        .eq('created_by', user.id)
+
+      if (designsError) {
+        console.error('Error fetching designs:', designsError.message)
+        return
+      }
+
+      console.log('Designs found:', designsCount)
+
+      // Fetch orders
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('total_amount')
+        .eq('tailor_id', user.id)
+
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError.message)
+        return
+      }
+
+      const totalOrders = orders?.length || 0
+      const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0
+
+      // Fetch recent designs
+      const { data: recentDesigns, error: recentDesignsError } = await supabase
+        .from('designs')
+        .select('id, title, created_at')
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (recentDesignsError) {
+        console.error('Error fetching recent designs:', recentDesignsError.message)
+        return
+      }
+
+      // Fetch recent orders
+      const { data: recentOrders, error: recentOrdersError } = await supabase
+        .from('orders')
+        .select('id, created_at, total_amount, status')
+        .eq('tailor_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (recentOrdersError) {
+        console.error('Error fetching recent orders:', recentOrdersError.message)
+        return
+      }
+
+      setStats({
+        totalDesigns: designsCount || 0,
+        totalOrders,
+        totalRevenue,
+        averageRating: 4.8, // Placeholder
+        recentDesigns: recentDesigns || [],
+        recentOrders: recentOrders || []
+      })
+
+      console.log('Stats updated successfully')
+    } catch (error) {
+      console.error('Error in fetchDashboardStats:', error instanceof Error ? error.message : error)
+    }
+  }
+
+  const handleViewAllDesigns = () => {
+    router.push('/tailor/designs')
+  }
+
+  const handleViewAllOrders = () => {
+    router.push('/tailor/orders')
   }
 
   if (isLoading) {
@@ -196,31 +319,49 @@ export default function Dashboard() {
           <div className={styles.cardsGrid}>
             <Card className={styles.card}>
               <h3>Total Designs</h3>
-              <p className={styles.statNumber}>24</p>
+              <p className={styles.statNumber}>{stats.totalDesigns}</p>
             </Card>
             <Card className={styles.card}>
               <h3>Total Orders</h3>
-              <p className={styles.statNumber}>120</p>
+              <p className={styles.statNumber}>{stats.totalOrders}</p>
             </Card>
             <Card className={styles.card}>
               <h3>Revenue</h3>
-              <p className={styles.statNumber}>$12,345</p>
+              <p className={styles.statNumber}>${stats.totalRevenue.toLocaleString()}</p>
             </Card>
             <Card className={styles.card}>
               <h3>Rating</h3>
-              <p className={styles.statNumber}>4.8</p>
+              <p className={styles.statNumber}>{stats.averageRating.toFixed(1)}</p>
             </Card>
 
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Designs</h3>
-              <Button className={styles.viewAllButton}>
+              {stats.recentDesigns.map((design) => (
+                <div key={design.id} className={styles.recentItem}>
+                  <span>{design.title}</span>
+                  {/* <span>$10</span> */}
+                </div>
+              ))}
+              <Button 
+                className={styles.viewAllButton}
+                onClick={handleViewAllDesigns}
+              >
                 View All Designs
               </Button>
             </Card>
 
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Orders</h3>
-              <Button className={styles.viewAllButton}>
+              {stats.recentOrders.map((order) => (
+                <div key={order.id} className={styles.recentItem}>
+                  <span>Order #{order.id.slice(0, 8)}</span>
+                  <span>${order.total_amount}</span>
+                </div>
+              ))}
+              <Button 
+                className={styles.viewAllButton}
+                onClick={handleViewAllOrders}
+              >
                 View All Orders
               </Button>
             </Card>

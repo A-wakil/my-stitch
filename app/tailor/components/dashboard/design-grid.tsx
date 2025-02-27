@@ -74,120 +74,120 @@ export function DesignGrid() {
   }
 
   return (
-    <>
-      {designs.length === 0 ? (
-        <div className={styles['empty-state']}>
-          <div className={styles['empty-state-content']}>
-            <h2 className={styles['empty-state-title']}>No designs yet</h2>
-            <p className={styles['empty-state-message']}>
-              You haven&apos;t uploaded any designs. Start creating your first design!
-            </p>
+    <div className={styles.container}>
+      <div className={styles.tabs}>
+        <button className={`${styles.tab} ${styles.activeTab}`}>
+          All Designs ({designs.length})
+        </button>
+        {/* <button className={styles.tab}>
+          Active ({designs.length})
+        </button>
+        <button className={styles.tab}>
+          Draft ({designs.length})
+        </button> */}
+      </div>
+
+      <div className={styles.designsContainer}>
+        {designs.length === 0 ? (
+          <div className={styles['empty-state']}>
+            <div className={styles['empty-state-content']}>
+              <h2 className={styles['empty-state-title']}>No designs yet</h2>
+              <p className={styles['empty-state-message']}>
+                You haven&apos;t uploaded any designs. Start creating your first design!
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className={styles.grid}>
-          {designs?.map((design) => {
-            const currentIndex = getCurrentImageIndex(design.id)
-            
-            return (
-              <div 
-                key={design.id} 
-                className={styles['card-content']}
-              >
-                <div className={styles['carousel-container']}>
-                  <img 
-                    src={design.images?.[currentIndex] || "/placeholder.svg"} 
-                    alt={`${design.title} - Image ${currentIndex + 1}`} 
-                    className={styles['card-image']} 
-                  />
-                  {design.images?.length > 1 && (
-                    <div className={styles['carousel-controls']}>
-                      <button
-                        className={styles['carousel-button']}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateImageIndex(
-                            design.id,
-                            currentIndex - 1,
-                            design.images.length
-                          );
-                        }}
-                      >
-                        ←
-                      </button>
-                      <span className={styles['carousel-indicator']}>
-                        {currentIndex + 1} / {design.images.length}
-                      </span>
-                      <button
-                        className={styles['carousel-button']}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          updateImageIndex(
-                            design.id,
-                            currentIndex + 1,
-                            design.images.length
-                          );
-                        }}
-                      >
-                        →
-                      </button>
+        ) : (
+          <div className={styles.grid}>
+            {designs?.map((design) => {
+              const currentIndex = getCurrentImageIndex(design.id)
+              
+              return (
+                <div 
+                  key={design.id} 
+                  className={styles['card-content']}
+                >
+                  <div className={styles['carousel-container']}>
+                    <div className={styles.mainImage}>
+                      <img 
+                        src={design.images?.[currentIndex] || "/placeholder.svg"} 
+                        alt={`${design.title} - Image ${currentIndex + 1}`} 
+                        className={styles.designImage} 
+                      />
                     </div>
-                  )}
-                </div>
-                <h3 className={styles['card-title']}>{design.title}</h3>
-                <div className={styles['fabric-container']}>
-                  {design.fabrics?.map((fabric, fabricIndex) => (
-                    <div key={fabricIndex} className={styles['fabric-item']}>
-                      <div className={styles['fabric-header']}>
-                        <img 
-                          src={fabric.image || "/placeholder.svg"}
-                          alt={`${fabric.name} fabric`}
-                          className={styles['fabric-image']}
+                    <div className={styles.thumbnails}>
+                      {design.images?.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`${design.title} view ${index + 1}`}
+                          className={`${styles.thumbnail} ${currentIndex === index ? styles.activeThumbnail : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImageIndices(prev => ({
+                              ...prev,
+                              [design.id]: index
+                            }));
+                          }}
                         />
-                        <span className={styles['fabric-name']}>{fabric.name}</span>
-                      </div>
-                      <div className={styles['color-list']}>
-                        {fabric.colors?.map((color, colorIndex) => (
-                          <div key={colorIndex} className={styles['color-item']}>
-                            <div 
-                              className={styles['color-swatch']} 
-                              style={{ backgroundColor: color.name }}
-                            />
-                            <span className={styles['color-name']}>{color.name}</span>
-                          </div>
-                        ))}
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <h3 className={styles['card-title']}>{design.title}</h3>
+                  <div className={styles['fabric-container']}>
+                    {design.fabrics?.map((fabric, fabricIndex) => (
+                      <div key={fabricIndex} className={styles['fabric-item']}>
+                        <div className={styles['fabric-header']}>
+                          <img 
+                            src={fabric.image || "/placeholder.svg"}
+                            alt={`${fabric.name} fabric`}
+                            className={styles['fabric-image']}
+                          />
+                          <span className={styles['fabric-name']}>{fabric.name}</span>
+                        </div>
+                        <div className={styles['color-list']}>
+                          {fabric.colors?.map((color, colorIndex) => (
+                            <div key={colorIndex} className={styles['color-item']}>
+                              <div 
+                                className={styles['color-swatch']} 
+                                style={{ backgroundColor: color.name }}
+                              />
+                              <span className={styles['color-name']}>{color.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles['card-footer']}>
+                    <button 
+                      className={styles['edit-button']}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(design.id);
+                      }}
+                    >
+                      <Pencil size={20} />
+                      Edit
+                    </button>
+                    <button 
+                      className={styles['delete-button']}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(design.id);
+                      }}
+                    >
+                      <Trash2 size={20} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <div className={styles['card-footer']}>
-                  <button 
-                    className={styles['edit-button']}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(design.id);
-                    }}
-                  >
-                    <Pencil size={20} />
-                    Edit
-                  </button>
-                  <button 
-                    className={styles['delete-button']}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(design.id);
-                    }}
-                  >
-                    <Trash2 size={20} />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

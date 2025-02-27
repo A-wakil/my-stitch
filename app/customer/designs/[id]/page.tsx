@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import OrderConfirmationModal from '../../ui/orderConfirmationModal/OrderConfirmationModal'
 import { Measurement } from '../../../lib/types'
+import { IoArrowBack } from "react-icons/io5"
 
 interface DesignDetail {
   id: string
@@ -290,6 +291,13 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   return (
     <div className={styles.container}>
+      <button 
+        onClick={() => router.push('/')}
+        className={styles.backButton}
+      >
+        <IoArrowBack /> Back to Home
+      </button>
+
       <div className={styles.productGrid}>
         {/* Left side - Image gallery */}
         <div className={styles.imageSection}>
