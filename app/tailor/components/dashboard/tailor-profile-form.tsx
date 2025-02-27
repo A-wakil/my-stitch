@@ -1,6 +1,5 @@
 "use client"
 import { useState } from "react"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -34,7 +33,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
   const [logo, setLogo] = useState<File | null>(null)
   const [banner, setBanner] = useState<File | null>(null)
   const [newSpecialization, setNewSpecialization] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
 
@@ -104,7 +103,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsUploading(true)
     setError(null)
 
     try {
@@ -166,7 +165,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred')
-      setIsLoading(false) // Make sure to reset loading state on error
+      setIsUploading(false) // Make sure to reset loading state on error
     }
   }
 
@@ -306,16 +305,16 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         <Button 
           type="submit" 
           className="submit-button"
-          disabled={isLoading}
+          disabled={isUploading}
         >
-          {isLoading ? 'Updating...' : 'Update Profile'}
+          {isUploading ? 'Updating...' : 'Update Profile'}
         </Button>
         <Button 
           type="button" 
           variant="secondary"
           className="cancel-button"
           onClick={onCancel}
-          disabled={isLoading}
+          disabled={isUploading}
         >
           Cancel
         </Button>

@@ -11,6 +11,7 @@ import { AuthDialog } from "../AuthDialog/AuthDialog"
 import { IoArrowBack } from "react-icons/io5";
 import { TailorProfileForm } from "./components/dashboard/tailor-profile-form"
 import { useProfile } from "../context/ProfileContext"
+import { Spinner } from "../tailor/components/ui/spinner"
 
 // Add these interfaces at the top of the file, after the imports
 interface Design {
@@ -52,6 +53,10 @@ export default function Dashboard() {
     recentDesigns: [],
     recentOrders: []
   })
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+
+  // Combine both loading states
+  const isPageLoading = isLoading || isLoadingStats
 
   useEffect(() => {
     // Check auth status when component mounts
@@ -60,7 +65,7 @@ export default function Dashboard() {
       setIsAuthDialogOpen(!session?.user)
       
       if (session?.user) {
-        // Fetch tailor profile when user is authenticated
+        // Don't set isLoading to false until all data is loaded
         const { data, error } = await supabase
           .from('tailor_profiles')
           .select('*')
@@ -164,10 +169,10 @@ export default function Dashboard() {
 
   const fetchDashboardStats = async () => {
     try {
+      setIsLoadingStats(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         console.log('No user found')
-        setIsLoading(false)
         return
       }
 
@@ -230,7 +235,7 @@ export default function Dashboard() {
         totalDesigns: designsCount || 0,
         totalOrders,
         totalRevenue,
-        averageRating: 4.8, // Placeholder
+        averageRating: 4.8,
         recentDesigns: recentDesigns || [],
         recentOrders: recentOrders || []
       })
@@ -238,6 +243,8 @@ export default function Dashboard() {
       console.log('Stats updated successfully')
     } catch (error) {
       console.error('Error in fetchDashboardStats:', error instanceof Error ? error.message : error)
+    } finally {
+      setIsLoadingStats(false)
     }
   }
 
@@ -249,8 +256,12 @@ export default function Dashboard() {
     router.push('/tailor/orders')
   }
 
-  if (isLoading) {
-    return <div>Loading...</div>
+  if (isPageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    )
   }
 
   if (!user) {

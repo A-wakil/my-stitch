@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardFooter } from "../../components/ui/card"
-import { Button } from "../../components/ui/button"
 import { Pencil, Trash2 } from "lucide-react"
 import styles from "./styles/DesignGrid.module.css"
+import { Spinner } from "../../components/ui/spinner"
 
 interface Design {
   id: string
@@ -19,8 +18,9 @@ interface Design {
 }
 
 export function DesignGrid() {
-  const [designs, setDesigns] = useState<Design[]>([])
+  const [designs, setDesigns] = useState<Design[] | null>(null)
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({})
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export function DesignGrid() {
 
   const fetchDesigns = async () => {
     try {
+      setIsLoading(true)
       const response = await fetch("/api/designs")
       if (response.ok) {
         const data = await response.json()
@@ -38,6 +39,8 @@ export function DesignGrid() {
       }
     } catch (error) {
       console.error("Error fetching designs:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -52,7 +55,9 @@ export function DesignGrid() {
           method: "DELETE",
         })
         if (response.ok) {
-          setDesigns(designs.filter((design) => design.id !== id))
+          if (designs) {
+            setDesigns(designs.filter((design) => design.id !== id))
+          }
         } else {
           console.error("Failed to delete design")
         }
@@ -73,18 +78,20 @@ export function DesignGrid() {
     }))
   }
 
+  if (isLoading || !designs) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    )
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${styles.activeTab}`}>
           All Designs ({designs.length})
         </button>
-        {/* <button className={styles.tab}>
-          Active ({designs.length})
-        </button>
-        <button className={styles.tab}>
-          Draft ({designs.length})
-        </button> */}
       </div>
 
       <div className={styles.designsContainer}>

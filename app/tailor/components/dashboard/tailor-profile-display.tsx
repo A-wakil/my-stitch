@@ -3,8 +3,9 @@ import { useEffect, useState } from "react"
 import "./tailor-profile-display.css"
 import { Card, CardContent } from "../../components/ui/card"
 import { Button } from "../../components/ui/button"
-import { Send, Phone, Edit } from "lucide-react"
+import { Edit } from "lucide-react"
 import { supabase } from "../../../lib/supabaseClient"
+import { Spinner } from "../../components/ui/spinner"
 
 interface TailorProfile {
   brand_name: string;
@@ -46,6 +47,7 @@ export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayPr
   useEffect(() => {
     async function fetchProfile() {
       try {
+        setIsLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
         
         if (!user) throw new Error('No user found')
@@ -71,7 +73,7 @@ export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayPr
   }, [supabase])
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <Spinner />
   }
 
   if (error || !tailorProfile) {
