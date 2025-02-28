@@ -1,6 +1,5 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import Link from "next/link"
 import { useRouter } from 'next/navigation'
 import { Card } from "../tailor/components/ui/card"
 import { Button } from "../tailor/components/ui/button"
@@ -256,6 +255,7 @@ export default function Dashboard() {
     router.push('/tailor/orders')
   }
 
+  // Use combined loading state for the spinner
   if (isPageLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
