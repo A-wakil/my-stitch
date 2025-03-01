@@ -6,7 +6,7 @@ import styles from './orders.module.css'
 import { Order } from '../../lib/types'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
-
+import { Profile } from '../../lib/types'
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
 export default function TailorOrdersPage() {
@@ -14,7 +14,10 @@ export default function TailorOrdersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<OrderStatus>('all')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})  // Track selected image index for each order
+  const [client, setClient] = useState<Profile | null>(null)
   const router = useRouter()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMeasurements, setSelectedMeasurements] = useState<any>(null)
 
   const fetchOrders = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -54,6 +57,7 @@ export default function TailorOrdersPage() {
     )
 
     setOrders(ordersWithDesigns)
+    
     setIsLoading(false)
   }
 
@@ -90,6 +94,11 @@ export default function TailorOrdersPage() {
     acc[order.status] = (acc[order.status] || 0) + 1
     return acc
   }, {} as Record<string, number>)
+
+  const openMeasurementsModal = (measurements: any) => {
+    setSelectedMeasurements(measurements)
+    setIsModalOpen(true)
+  }
 
   if (isLoading) {
     return <Spinner />
@@ -180,9 +189,18 @@ export default function TailorOrdersPage() {
                     })()}
                   </div>
                 </div>
+                <div>
+                  <div className={styles.label}>MEASUREMENTS</div>
+                  <button 
+                    className={styles.measurementsButton}
+                    onClick={() => openMeasurementsModal(order.measurements)}
+                  >
+                    View Measurements
+                  </button>
+                </div>
               </div>
               <div className={styles.orderNumber}>
-                <div className={styles.label}>ORDER # {order.id}</div>
+                <div className={styles.label}>Client Name: {client?.firstname} {client?.lastname}</div>
               </div>
             </div>
           </div>
@@ -289,6 +307,45 @@ export default function TailorOrdersPage() {
           </div>
         </div>
       ))}
+
+      {isModalOpen && selectedMeasurements && (
+        <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Measurements</h2>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setIsModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              {(() => {
+                const measurements = typeof selectedMeasurements === 'string' 
+                  ? JSON.parse(selectedMeasurements)
+                  : selectedMeasurements;
+
+                // Skip these technical fields
+                const skipFields = ['id', 'user_id', 'created_at', 'updated_at'];
+                
+                return Object.entries(measurements)
+                  .filter(([key]) => !skipFields.includes(key))
+                  .map(([key, value]) => (
+                    <div key={key} className={styles.measurementRow}>
+                      <span className={styles.measurementLabel}>
+                        {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}:
+                      </span>
+                      <span className={styles.measurementValue}>
+                        {typeof value === 'number' ? `${value} inches` : String(value)}
+                      </span>
+                    </div>
+                  ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

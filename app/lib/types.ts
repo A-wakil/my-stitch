@@ -82,3 +82,12 @@ export interface Measurement {
     color_name: string | null
     design?: Design | null
   }
+
+  export interface Profile {
+    id: string;  // UUID is represented as string in TypeScript
+    email: string;
+    roles: string[];
+    created_at: string;  // ISO timestamp string
+    firstname: string;
+    lastname: string | null;
+  }
