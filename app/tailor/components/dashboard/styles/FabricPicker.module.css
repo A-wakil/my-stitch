@@ -97,4 +97,63 @@
 
 .add-fabric-button:active {
   transform: translateY(0);
-} 
+}
+
+.add-fabric-button:disabled {
+  background-color: rgb(156 163 175);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.add-fabric-button:disabled:hover {
+  background-color: rgb(156 163 175);
+  transform: none;
+  box-shadow: none;
+}
+
+.file-input {
+  position: relative;
+  padding: 0.5rem;
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-input:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.file-input::before {
+  content: 'Upload Fabric Image: ';
+  font-weight: 500;
+  color: #374151;
+}
+
+.file-input::file-selector-button {
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.file-input::file-selector-button:hover {
+  background-color: #e5e7eb;
+}
+
+.add-fabric-button-disabled {
+  background-color: rgb(156 163 175);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.add-fabric-button-disabled:hover {
+  background-color: rgb(156 163 175);
+  transform: none;
+  box-shadow: none;
+}

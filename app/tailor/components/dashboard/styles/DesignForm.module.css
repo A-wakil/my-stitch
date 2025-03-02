@@ -4,7 +4,6 @@
   gap: 2rem;
   background-color: #f9fafb;
   padding: 3rem;
-  margin-left: 17px;
 }
 
 .formGroup {
@@ -92,11 +91,23 @@
   color: white;
   border-radius: 0.5rem;
   font-weight: 500;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .submitButton:hover {
   background-color: #1a1a1a;
+}
+
+.submitButtonDisabled {
+  background-color: rgb(156 163 175);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.submitButtonDisabled:hover {
+  background-color: rgb(156 163 175);
+  transform: none;
+  box-shadow: none;
 }
 
 

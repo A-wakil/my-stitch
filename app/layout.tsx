@@ -4,6 +4,7 @@ import { AuthProvider } from "./lib/AuthContext";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast'
 
+
 import { ReactNode } from 'react'
 
 interface RootLayoutProps {

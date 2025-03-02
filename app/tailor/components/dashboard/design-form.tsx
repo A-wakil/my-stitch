@@ -11,6 +11,7 @@ import { ImageUpload } from "../../components/dashboard/image-upload"
 import styles from "./styles/DesignForm.module.css"
 import { Fabric } from "../../types/design"
 import { supabase } from "../../../lib/supabaseClient"
+import { toast } from "react-hot-toast"
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -19,12 +20,7 @@ interface DesignFormProps {
     title: string
     description: string
     images: string[]
-    fabrics: Array<{
-      name: string
-      image: string | File | null
-      price: number
-      colors: Array<{ name: string; image: string | File | null }>
-    }>
+    fabrics: Array<Fabric>
   }
 }
 
@@ -37,7 +33,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     initialData?.fabrics.map((f) => ({
       name: f.name,
       image: f.image,
-      price: f.price || 0,
+      yardPrice: f.yardPrice || 0,
+      stitchPrice: f.stitchPrice || 0,
       colors: f.colors.map(c => ({ name: c.name, image: c.image }))
     })) || []
   )
@@ -53,7 +50,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         return {
           name: f.name,
           image: f.image,
-          price: f.price || 0,
+          yardPrice: f.yardPrice || 0,
+          stitchPrice: f.stitchPrice || 0,
           colors: f.colors.map(c => ({ name: c.name, image: c.image }))
         }
       }))
@@ -62,8 +60,45 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
   console.log('Current fabrics state:', fabrics)
 
+  const isFormValid = () => {
+    // Check basic form fields
+    if (!title.trim()) return { valid: false, message: "Please enter a design title" }
+    if (!description.trim()) return { valid: false, message: "Please enter a description" }
+    
+    // Check if there are either new images or existing images
+    if (images.length === 0 && existingImages.length === 0) {
+      return { valid: false, message: "Please upload at least one image" }
+    }
+
+    // Check if there's at least one fabric
+    if (fabrics.length === 0) {
+      return { valid: false, message: "Please add at least one fabric" }
+    }
+
+    // Check if each fabric has complete information
+    for (const fabric of fabrics) {
+      if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
+        return { valid: false, message: "Please complete all fabric information" }
+      }
+      if (fabric.colors.length === 0) {
+        return { valid: false, message: `Please add at least one color for ${fabric.name}` }
+      }
+    }
+
+    return { valid: true, message: "" }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    const validation = isFormValid()
+    if (!validation.valid) {
+      toast.error(validation.message, {
+        duration: 2000,
+        position: 'top-center',
+      })
+      return
+    }
 
     const formData = new FormData()
     formData.append("title", title)
@@ -107,7 +142,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       return {
         name: fabric.name,
         image: fabricImageUrl,
-        price: fabric.price,
+        yardPrice: fabric.yardPrice,
+        stitchPrice: fabric.stitchPrice,
         colors
       }
     }))
@@ -176,7 +212,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       </div>
       <Button 
         type="submit" 
-        className={styles.submitButton}
+        className={`${styles.submitButton} ${!isFormValid().valid ? styles.submitButtonDisabled : ''}`}
       >
         {initialData?.id ? "Update Design" : "Submit Design"}
       </Button>
