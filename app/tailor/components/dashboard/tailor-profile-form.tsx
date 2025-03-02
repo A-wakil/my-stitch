@@ -195,23 +195,57 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="logo">Logo *</Label>
+        <Label htmlFor="logo">Logo</Label>
+        {formData.logo && (
+          <div className="current-image">
+            <img 
+              src={formData.logo} 
+              alt="Current logo" 
+              style={{ 
+                maxWidth: '150px',
+                height: '150px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                marginBottom: '15px',
+                border: '2px solid #eee'
+              }} 
+            />
+          </div>
+        )}
         <Input 
           id="logo" 
           type="file" 
           accept="image/*" 
           onChange={handleLogoUpload}
-          required
+          required={!formData.logo}
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="bannerImage">Banner Image *</Label>
+        <Label htmlFor="bannerImage">Banner Image</Label>
+        {formData.bannerImage && (
+          <div className="current-image">
+            <img 
+              src={formData.bannerImage} 
+              alt="Current banner" 
+              style={{ 
+                maxWidth: '300px',
+                height: '150px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                marginBottom: '15px',
+                border: '2px solid #eee'
+              }} 
+            />
+          </div>
+        )}
         <Input 
           id="bannerImage" 
           type="file" 
           accept="image/*" 
           onChange={handleBannerUpload}
-          required
+          required={!formData.bannerImage}
         />
       </div>
       <div className="form-group">

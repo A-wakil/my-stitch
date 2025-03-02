@@ -1,32 +1,64 @@
 'use client'
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { supabase } from '../../lib/supabaseClient'
 import { TailorProfileForm } from "../components/dashboard/tailor-profile-form"
 import { TailorProfileDisplay } from "../components/dashboard/tailor-profile-display"
 import styles from "./page.module.css"
+import { Profile } from "../types/design"
 
-const initialProfile = {
-  brandName: "Elegant Stitches",
-  tailorName: "Jane Doe",
-  logo: "/image_1.webp",
-  bannerImage: "/syari_2.jpg",
-  address: "123 Fashion St, Styleville, ST 12345",
-  phone: "+1 (555) 123-4567",
-  email: "jane@elegantstitches.com",
-  bio: "Creating bespoke fashion for over 20 years",
-  rating: 4.8,
-  website: "elegantstitches.com",
-  experience: "10+ years",
-  specializations: ["Custom Suits", "Custom Shirts", "Custom Pants", "Custom Ties", "Custom Shoes"],
-}
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
-  const [profileData, setProfileData] = useState(initialProfile)
+  const [profileData, setProfileData] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const handleProfileUpdate = (updatedProfile: typeof initialProfile) => {
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data, error } = await supabase
+          .from('tailor_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (error) throw error
+        if (data) {
+          const transformedData = {
+            brandName: data.brand_name,
+            tailorName: data.tailor_name,
+            logo: data.logo_url,
+            bannerImage: data.banner_image_url,
+            address: data.address,
+            phone: data.phone,
+            email: data.email,
+            bio: data.bio,
+            rating: data.rating,
+            website: data.website,
+            experience: data.experience,
+            specializations: data.specializations || [],
+          }
+          setProfileData(transformedData)
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  const handleProfileUpdate = (updatedProfile: typeof profileData) => {
     setProfileData(updatedProfile)
     setIsEditing(false)
   }
+
+  if (loading) return <div>Loading...</div>
+  if (!profileData) return <div>No profile found</div>
 
   return (
     <div className={styles.container}>
