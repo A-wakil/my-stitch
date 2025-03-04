@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import './Header.css'
 import { IoMenu, IoPerson, IoReceiptOutline } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
@@ -157,11 +157,10 @@ export function Header() {
               <IoMenu />
               Menu
             </div>
-            <Link href="/customer/orders" className='left-sub' style={{ cursor: 'pointer' }}>
-              <IoReceiptOutline />
+            <div className='left-sub' onClick={() => router.push('/customer/orders')} style={{ cursor: 'pointer' }}>
               Orders
-            </Link>
-
+              <IoReceiptOutline />
+            </div>
           </div>
           <div className="header-content center">
             <div className="header-title-wrapper">

@@ -20,7 +20,7 @@
   
   .header-content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     padding: 1rem 0;
   }
@@ -69,17 +69,38 @@
   }
 
   .left-sub {
-    width: 90px;
     display: flex;
-    flex-direction: row;
-    margin: 0 20px 0 20px;
-    justify-content: space-around;
     align-items: center;
+    gap: 8px;
+    margin: 0 20px;
+    text-decoration: none;
+    color: inherit;
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
   }
 
-  .header-content {
+  .left-sub:hover {
+    opacity: 0.8;
+  }
+
+  .left-sub-button {
+    all: unset;
+    min-width: 90px;
     display: flex;
     flex-direction: row;
+    margin: 0 20px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+  }
+
+  .left-sub-button:hover {
+    opacity: 0.8;
   }
 
   .right-icons{
@@ -170,6 +191,12 @@
   text-align: center;
   margin: 0 15px;
   white-space: nowrap;
+}
+
+/* Add styles for the left section */
+.header-content:first-child {
+  position: relative;
+  z-index: 2;
 }
   
   

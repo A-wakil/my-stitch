@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { X, Plus } from "lucide-react"
-import { Fabric, Color } from "../../types/design"
+import { Fabric} from "../../types/design"
 import styles from './styles/FabricPicker.module.css'
 import toast from "react-hot-toast"
 
