@@ -20,7 +20,7 @@ const mainNavItems = [
 
 const secondaryNavItems = [
   { name: 'Create a Tailor Account', path: '/tailor' },
-  { name: 'Contact Us', path: '#' },
+  { name: 'Contact Us', path: 'mailto:abdulwakil.ola@gmail.com' },
 ]
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -59,15 +59,36 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <ul className="nav-list">
             {secondaryNavItems.map((item) => (
               <li key={item.name} className="nav-item">
-                <a href={item.path} className="nav-link">{item.name}</a>
+                {item.path.startsWith('mailto:') ? (
+                  <a 
+                    href={item.path} 
+                    className="nav-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  <a 
+                    href={item.path}
+                    className="nav-link"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onClose()
+                      router.push(item.path)
+                    }}
+                  >
+                    {item.name}
+                  </a>
+                )}
               </li>
             ))}
           </ul>
 
-          <div className="nav-list contact-info">
+          {/* <div className="nav-list contact-info">
             <p>Can we help you?</p>
             <p>+1.866.STITCH</p>
-          </div>
+          </div> */}
         </div>
       </nav>
     </div>
