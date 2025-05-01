@@ -343,4 +343,48 @@
   color: #6c757d;
   font-style: italic;
   margin: 1rem 0;
+}
+
+.styleSelection {
+  margin-bottom: 2rem;
+}
+
+.styleOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.styleOption {
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.styleOption:hover {
+  border-color: #adb5bd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.styleOption.selectedStyle {
+  background: #e9ecef;
+  border-color: #000;
+  font-weight: 500;
+}
+
+.styleOption span {
+  font-size: 1rem;
+  color: #212529;
+}
+
+@media (max-width: 768px) {
+  .styleOptions {
+    grid-template-columns: 1fr;
+  }
 } 

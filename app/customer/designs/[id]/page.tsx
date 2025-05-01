@@ -79,6 +79,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | undefined>(undefined)
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(true)
   const [showMeasurementDetails, setShowMeasurementDetails] = useState(false)
+  const [selectedStyle, setSelectedStyle] = useState<string>('')
 
   useEffect(() => {
     async function fetchDesign() {
@@ -212,6 +213,12 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       return
     }
     
+    // Validate style selection
+    if (!selectedStyle) {
+      toast.error('Please select a style option')
+      return
+    }
+
     // Validate color selection
     if (selectedColor === null) {
       toast.error('Please select a color')
@@ -268,8 +275,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         shipping_address: shippingAddressJson,
         fabric_name: design?.fabrics[selectedFabric].name,
         color_name: selectedColor !== null ? design?.fabrics[selectedFabric].colors[selectedColor].name : '',
+        style_type: selectedStyle,
         estimated_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        fabric_yards: yards // Store calculated yards in the order
+        fabric_yards: yards
       };
 
       const { data, error } = await supabase
@@ -325,26 +333,57 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     }
   }
 
-  // Function to calculate yards needed based on measurements
+  // Function to calculate yards needed based on measurements and style
   const calculateYardsNeeded = (measurements: Measurement): number => {
-    // These calculations are estimations based on standard garment construction
-    // Adjust the formula based on your specific requirements
-    
-    // Basic calculation using chest, shirt length, and shoulder measurements
-    // A simple formula: larger measurements require more fabric
-    const chestFactor = measurements.chest ? measurements.chest / 20 : 1;
-    const lengthFactor = measurements.shirt_length ? measurements.shirt_length / 24 : 1;
-    const shoulderFactor = measurements.shoulder_to_wrist ? measurements.shoulder_to_wrist / 25 : 1;
-    
-    // Base yards for a standard shirt (adjust as needed)
-    const baseYards = 2;
-    
-    // Calculate total yards needed based on measurements
-    const totalYards = baseYards * chestFactor * lengthFactor * shoulderFactor;
-    
-    // Round to the nearest quarter yard and add a small buffer
-    return Math.ceil(totalYards * 4) / 4 + 0.25;
-  }
+    // Helper function to calculate Kaftan/Shirt yards
+    const calculateKaftanYards = (measurements: Measurement): number => {
+      const shirtLength = measurements.shirt_length || 0;
+      const sleeveLength = measurements.shoulder_to_wrist || 0;
+      
+      // Body panel calculation (front & back side by side)
+      const bodyPanelYards = (shirtLength + 2) / 36;
+      
+      // Sleeves calculation (both sleeves side by side)
+      const sleevePanelYards = (sleeveLength + 2) / 36;
+      
+      // Add margin for neck facings and details
+      return bodyPanelYards + sleevePanelYards + 0.5;
+    };
+
+    // Helper function to calculate trouser yards
+    const calculateTrouserYards = (measurements: Measurement): number => {
+      const trouserLength = measurements.trouser_length || 0;
+      
+      // Basic trouser calculation plus margin for pockets/facings
+      return ((trouserLength + 2) / 36) + 0.5;
+    };
+
+    // Helper function to calculate Agbada yards
+    const calculateAgbadaYards = (measurements: Measurement): number => {
+      const agbadaLength = measurements.shirt_length ? measurements.shirt_length + 10 : 0; // Adding 10" for typical Agbada length
+      
+      // Two lengths plus margin for embroidery and finishing
+      return (2 * ((agbadaLength + 2) / 36)) + 0.75;
+    };
+
+    // Calculate based on selected style
+    switch(selectedStyle) {
+      case 'kaftan':
+        return Math.ceil(calculateKaftanYards(measurements) * 2) / 2; // Round to nearest 0.5
+
+      case 'kaftan_agbada':
+        const kaftanYards = calculateKaftanYards(measurements);
+        const trouserYards = calculateTrouserYards(measurements);
+        const agbadaYards = calculateAgbadaYards(measurements);
+        return Math.ceil((kaftanYards + trouserYards + agbadaYards) * 2) / 2; // Round to nearest 0.5
+
+      case 'agbada':
+        return Math.ceil(calculateAgbadaYards(measurements) * 2) / 2; // Round to nearest 0.5
+
+      default:
+        return 0;
+    }
+  };
 
   const totalPrice = useMemo(() => {
     if (!design || !design.fabrics[selectedFabric]) return 0;
@@ -436,6 +475,30 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 </p>
               </>
             )}
+          </div>
+
+          <div className={styles.styleSelection}>
+            <h3>Style Options</h3>
+            <div className={styles.styleOptions}>
+              <div
+                className={`${styles.styleOption} ${selectedStyle === 'kaftan' ? styles.selectedStyle : ''}`}
+                onClick={() => setSelectedStyle('kaftan')}
+              >
+                <span>Kaftan</span>
+              </div>
+              <div
+                className={`${styles.styleOption} ${selectedStyle === 'kaftan_agbada' ? styles.selectedStyle : ''}`}
+                onClick={() => setSelectedStyle('kaftan_agbada')}
+              >
+                <span>Kaftan & Agbada</span>
+              </div>
+              <div
+                className={`${styles.styleOption} ${selectedStyle === 'agbada' ? styles.selectedStyle : ''}`}
+                onClick={() => setSelectedStyle('agbada')}
+              >
+                <span>Agbada</span>
+              </div>
+            </div>
           </div>
 
           <div className={styles.fabricSelection}>
