@@ -49,7 +49,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         title: formData.get("title"),
         description: formData.get("description"),
         fabrics: processedFabrics,
-        created_by: created_by
+        created_by: created_by,
+        completion_time: parseInt(formData.get("completion_time") as string)
       })
       .eq('id', id)
       .select()

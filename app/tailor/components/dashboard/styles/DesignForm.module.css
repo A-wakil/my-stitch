@@ -110,4 +110,40 @@
   box-shadow: none;
 }
 
+.durationInput {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.durationInput input {
+  width: 100px;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: white;
+  font-size: 1rem;
+}
+
+.durationInput select {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background-color: white;
+  font-size: 1rem;
+  max-width: 200px;
+}
+
+.durationInput input:focus,
+.durationInput select:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.durationInput input:hover,
+.durationInput select:hover {
+  border-color: #d1d5db;
+}
+
 

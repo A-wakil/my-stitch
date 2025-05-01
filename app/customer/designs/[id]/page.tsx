@@ -22,6 +22,7 @@ interface DesignDetail {
   }>
   created_by: string
   brand_name: string
+  completion_time: number
 }
 
 interface PaymentMethod {
@@ -38,6 +39,7 @@ interface OrderDetails {
       colors: Array<{ name: string }>;
     }>;
     brand_name: string;
+    completion_time: number;
   };
   selectedFabric: number;
   selectedColor: number | null;
@@ -386,7 +388,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         orderDetails={{
           design: {
             ...design,
-            brand_name: brandName
+            brand_name: brandName,
+            completion_time: design?.completion_time || 1
           },
           selectedFabric,
           selectedColor,

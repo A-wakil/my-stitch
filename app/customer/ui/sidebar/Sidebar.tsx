@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation'
 import { IoPersonOutline } from 'react-icons/io5'
 import { LuRuler } from 'react-icons/lu'
 import { HiOutlineShoppingBag } from 'react-icons/hi'
-import { IoCutSharp } from 'react-icons/io5'
+
+
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
+  user: any
+  toggleAuthDialog: () => void
 }
 
 const mainNavItems = [
@@ -23,7 +26,7 @@ const secondaryNavItems = [
   { name: 'Contact Us', path: 'mailto:abdulwakil.ola@gmail.com' },
 ]
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, user, toggleAuthDialog }: SidebarProps) {
   const router = useRouter()
 
   return (
@@ -43,9 +46,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 href={item.path}
                 className="nav-link"
                 onClick={(e) => {
-                  e.preventDefault()
-                  onClose()
-                  router.push(item.path)
+                  e.preventDefault();
+                  if (!user) {
+                    toggleAuthDialog();
+                  } else {
+                    onClose();
+                    router.push(item.path);
+                  }
                 }}
               >
                 <span className="nav-icon">{item.icon}</span>
@@ -73,9 +80,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     href={item.path}
                     className="nav-link"
                     onClick={(e) => {
-                      e.preventDefault()
-                      onClose()
-                      router.push(item.path)
+                      e.preventDefault();
+                      if (!user) {
+                        toggleAuthDialog();
+                      } else {
+                        onClose();
+                        router.push(item.path);
+                      }
                     }}
                   >
                     {item.name}

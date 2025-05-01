@@ -24,6 +24,14 @@ interface DesignFormProps {
   }
 }
 
+type Duration = number; // This will represent weeks
+
+// Add interface for errors
+interface FormErrors {
+  duration?: string;
+  // add other error types if needed
+}
+
 export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")
@@ -38,6 +46,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       colors: f.colors.map(c => ({ name: c.name, image: c.image }))
     })) || []
   )
+  const [duration, setDuration] = useState<Duration>(1);
+  const [errors, setErrors] = useState<FormErrors>({})
 
   useEffect(() => {
     if (initialData) {
@@ -61,6 +71,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   console.log('Current fabrics state:', fabrics)
 
   const isFormValid = () => {
+    const newErrors: FormErrors = {}
+
     // Check basic form fields
     if (!title.trim()) return { valid: false, message: "Please enter a design title" }
     if (!description.trim()) return { valid: false, message: "Please enter a description" }
@@ -85,6 +97,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       }
     }
 
+    setErrors(newErrors)
     return { valid: true, message: "" }
   }
 
@@ -104,6 +117,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     formData.append("title", title)
     formData.append("description", description)
     formData.append("existingImages", JSON.stringify(existingImages))
+    formData.append("completion_time", duration.toString())
     
     // Append new images
     images.forEach((image) => {
@@ -208,6 +222,16 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         <FabricPicker 
           fabrics={fabrics} 
           setFabrics={setFabrics} 
+        />
+      </div>
+      <div className={styles.formGroup}>
+        <label className={styles.label}>Completion Time (weeks)</label>
+        <input
+          type="number"
+          min="1"
+          value={duration}
+          onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+          className={styles.input}
         />
       </div>
       <Button 

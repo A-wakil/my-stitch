@@ -117,6 +117,7 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading}
+                                autoComplete="username email"
                             />
                             {errors.email && <span className={styles.error}>{errors.email}</span>}
                         </div>
@@ -130,6 +131,7 @@ export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
+                                autoComplete="current-password"
                             />
                             {errors.password && <span className={styles.error}>{errors.password}</span>}
                         </div>

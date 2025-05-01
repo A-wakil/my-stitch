@@ -18,6 +18,7 @@ interface OrderConfirmationModalProps {
         colors: Array<{ name: string }>
       }>
       brand_name: string
+      completion_time: number
     }
     selectedFabric: number
     selectedColor: number | null
@@ -56,6 +57,27 @@ interface PaymentForm {
   cardholderName: string;
 }
 
+const calculateDeliveryDates = (completionTime: number) => {
+  const today = new Date();
+  const minWeeks = completionTime + 2; // completion time + 2 weeks min shipping
+  const maxWeeks = completionTime + 3; // completion time + 3 weeks max shipping
+  
+  const earliestDate = new Date(today.setDate(today.getDate() + (minWeeks * 7)));
+  const latestDate = new Date(today.setDate(today.getDate() + ((maxWeeks - minWeeks) * 7)));
+  
+  return {
+    earliest: earliestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }),
+    latest: latestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    })
+  };
+};
 
 export default function OrderConfirmationModal({
   isOpen,
@@ -338,6 +360,8 @@ export default function OrderConfirmationModal({
     }
   };
 
+  const deliveryDates = calculateDeliveryDates(orderDetails.design.completion_time);
+
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modal}>
@@ -350,8 +374,7 @@ export default function OrderConfirmationModal({
 
         <div className={styles.modalContent}>
           <div className={styles.orderInfo}>
-            <h3>Arriving Feb 20, 2025</h3>
-            <p className={styles.shipping}>FREE Prime Delivery</p>
+            <h3>Arriving {deliveryDates.earliest} - {deliveryDates.latest}</h3>
             <p className={styles.seller}>Ships from {orderDetails.design.brand_name}</p>
           </div>
 

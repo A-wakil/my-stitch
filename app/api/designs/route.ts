@@ -129,7 +129,8 @@ export async function POST(request: Request) {
         description: formData.get("description"),
         images: imageUrls,
         fabrics: processedFabrics,
-        created_by: created_by
+        created_by: created_by,
+        completion_time: parseInt(formData.get("completion_time") as string)
       })
       .select()
       .single()
@@ -169,7 +170,8 @@ export async function PUT(request: Request) {
         description: formData.get("description"),
         images: imageUrls,
         fabrics: processedFabrics,
-        created_by: created_by
+        created_by: created_by,
+        completion_time: parseInt(formData.get("completion_time") as string)
       })
       .eq('id', designId)
       .select()

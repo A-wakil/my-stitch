@@ -157,7 +157,7 @@ export function Header() {
               <IoMenu />
               Menu
             </div>
-            <div className='left-sub' onClick={() => router.push('/customer/orders')} style={{ cursor: 'pointer' }}>
+            <div className='left-sub' onClick={!user ? toggleAuthDialog : () => router.push('/customer/orders')} style={{ cursor: 'pointer' }}>
               Orders
               <IoReceiptOutline />
             </div>
@@ -200,7 +200,7 @@ export function Header() {
           onClose={closeAuthDialog}
         />
       </header>
-      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={user} toggleAuthDialog={toggleAuthDialog} />
     </>
   )
 }
