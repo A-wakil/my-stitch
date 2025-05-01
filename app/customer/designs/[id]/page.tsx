@@ -389,7 +389,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     if (!design || !design.fabrics[selectedFabric]) return 0;
     
     return getFabricPrice(design.fabrics[selectedFabric], selectedMeasurement);
-  }, [design, selectedFabric, selectedMeasurement]);
+  }, [design, selectedFabric, selectedMeasurement, selectedStyle]);
 
   // Add a helper function to transform design data for the OrderConfirmationModal
   const mapDesignToOrderFormat = (design: DesignDetail, brandName: string) => {
@@ -467,6 +467,15 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             <p>Fabric Price: ${design.fabrics[selectedFabric].yardPrice?.toFixed(2) || "0.00"} per yard</p>
             {selectedMeasurement && (
               <>
+                {selectedStyle && (
+                  <p>
+                    Selected Style: <span className={styles.styleValue}>
+                      {selectedStyle === 'kaftan' ? 'Kaftan' : 
+                       selectedStyle === 'kaftan_agbada' ? 'Kaftan & Agbada' : 
+                       selectedStyle === 'agbada' ? 'Agbada' : 'None Selected'}
+                    </span>
+                  </p>
+                )}
                 <p>
                   Estimated fabric: {calculateYardsNeeded(selectedMeasurement).toFixed(2)} yards = ${((design.fabrics[selectedFabric].yardPrice || 0) * calculateYardsNeeded(selectedMeasurement)).toFixed(2)}
                 </p>

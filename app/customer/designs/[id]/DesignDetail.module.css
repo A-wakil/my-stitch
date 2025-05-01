@@ -383,6 +383,15 @@
   color: #212529;
 }
 
+.styleValue {
+  font-weight: 500;
+  color: #212529;
+  margin-left: 4px;
+  padding: 2px 8px;
+  background-color: rgba(33, 37, 41, 0.05);
+  border-radius: 4px;
+}
+
 @media (max-width: 768px) {
   .styleOptions {
     grid-template-columns: 1fr;

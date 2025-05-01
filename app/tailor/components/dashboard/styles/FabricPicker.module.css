@@ -1,43 +1,381 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.infoTooltip {
+  position: relative;
+  margin-left: 0.75rem;
+  cursor: help;
+}
+
+.infoIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+}
+
+.tooltipContent {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.tooltipContent p {
+  margin: 0.5rem 0;
+}
+
+.tooltipContent ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.tooltipContent li {
+  margin: 0.25rem 0;
+}
+
+.infoTooltip:hover .tooltipContent {
+  opacity: 1;
+  visibility: visible;
+}
+
+.listTitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 1.5rem 0 1rem;
+}
+
+.fabricGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.fabricCard {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+  transition: all 0.2s ease;
+  padding-top: 2.5rem;
+  margin-top: 10px;
+}
+
+.fabricCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.cardActionButtons {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 5;
+}
+
+.actionButton {
+  height: 1.75rem;
+  width: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.actionButton[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.actionButton[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
+  margin-bottom: -10px;
+}
+
+.actionButton[variant="destructive"] {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.actionButton[variant="destructive"]:hover {
+  background-color: #fecaca;
+}
+
+.actionButton[variant="ghost"] {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.actionButton[variant="ghost"]:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.saveButton {
+  height: 1.75rem;
+  width: 1.75rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+  background-color: #ecfdf5;
+  border: 1px solid #d1fae5;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.saveButton:hover {
+  background-color: #d1fae5;
+}
+
+.saveButton[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.saveButton[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
+  margin-bottom: -10px;
+}
+
+.fabricCardContent {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.fabricName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem;
+  padding-right: 0.5rem;
+}
+
+.fabricDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.priceTag {
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #f3f4f6;
+}
+
+.priceLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.priceValue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.fabricImageContainer {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
 .fabric-image {
-  width: 120px;
+  width: 100%;
+  max-width: 200px;
   aspect-ratio: 3/2;
   border-radius: 0.375rem;
-  margin-bottom: 0.5rem;
+  object-fit: cover;
+  border: 1px solid #f3f4f6;
+}
+
+.colorSection {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.colorSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.colorTitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.colorCount {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-left: 0.25rem;
 }
 
 .color-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .color-pill {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: rgb(243 244 246);
+  background-color: #f9fafb;
   border-radius: 9999px;
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
+  border: 1px solid #f3f4f6;
+  width: fit-content;
+  max-width: 100%;
+  position: relative;
 }
 
 .color-swatch {
   width: 1rem;
   height: 1rem;
+  min-width: 1rem;
   border-radius: 9999px;
-  border: 1px solid rgb(229 231 235);
+  border: 1px solid #e5e7eb;
+}
+
+.colorName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.noColorsMessage {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  border: 1px dashed #e5e7eb;
+}
+
+.colorPickerContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* Add hover effect to color pills */
+.color-pill:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .remove-button {
-  height: 1rem;
-  width: 1rem;
+  height: 1.25rem;
+  width: 1.25rem;
   padding: 0;
   border-radius: 9999px;
-}
-
-.remove-button:hover {
-  background-color: rgb(229 231 235);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .remove-icon {
@@ -45,11 +383,21 @@
   width: 0.75rem;
 }
 
+.colorPicker {
+  width: 80px;
+  height: 40px;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
 .add-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: rgb(31 41 55); /* gray-800 */
+  background-color: #1f2937;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -60,13 +408,9 @@
 }
 
 .add-button:hover {
-  background-color: rgb(17 24 39); /* gray-900 */
+  background-color: #111827;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.add-button:active {
-  transform: translateY(0);
 }
 
 .add-button-icon {
@@ -74,64 +418,76 @@
   height: 1rem;
 }
 
-.add-fabric-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: rgb(31 41 55);
-  color: white;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.375rem;
+/* Add New Fabric Form */
+.addFabricSection {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.formTitle {
+  font-size: 1.25rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
+  color: #111827;
+  margin: 0 0 1.5rem;
 }
 
-.add-fabric-button:hover {
-  background-color: rgb(17 24 39);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.add-fabric-button:active {
-  transform: translateY(0);
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.add-fabric-button:disabled {
-  background-color: rgb(156 163 175);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.add-fabric-button:disabled:hover {
-  background-color: rgb(156 163 175);
-  transform: none;
-  box-shadow: none;
-}
-
-.file-input {
-  position: relative;
-  padding: 0.5rem;
-  border: 2px dashed #e5e7eb;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.file-input:hover {
-  border-color: #9ca3af;
-  background-color: #f9fafb;
-}
-
-.file-input::before {
-  content: 'Upload Fabric Image: ';
+.formLabel {
+  font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
 }
 
-.file-input::file-selector-button {
+.formInput {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.625rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.formInput:focus {
+  border-color: #6b7280;
+  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.1);
+}
+
+.helpText {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0;
+}
+
+.fileInput {
+  position: relative;
+  padding: 0.625rem;
+  border: 2px dashed #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.fileInput:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.fileInput::file-selector-button {
   background-color: #f3f4f6;
   color: #374151;
   padding: 0.375rem 0.75rem;
@@ -139,21 +495,155 @@
   border-radius: 0.25rem;
   cursor: pointer;
   margin-right: 0.5rem;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
-.file-input::file-selector-button:hover {
+.fileInput::file-selector-button:hover {
   background-color: #e5e7eb;
 }
 
+.addFabricButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #1f2937;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  width: auto;
+  margin: 0 auto;
+}
+
+.addFabricButton:hover {
+  background-color: #111827;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.addButtonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .add-fabric-button-disabled {
-  background-color: rgb(156 163 175);
+  background-color: #9ca3af;
   cursor: not-allowed;
   transform: none;
 }
 
 .add-fabric-button-disabled:hover {
-  background-color: rgb(156 163 175);
+  background-color: #9ca3af;
   transform: none;
   box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .fabricGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fabricCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.editableHeader {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.editInput {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.editButton, 
+.saveButton {
+  height: 1.75rem;
+  width: 1.75rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.editButton:hover, 
+.saveButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+.editFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.editLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.updateImageContainer {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.updateImageLabel {
+  font-size: 0.85rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.updateImageInput {
+  font-size: 0.75rem;
+  padding: 0.375rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 0.25rem;
+}
+
+.toggleDetailsButton {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  color: #6b7280;
+}
+
+.toggleDetailsButton:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+/* If there are too many colors for small screens, switch to a single column */
+@media (max-width: 576px) {
+  .color-list {
+    grid-template-columns: 1fr;
+  }
 }
