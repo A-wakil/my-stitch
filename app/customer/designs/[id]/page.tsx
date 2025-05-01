@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useMemo } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import styles from './DesignDetail.module.css'
 import { useRouter } from 'next/navigation'
@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast'
 import OrderConfirmationModal from '../../ui/orderConfirmationModal/OrderConfirmationModal'
 import { Measurement } from '../../../lib/types'
 import { IoArrowBack } from "react-icons/io5"
+import { IoChevronDown, IoChevronUp } from "react-icons/io5"
 
 interface DesignDetail {
   id: string
@@ -17,7 +18,9 @@ interface DesignDetail {
   fabrics: Array<{
     name: string
     image: string
-    price: number
+    yardPrice?: number
+    stitchPrice?: number
+    price?: number // Keep backward compatibility
     colors: Array<{ name: string; image: string }>
   }>
   created_by: string
@@ -35,8 +38,11 @@ interface OrderDetails {
     title: string;
     fabrics: Array<{
       name: string;
-      price: number;
-      colors: Array<{ name: string }>;
+      image?: string;
+      price?: number;
+      yardPrice?: number;
+      stitchPrice?: number;
+      colors: Array<{ name: string; image?: string }>;
     }>;
     brand_name: string;
     completion_time: number;
@@ -72,6 +78,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [savedMeasurements, setSavedMeasurements] = useState<Measurement[]>([])
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | undefined>(undefined)
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(true)
+  const [showMeasurementDetails, setShowMeasurementDetails] = useState(false)
 
   useEffect(() => {
     async function fetchDesign() {
@@ -199,7 +206,13 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   }, []);
 
   const handleAddToCart = async () => {
-    // Validate color selection first
+    // Validate measurements first
+    if (!selectedMeasurement) {
+      toast.error('Please select your measurements')
+      return
+    }
+    
+    // Validate color selection
     if (selectedColor === null) {
       toast.error('Please select a color')
       return
@@ -230,6 +243,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         return;
       }
 
+      // Calculate yards if measurements are available
+      const yards = selectedMeasurement ? calculateYardsNeeded(selectedMeasurement) : 0;
+
       // Format shipping address as a proper JSON string
       const shippingAddressJson = JSON.stringify({
         street_address: orderShippingAddress.split(',')[0].trim(),
@@ -247,12 +263,13 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         tailor_id: designData.created_by,
         design_id: id,
         status: 'pending',
-        total_amount: design?.fabrics[selectedFabric].price || 0,
+        total_amount: totalPrice,
         measurements: measurementsJson,
         shipping_address: shippingAddressJson,
         fabric_name: design?.fabrics[selectedFabric].name,
         color_name: selectedColor !== null ? design?.fabrics[selectedFabric].colors[selectedColor].name : '',
-        estimated_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        estimated_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        fabric_yards: yards // Store calculated yards in the order
       };
 
       const { data, error } = await supabase
@@ -285,6 +302,68 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   const handleMeasurementUpdate = (measurement: Measurement | undefined) => {
     setSelectedMeasurement(measurement);
+  };
+
+  const getFabricPrice = (fabric: any, measurement?: Measurement) => {
+    // Default values if properties are undefined
+    const stitchPrice = fabric.stitchPrice || 0;
+    const yardPrice = fabric.yardPrice || 0;
+    
+    // If we have measurements, calculate yards needed
+    if (measurement) {
+      const yards = calculateYardsNeeded(measurement);
+      return stitchPrice + (yards * yardPrice);
+    } 
+    
+    // Fallback to previous logic if no measurements available
+    if (fabric.price !== undefined) {
+      return fabric.price;
+    } else if (fabric.stitchPrice !== undefined) {
+      return fabric.stitchPrice;
+    } else {
+      return 0; // Default price if none is available
+    }
+  }
+
+  // Function to calculate yards needed based on measurements
+  const calculateYardsNeeded = (measurements: Measurement): number => {
+    // These calculations are estimations based on standard garment construction
+    // Adjust the formula based on your specific requirements
+    
+    // Basic calculation using chest, shirt length, and shoulder measurements
+    // A simple formula: larger measurements require more fabric
+    const chestFactor = measurements.chest ? measurements.chest / 20 : 1;
+    const lengthFactor = measurements.shirt_length ? measurements.shirt_length / 24 : 1;
+    const shoulderFactor = measurements.shoulder_to_wrist ? measurements.shoulder_to_wrist / 25 : 1;
+    
+    // Base yards for a standard shirt (adjust as needed)
+    const baseYards = 2;
+    
+    // Calculate total yards needed based on measurements
+    const totalYards = baseYards * chestFactor * lengthFactor * shoulderFactor;
+    
+    // Round to the nearest quarter yard and add a small buffer
+    return Math.ceil(totalYards * 4) / 4 + 0.25;
+  }
+
+  const totalPrice = useMemo(() => {
+    if (!design || !design.fabrics[selectedFabric]) return 0;
+    
+    return getFabricPrice(design.fabrics[selectedFabric], selectedMeasurement);
+  }, [design, selectedFabric, selectedMeasurement]);
+
+  // Add a helper function to transform design data for the OrderConfirmationModal
+  const mapDesignToOrderFormat = (design: DesignDetail, brandName: string) => {
+    return {
+      title: design.title,
+      fabrics: design.fabrics.map(fabric => ({
+        name: fabric.name,
+        price: getFabricPrice(fabric, selectedMeasurement), // Use calculated price
+        colors: fabric.colors.map(color => ({ name: color.name }))
+      })),
+      brand_name: brandName,
+      completion_time: design.completion_time || 1
+    };
   };
 
   if (!design) {
@@ -321,12 +400,43 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               />
             ))}
           </div>
+          <button 
+            className={styles.addToCartButton}
+            onClick={handleAddToCart}
+            disabled={loading || !selectedMeasurement}
+          >
+            {loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order')}
+          </button>
         </div>
 
         {/* Right side - Product details */}
         <div className={styles.detailsSection}>
           <h1 className={styles.title}>{design.title}</h1>
-          <p className={styles.price}>${design.fabrics[selectedFabric].price.toFixed(2)}</p>
+          
+          <div className={styles.description}>
+            <p>{design.description}</p>
+          </div>
+          
+          {!selectedMeasurement && (
+            <p className={styles.partialPrice}>
+              Total price calculated after measurements are selected
+            </p>
+          )}
+          
+          <div className={styles.priceBreakdown}>
+            <p>Stitching Price: ${design.fabrics[selectedFabric].stitchPrice?.toFixed(2) || "0.00"}</p>
+            <p>Fabric Price: ${design.fabrics[selectedFabric].yardPrice?.toFixed(2) || "0.00"} per yard</p>
+            {selectedMeasurement && (
+              <>
+                <p>
+                  Estimated fabric: {calculateYardsNeeded(selectedMeasurement).toFixed(2)} yards = ${((design.fabrics[selectedFabric].yardPrice || 0) * calculateYardsNeeded(selectedMeasurement)).toFixed(2)}
+                </p>
+                <p className={styles.estimatedTotal}>
+                  Total Price: ${totalPrice.toFixed(2)}
+                </p>
+              </>
+            )}
+          </div>
 
           <div className={styles.fabricSelection}>
             <h3>Fabrics</h3>
@@ -366,17 +476,81 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             </div>
           </div>
 
-          <button 
-            className={styles.addToCartButton}
-            onClick={handleAddToCart}
-            disabled={loading}
-          >
-            {loading ? 'Adding...' : 'Place Order'}
-          </button>
-
-          <div className={styles.description}>
-            <h3>Description</h3>
-            <p>{design.description}</p>
+          {/* Add measurement selection section */}
+          <div className={styles.measurementSelection}>
+            <h3>Your Measurements</h3>
+            {isLoadingMeasurements ? (
+              <div className={styles.loadingMeasurements}>Loading measurements...</div>
+            ) : savedMeasurements.length > 0 ? (
+              <>
+                <select
+                  value={selectedMeasurement?.id.toString() || ''}
+                  onChange={(e) => {
+                    const measurementId = e.target.value;
+                    if (measurementId) {
+                      const measurement = savedMeasurements.find(m => m.id.toString() === measurementId);
+                      if (measurement) {
+                        setSelectedMeasurement(measurement);
+                      }
+                    } else {
+                      setSelectedMeasurement(undefined);
+                    }
+                  }}
+                  className={styles.measurementSelect}
+                >
+                  <option value="">Select your measurements...</option>
+                  {savedMeasurements.map((measurement) => (
+                    <option key={measurement.id} value={measurement.id.toString()}>
+                      {measurement.name}
+                    </option>
+                  ))}
+                </select>
+                
+                {selectedMeasurement && (
+                  <div className={styles.selectedMeasurementDetails}>
+                    <div 
+                      className={styles.measurementDetailsHeader}
+                      onClick={() => setShowMeasurementDetails(!showMeasurementDetails)}
+                    >
+                      <h4>{selectedMeasurement.name}</h4>
+                      <div className={styles.showDetailsToggle}>
+                        <span>{showMeasurementDetails ? 'Hide Details' : 'Show Details'}</span>
+                        <button className={styles.toggleButton}>
+                          {showMeasurementDetails ? <IoChevronUp /> : <IoChevronDown />}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {showMeasurementDetails && (
+                      <div className={styles.measurementGrid}>
+                        {Object.entries(selectedMeasurement)
+                          .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key) && typeof selectedMeasurement[key as keyof Measurement] === 'number')
+                          .map(([key, value]) => (
+                            <div key={key} className={styles.measurementItem}>
+                              <span className={styles.measurementLabel}>
+                                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                              </span>
+                              <span>
+                                {value} inches
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className={styles.noMeasurements}>
+                <p>No measurements found. Please add your measurements in your profile first.</p>
+                <button
+                  onClick={() => router.push('/customer/profile/measurements')}
+                  className={styles.addMeasurementsButton}
+                >
+                  Add Measurements
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -386,16 +560,12 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         onClose={() => setIsModalOpen(false)}
         onConfirm={handleConfirmOrder}
         orderDetails={{
-          design: {
-            ...design,
-            brand_name: brandName,
-            completion_time: design?.completion_time || 1
-          },
+          design: mapDesignToOrderFormat(design, brandName),
           selectedFabric,
           selectedColor,
           shippingAddress: orderShippingAddress,
           paymentMethod: selectedPaymentMethod,
-          total: design?.fabrics[selectedFabric].price || 0,
+          total: totalPrice,
           measurement: selectedMeasurement
         }}
         savedAddresses={savedAddresses}
@@ -403,7 +573,10 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         savedMeasurements={savedMeasurements}
         onAddressChange={handleAddressUpdate}
         onPaymentMethodChange={handlePaymentMethodUpdate}
-        onMeasurementChange={handleMeasurementUpdate}
+        onMeasurementChange={(measurement) => {
+          setSelectedMeasurement(measurement);
+          // Recalculation happens automatically through the useMemo
+        }}
         isLoading={isLoading}
         isLoadingPayment={isLoadingPayment}
         isLoadingMeasurements={isLoadingMeasurements}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -48,6 +48,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   )
   const [duration, setDuration] = useState<Duration>(1);
   const [errors, setErrors] = useState<FormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (initialData) {
@@ -70,48 +71,85 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
   console.log('Current fabrics state:', fabrics)
 
-  const isFormValid = () => {
+  // Move isFormValid to a memoized value
+  const formValidation = useMemo(() => {
     const newErrors: FormErrors = {}
+    const isUpdate = !!initialData?.id;
+    
+    console.log('[Validation] Checking form validity, isUpdate:', isUpdate);
 
-    // Check basic form fields
-    if (!title.trim()) return { valid: false, message: "Please enter a design title" }
-    if (!description.trim()) return { valid: false, message: "Please enter a description" }
+    // Check basic fields
+    if (!title.trim()) {
+      console.log('[Validation] Missing title');
+      return { valid: false, message: "Please enter a design title" }
+    }
+    if (!description.trim()) {
+      console.log('[Validation] Missing description');
+      return { valid: false, message: "Please enter a description" }
+    }
     
     // Check if there are either new images or existing images
     if (images.length === 0 && existingImages.length === 0) {
+      console.log('[Validation] Missing images');
       return { valid: false, message: "Please upload at least one image" }
     }
 
-    // Check if there's at least one fabric
-    if (fabrics.length === 0) {
+    // For updates, don't require fabrics if none were changed
+    if (fabrics.length === 0 && !isUpdate) {
+      console.log('[Validation] Missing fabrics on new design');
       return { valid: false, message: "Please add at least one fabric" }
     }
 
-    // Check if each fabric has complete information
-    for (const fabric of fabrics) {
-      if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
-        return { valid: false, message: "Please complete all fabric information" }
-      }
-      if (fabric.colors.length === 0) {
-        return { valid: false, message: `Please add at least one color for ${fabric.name}` }
+    // When updating an existing design, check if fabrics have changed
+    if (isUpdate) {
+      console.log('[Validation] Processing update - fabrics:', fabrics.length, 
+                  'initialFabrics:', initialData?.fabrics.length);
+      
+      // Special case - always allow updates when only changing basic fields
+      return { valid: true, message: "" };
+    } else {
+      // For new designs, validate all fabrics
+      for (const fabric of fabrics) {
+        if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
+          const missingFields = [];
+          if (!fabric.name) missingFields.push("name");
+          if (!fabric.image) missingFields.push("image");
+          if (!fabric.yardPrice) missingFields.push("yard price");
+          if (!fabric.stitchPrice) missingFields.push("stitching price");
+          
+          const errorMsg = `Please complete all fields for fabric: ${missingFields.join(", ")}`;
+          console.log('[Validation] Error:', errorMsg);
+          return { 
+            valid: false, 
+            message: errorMsg
+          }
+        }
+        
+        if (fabric.colors.length === 0) {
+          const errorMsg = `Please add at least one color for ${fabric.name}`;
+          console.log('[Validation] Error:', errorMsg);
+          return { valid: false, message: errorMsg }
+        }
       }
     }
 
+    console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }
+  }, [title, description, images, existingImages, fabrics, initialData?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    const validation = isFormValid()
-    if (!validation.valid) {
-      toast.error(validation.message, {
+    if (!formValidation.valid) {
+      toast.error(formValidation.message, {
         duration: 2000,
         position: 'top-center',
       })
       return
     }
+
+    setIsSubmitting(true)
 
     const formData = new FormData()
     formData.append("title", title)
@@ -186,6 +224,9 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       onSubmitSuccess()
     } catch (error) {
       console.error("Error submitting design:", error)
+      toast.error("Failed to save design. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -236,9 +277,13 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       </div>
       <Button 
         type="submit" 
-        className={`${styles.submitButton} ${!isFormValid().valid ? styles.submitButtonDisabled : ''}`}
+        className={`${styles.submitButton} ${(!formValidation.valid || isSubmitting) ? styles.submitButtonDisabled : ''}`}
+        disabled={!formValidation.valid || isSubmitting}
       >
-        {initialData?.id ? "Update Design" : "Submit Design"}
+        {isSubmitting ? 
+          "Saving..." : 
+          (initialData?.id ? "Update Design" : "Submit Design")
+        }
       </Button>
     </form>
   )

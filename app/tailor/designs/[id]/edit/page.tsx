@@ -72,7 +72,15 @@ export default function EditDesignPage() {
   return (
     <div className={styles.container}>
       <div className={styles.wrapper}>
-        <h2 className={styles.title}>Edit Design</h2>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Edit Design</h2>
+          <button 
+            onClick={() => router.push('/tailor/designs')} 
+            className={styles.cancelButton}
+          >
+            Cancel
+          </button>
+        </div>
         <DesignForm initialData={design} onSubmitSuccess={handleSubmitSuccess} />
       </div>
     </div>

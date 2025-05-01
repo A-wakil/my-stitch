@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -15,22 +15,20 @@ interface FabricPickerProps {
 export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
   const [fabricName, setFabricName] = useState("")
   const [fabricImage, setFabricImage] = useState<File | null>(null)
-  const [colorName, setColorName] = useState("#000000")
   const [fabricPrice, setFabricPrice] = useState("")
   const [stitchingPrice, setStitchingPrice] = useState("")
 
-  const isFormValid = () => {
+  const formValidation = useMemo(() => {
     if (!fabricName.trim()) return { valid: false, message: "Please enter a fabric name" }
     if (!fabricPrice) return { valid: false, message: "Please enter a price per yard" }
     if (!stitchingPrice) return { valid: false, message: "Please enter a stitching price" }
     if (!fabricImage) return { valid: false, message: "Please upload a fabric image" }
     return { valid: true, message: "" }
-  }
+  }, [fabricName, fabricPrice, stitchingPrice, fabricImage])
 
   const addFabric = () => {
-    const validation = isFormValid()
-    if (!validation.valid) {
-      toast.error(validation.message, {
+    if (!formValidation.valid) {
+      toast.error(formValidation.message, {
         duration: 2000,
         position: 'top-center',
       })
@@ -50,24 +48,20 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
     setStitchingPrice("")
   }
 
-  const addColor = (fabricIndex: number) => {
-    if (colorName) {
-      setFabrics((prevFabrics) => {
-        const newFabrics = [...prevFabrics];
-        newFabrics[fabricIndex] = {
-          ...newFabrics[fabricIndex],
-          colors: [
-            ...newFabrics[fabricIndex].colors,
-            {
-              name: colorName,
-              image: null
-            }
-          ]
-        };
-        return newFabrics;
-      });
-      setColorName("#000000");
-    }
+  const handleColorAdd = (fabricIndex: number, colorValue: string) => {
+    if (!colorValue) return;
+    
+    setFabrics(prevFabrics => {
+      const newFabrics = [...prevFabrics];
+      newFabrics[fabricIndex] = {
+        ...newFabrics[fabricIndex],
+        colors: [
+          ...newFabrics[fabricIndex].colors,
+          { name: colorValue, image: null }
+        ]
+      };
+      return newFabrics;
+    });
   }
 
   const removeColor = (fabricIndex: number, colorIndex: number) => {
@@ -120,15 +114,11 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                 />
               )}
               
-
               <div className="mt-4">
                 <Label style={{ fontSize: '1rem', fontWeight: 'bold', paddingBottom: '1rem' }}>Add Available Colors:</Label>
                 <div className={styles['color-list']}>
                   {fabric.colors.map((color, colorIndex) => (
-                    <div 
-                      key={colorIndex} 
-                      className={styles['color-pill']}
-                    >
+                    <div key={colorIndex} className={styles['color-pill']}>
                       <div 
                         className={styles['color-swatch']}
                         style={{ backgroundColor: color.name }}
@@ -147,23 +137,28 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                   ))}
                 </div>
                 <div className="flex space-x-2 mt-2">
-                  <Input 
-                    type="color" 
-                    value={colorName}
-                    onChange={(e) => setColorName(e.target.value)}
-                    className="w-20"
-                  />
-                  <Button 
-                    type="button" 
-                    onClick={() => addColor(fabricIndex)}
-                    className={styles['add-button']}
-                  >
-                    <Plus className={styles['add-button-icon']} />
-                    Add Color
-                  </Button>
+                  <div className="flex space-x-2 w-full">
+                    <Input 
+                      type="color" 
+                      id={`color-input-${fabricIndex}`}
+                      name="colorInput"
+                      defaultValue="#000000"
+                      className="w-20"
+                    />
+                    <Button 
+                      type="button"
+                      onClick={() => {
+                        const colorInput = document.getElementById(`color-input-${fabricIndex}`) as HTMLInputElement;
+                        handleColorAdd(fabricIndex, colorInput.value);
+                        colorInput.value = "#000000";
+                      }}
+                      className={styles['add-button']}
+                    >
+                      <Plus className={styles['add-button-icon']} />
+                      Add Color
+                    </Button>
+                  </div>
                 </div>
-                
-                
               </div>
             </div>
           </div>
@@ -197,7 +192,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
         <Button 
           type="button" 
           onClick={addFabric} 
-          className={`${styles['add-fabric-button']} ${!isFormValid().valid ? styles['add-fabric-button-disabled'] : ''}`}
+          className={`${styles['add-fabric-button']} ${!formValidation.valid ? styles['add-fabric-button-disabled'] : ''}`}
         >
           <Plus className={styles['add-button-icon']} />
           Add Fabric
@@ -206,4 +201,3 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
     </div>
   )
 }
-

@@ -324,6 +324,20 @@
   border-radius: 0.375rem;
 }
 
+.measurementDisplay {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+}
+
+.measurementDisplay h5 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #171717;
+  font-weight: 500;
+}
+
 .measurementDetails h5 {
   margin: 0 0 0.5rem;
   font-size: 0.875rem;

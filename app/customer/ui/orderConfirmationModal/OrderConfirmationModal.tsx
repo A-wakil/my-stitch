@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, MouseEvent } from 'react'
 import styles from './OrderConfirmationModal.module.css'
 import { IoClose } from 'react-icons/io5'
 import { supabase } from '../../../lib/supabaseClient'
@@ -362,8 +362,15 @@ export default function OrderConfirmationModal({
 
   const deliveryDates = calculateDeliveryDates(orderDetails.design.completion_time);
 
+  // Add handler to close modal when clicking outside
+  const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className={styles.modalOverlay}>
+    <div className={styles.modalOverlay} onClick={handleBackdropClick}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h2>Confirm your order</h2>
@@ -630,50 +637,28 @@ export default function OrderConfirmationModal({
 
           <div className={styles.section}>
             <h4>Measurements</h4>
-            {isLoadingMeasurements ? (
-              <div className={styles.loading}>Loading measurements...</div>
-            ) : (
-              <>
-                {savedMeasurements.length > 0 ? (
-                  <div className={styles.measurementSelect}>
-                    <select
-                      value={orderDetails.measurement?.id.toString() || ''}
-                      onChange={(e) => handleMeasurementChange(e.target.value)}
-                      className={styles.select}
-                    >
-                      <option value="">Select a measurement...</option>
-                      {savedMeasurements.map((measurement) => (
-                        <option key={measurement.id} value={measurement.id.toString()}>
-                          {measurement.name}
-                        </option>
-                      ))}
-                    </select>
-                    {orderDetails.measurement && (
-                      <div className={styles.measurementDetails}>
-                        <h5>Selected Measurement: {orderDetails.measurement.name}</h5>
-                        <div className={styles.measurementGrid}>
-                          {Object.entries(orderDetails.measurement)
-                            .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key))
-                            .map(([key, value]) => (
-                              <div key={key} className={styles.measurementItem}>
-                                <span className={styles.measurementLabel}>
-                                  {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
-                                </span>
-                                <span className={styles.measurementValue}>
-                                  {typeof value === 'number' ? `${value} inches` : value}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
+            {orderDetails.measurement ? (
+              <div className={styles.measurementDisplay}>
+                <h5>{orderDetails.measurement.name}</h5>
+                <div className={styles.measurementGrid}>
+                  {Object.entries(orderDetails.measurement)
+                    .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key))
+                    .map(([key, value]) => (
+                      <div key={key} className={styles.measurementItem}>
+                        <span className={styles.measurementLabel}>
+                          {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                        </span>
+                        <span className={styles.measurementValue}>
+                          {typeof value === 'number' ? `${value} inches` : value}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className={styles.noMeasurements}>
-                    No saved measurements found. Please add measurements in your profile before placing an order.
-                  </p>
-                )}
-              </>
+                    ))}
+                </div>
+              </div>
+            ) : (
+              <p className={styles.noMeasurements}>
+                No measurement selected. Please select a measurement before placing an order.
+              </p>
             )}
           </div>
 
