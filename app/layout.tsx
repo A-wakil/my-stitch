@@ -3,7 +3,7 @@
 import { AuthProvider } from "./lib/AuthContext";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast'
-
+import { ProfileProvider } from "./context/ProfileContext";
 
 import { ReactNode } from 'react'
 
@@ -17,13 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
     <html lang="en">
       <body className="antialiased">
-        {children}
-        <Toaster />
+        <AuthProvider>
+          <ProfileProvider>
+            {children}
+            <Toaster />
+          </ProfileProvider>
+        </AuthProvider>
       </body>
     </html>
-    </AuthProvider>
   );
 }

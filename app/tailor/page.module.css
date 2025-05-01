@@ -190,3 +190,101 @@
 .createProfileButton:hover {
   background: #27272a;
 }
+
+.recentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: #f8f9fa;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+}
+
+.recentItem:hover {
+  transform: translateX(4px);
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.recentItem:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  transform: translateX(4px);
+}
+
+.recentItemContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.recentItemImage {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.375rem;
+  object-fit: cover;
+}
+
+.recentItemDetails {
+  flex: 1;
+}
+
+.recentItemTitle {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.recentItemMeta {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.recentItemStatus {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.recentItemStatus[data-status="pending"] {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.recentItemStatus[data-status="accepted"] {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.recentItemStatus[data-status="in_progress"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.recentItemStatus[data-status="ready_to_ship"] {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.recentItemStatus[data-status="shipped"] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.recentItemPrice {
+  font-weight: 500;
+  color: #111827;
+}
+
+.recentItemDate {
+  font-size: 0.875rem;
+  color: #6b7280;
+}

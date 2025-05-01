@@ -65,6 +65,28 @@ export default function TailorOrdersPage() {
     fetchOrders()
   }, [])
 
+  // Add new effect to handle hash-based scrolling
+  useEffect(() => {
+    if (typeof window !== 'undefined' && orders.length > 0) {
+      const hash = window.location.hash.slice(1) // Remove the # from the hash
+      if (hash) {
+        const element = document.getElementById(hash)
+        if (element) {
+          // Wait a bit for the layout to stabilize
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth' })
+            // Add a highlight effect
+            element.style.backgroundColor = '#fef9c3'
+            setTimeout(() => {
+              element.style.transition = 'background-color 0.5s ease'
+              element.style.backgroundColor = ''
+            }, 1500)
+          }, 100)
+        }
+      }
+    }
+  }, [orders])
+
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     const { error } = await supabase
       .from('orders')
@@ -156,7 +178,11 @@ export default function TailorOrdersPage() {
       </div>
 
       {filteredOrders.map(order => (
-        <div key={order.id} className={styles.orderCard}>
+        <div 
+          key={order.id} 
+          id={order.id}
+          className={styles.orderCard}
+        >
           <div className={styles.orderHeader}>
             <div className={styles.orderInfo}>
               <div className={styles.orderMeta}>

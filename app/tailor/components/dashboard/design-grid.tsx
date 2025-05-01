@@ -27,6 +27,25 @@ export function DesignGrid() {
     fetchDesigns()
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && designs) {
+      const hash = window.location.hash.slice(1)
+      if (hash) {
+        const element = document.getElementById(hash)
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth' })
+            element.style.backgroundColor = '#fef9c3'
+            setTimeout(() => {
+              element.style.transition = 'background-color 0.5s ease'
+              element.style.backgroundColor = ''
+            }, 1500)
+          }, 100)
+        }
+      }
+    }
+  }, [designs])
+
   const fetchDesigns = async () => {
     try {
       setIsLoading(true)
@@ -111,7 +130,8 @@ export function DesignGrid() {
               
               return (
                 <div 
-                  key={design.id} 
+                  key={design.id}
+                  id={design.id}
                   className={styles['card-content']}
                 >
                   <div className={styles['carousel-container']}>

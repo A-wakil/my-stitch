@@ -17,6 +17,7 @@ interface Design {
   id: string;
   title: string;
   created_at: string;
+  images: string[];
   // price: number;
 }
 
@@ -207,7 +208,7 @@ export default function Dashboard() {
       // Fetch recent designs
       const { data: recentDesigns, error: recentDesignsError } = await supabase
         .from('designs')
-        .select('id, title, created_at')
+        .select('id, title, created_at, images')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(5)
@@ -348,9 +349,34 @@ export default function Dashboard() {
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Designs</h3>
               {stats.recentDesigns.map((design) => (
-                <div key={design.id} className={styles.recentItem}>
-                  <span>{design.title}</span>
-                  {/* <span>$10</span> */}
+                <div 
+                  key={design.id} 
+                  className={styles.recentItem}
+                  onClick={() => {
+                    router.push(`/tailor/designs#${design.id}`);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      router.push(`/tailor/designs#${design.id}`);
+                    }
+                  }}
+                >
+                  <div className={styles.recentItemContent}>
+                    <img 
+                      src={design.images?.[0] || "/placeholder.svg"} 
+                      alt={design.title}
+                      className={styles.recentItemImage}
+                    />
+                    <div className={styles.recentItemDetails}>
+                      <div className={styles.recentItemTitle}>{design.title}</div>
+                      <div className={styles.recentItemMeta}>
+                        Created {new Date(design.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
               <Button 
@@ -364,9 +390,35 @@ export default function Dashboard() {
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Orders</h3>
               {stats.recentOrders.map((order) => (
-                <div key={order.id} className={styles.recentItem}>
-                  <span>Order #{order.id.slice(0, 8)}</span>
-                  <span>${order.total_amount}</span>
+                <div 
+                  key={order.id} 
+                  className={styles.recentItem}
+                  onClick={() => {
+                    router.push(`/tailor/orders#${order.id}`);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      router.push(`/tailor/orders#${order.id}`);
+                    }
+                  }}
+                >
+                  <div className={styles.recentItemContent}>
+                    <div className={styles.recentItemDetails}>
+                      <div className={styles.recentItemTitle}>Order #{order.id.slice(0, 8)}</div>
+                      <div className={styles.recentItemMeta}>
+                        Placed {new Date(order.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.recentItemStatus} data-status={order.status}>
+                    {order.status.replace(/_/g, ' ')}
+                  </div>
+                  <div className={styles.recentItemPrice}>
+                    ${order.total_amount}
+                  </div>
                 </div>
               ))}
               <Button 
