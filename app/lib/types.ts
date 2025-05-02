@@ -81,6 +81,8 @@ export interface Measurement {
     fabric_name: string | null
     color_name: string | null
     design?: Design | null
+    fabric_yards?: number | null
+    style_type?: 'kaftan' | 'kaftan_agbada' | 'agbada' | null
   }
 
   export interface Profile {

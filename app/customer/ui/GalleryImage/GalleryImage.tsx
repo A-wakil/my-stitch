@@ -41,6 +41,7 @@ export function GalleryImage({ images, alt, onClick }: GalleryImageProps) {
           alt={alt}
           width={400}
           height={600}
+          priority={true}
           className={`gallery-image w-full h-full object-cover ${slideDirection}`}
           onAnimationEnd={() => setSlideDirection('')}
         />
