@@ -19,7 +19,7 @@ export default function ProfilePage() {
         if (!user) return
 
         const { data, error } = await supabase
-          .from('tailor_profiles')
+          .from('tailor_details')
           .select('*')
           .eq('id', user.id)
           .single()

@@ -53,7 +53,7 @@ export function TailorProfileDisplay({ onEdit, profile }: TailorProfileDisplayPr
         if (!user) throw new Error('No user found')
 
         const { data, error } = await supabase
-          .from('tailor_profiles')
+          .from('tailor_details')
           .select('*')
           .eq('id', user.id)
           .single()

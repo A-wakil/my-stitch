@@ -113,7 +113,7 @@ export default function UserAccountDetails() {
                 }
 
                 const { data, error } = await supabase
-                    .from('account_details')
+                    .from('customer_details')
                     .select('*')
                     .eq('user_id', user.id)
                     .maybeSingle()
@@ -193,7 +193,7 @@ export default function UserAccountDetails() {
 
             // Check if account details already exist
             const { data: existingData } = await supabase
-                .from('account_details')
+                .from('customer_details')
                 .select('id')
                 .eq('user_id', user.id)
                 .maybeSingle()
@@ -201,7 +201,7 @@ export default function UserAccountDetails() {
             if (existingData) {
                 // Update existing record
                 const { error } = await supabase
-                    .from('account_details')
+                    .from('customer_details')
                     .update(dataToSave)
                     .eq('user_id', user.id)
 
@@ -209,7 +209,7 @@ export default function UserAccountDetails() {
             } else {
                 // Insert new record
                 const { error } = await supabase
-                    .from('account_details')
+                    .from('customer_details')
                     .insert([{ ...dataToSave, user_id: user.id }])
 
                 if (error) throw error

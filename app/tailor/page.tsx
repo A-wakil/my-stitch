@@ -67,7 +67,7 @@ export default function Dashboard() {
       if (session?.user) {
         // Don't set isLoading to false until all data is loaded
         const { data, error } = await supabase
-          .from('tailor_profiles')
+          .from('tailor_details')
           .select('*')
           .eq('id', session.user.id)
           .single()
@@ -88,7 +88,7 @@ export default function Dashboard() {
       setUser(user)
       if (user) {
         const { data, error } = await supabase
-          .from('tailor_profiles')
+          .from('tailor_details')
           .select('*')
           .eq('id', user.id)
           .single()

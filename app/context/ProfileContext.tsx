@@ -29,7 +29,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { data, error } = await supabase
-        .from('tailor_profiles')
+        .from('tailor_details')
         .select('id')
         .eq('id', user.id)
         .single()

@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './orders.module.css'
-import { Order } from '../../lib/types'
+import { Order, Profile } from '../../lib/types'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
-import { Profile } from '../../lib/types'
+import { sendOrderNotification, notifyOrderParties } from '../../lib/notifications'
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
 export default function TailorOrdersPage() {
@@ -14,51 +14,132 @@ export default function TailorOrdersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<OrderStatus>('all')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})  // Track selected image index for each order
-  const [client, setClient] = useState<Profile | null>(null)
+  const [clientProfiles, setClientProfiles] = useState<Record<string, Profile>>({})
+  const [tailorProfile, setTailorProfile] = useState<Profile | null>(null)
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMeasurements, setSelectedMeasurements] = useState<any>(null)
 
   const fetchOrders = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
 
-    // First fetch orders
-    const { data: ordersData, error: ordersError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('tailor_id', user.id)
-      .order('created_at', { ascending: false })
+      console.log('Current user ID:', user.id);
 
-    if (ordersError) {
-      console.error('Error fetching orders:', ordersError)
-      return
-    }
+      // Fetch tailor profile
+      const { data: tailorProfileData, error: tailorProfileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id);
 
-    // Then fetch design details for each order that has a design_id
-    const ordersWithDesigns = await Promise.all(
-      (ordersData || []).map(async (order) => {
-        if (!order.design_id) return { ...order, design: null }
-
-        const { data: designData, error: designError } = await supabase
-          .from('designs')
-          .select('*')
-          .eq('id', order.design_id)
-          .single()
-
-        if (designError) {
-          console.error(`Error fetching design ${order.design_id}:`, designError)
-          return { ...order, design: null }
+      if (tailorProfileError) {
+        console.error('Error fetching tailor profile:', tailorProfileError);
+      } else if (tailorProfileData && tailorProfileData.length > 0) {
+        console.log('Found tailor profile:', tailorProfileData[0].email);
+        
+        // Parse roles if stored as a string
+        const profile = tailorProfileData[0];
+        if (typeof profile.roles === 'string') {
+          try {
+            profile.roles = JSON.parse(profile.roles);
+          } catch (e) {
+            console.error('Error parsing roles:', e);
+            profile.roles = ['tailor']; // Default
+          }
         }
+        
+        setTailorProfile(profile);
+      } else {
+        console.error('Tailor profile not found for user ID:', user.id);
+        
+        // Check if profile exists in the database
+        const { data: checkProfiles, error: checkError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .limit(5);
+          
+        if (checkError) {
+          console.error('Error checking profiles table:', checkError);
+        } else {
+          console.log('Available profiles in database:', checkProfiles);
+        }
+      }
 
-        return { ...order, design: designData }
-      })
-    )
+      // First fetch orders
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('tailor_id', user.id)
+        .order('created_at', { ascending: false })
 
-    setOrders(ordersWithDesigns)
-    
-    setIsLoading(false)
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError)
+        return
+      }
+
+      if (ordersData.length === 0) {
+        console.log('No orders found for tailor ID:', user.id);
+        setOrders([]);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`Found ${ordersData.length} orders for tailor ID:`, user.id);
+
+      // Then fetch design details for each order that has a design_id
+      const ordersWithDesigns = await Promise.all(
+        (ordersData || []).map(async (order) => {
+          if (!order.design_id) return { ...order, design: null }
+
+          const { data: designData, error: designError } = await supabase
+            .from('designs')
+            .select('*')
+            .eq('id', order.design_id)
+            .single()
+
+          if (designError) {
+            console.error(`Error fetching design ${order.design_id}:`, designError)
+            return { ...order, design: null }
+          }
+
+          return { ...order, design: designData }
+        })
+      )
+
+      // Collect unique user IDs from orders
+      const userIds = [...new Set(ordersWithDesigns.map(order => order.user_id))];
+      console.log('Customer IDs from orders:', userIds);
+      
+      if (userIds.length > 0) {
+        // Fetch client profiles - with improved query
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', userIds);
+        
+        if (profilesError) {
+          console.error('Error fetching customer profiles:', profilesError);
+        } else if (!profiles || profiles.length === 0) {
+          console.error('No customer profiles found for IDs:', userIds);
+        } else {
+          console.log(`Found ${profiles.length} customer profiles`);
+          
+          const profileMap: Record<string, Profile> = {};
+          profiles.forEach(profile => {
+            profileMap[profile.id] = profile;
+          });
+          setClientProfiles(profileMap);
+        }
+      }
+
+      setOrders(ordersWithDesigns);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error in fetchOrders:', err);
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -88,24 +169,139 @@ export default function TailorOrdersPage() {
   }, [orders])
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ 
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-        ...(newStatus === 'accepted' && {
-          estimated_completion_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+    try {
+      console.log(`Updating order ${orderId} to status: ${newStatus}`);
+      
+      const order = orders.find(o => o.id === orderId);
+      if (!order) {
+        console.error(`Order ${orderId} not found in local state`);
+        return;
+      }
+
+      const additionalData: Record<string, any> = {};
+      
+      if (newStatus === 'accepted') {
+        const estimatedCompletionDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+        additionalData.estimatedCompletionDate = estimatedCompletionDate;
+      }
+
+      console.log('Updating order in database...');
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+          ...(newStatus === 'accepted' && {
+            estimated_completion_date: additionalData.estimatedCompletionDate
+          })
         })
-      })
-      .eq('id', orderId)
+        .eq('id', orderId);
 
-    if (error) {
-      console.error('Error updating order:', error)
-      return
+      if (error) {
+        console.error('Error updating order:', error);
+        return;
+      }
+
+      console.log('Order updated in database successfully');
+
+      // Get current tailor profile if not already loaded
+      let currentTailorProfile = tailorProfile;
+      if (!currentTailorProfile) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Try to get existing profile first
+          const { data: tailorData, error: tailorError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id);
+            
+          if (tailorData && tailorData.length > 0) {
+            // Check if the profile has tailor or both role
+            const profile = tailorData[0];
+            if (profile.roles === 'tailor' || profile.roles === 'both') {
+              currentTailorProfile = profile;
+              setTailorProfile(currentTailorProfile);
+            } else {
+              // Create or update profile to include tailor role
+              currentTailorProfile = await ensureProfileExists(
+                user.id, 
+                profile.email || user.email || 'tailor@example.com', 
+                'both'
+              );
+              if (currentTailorProfile) {
+                setTailorProfile(currentTailorProfile);
+              }
+            }
+          } else {
+            // Try to create a tailor profile automatically
+            const email = user.email || 'tailor@example.com';
+            currentTailorProfile = await ensureProfileExists(user.id, email, 'tailor');
+            if (currentTailorProfile) {
+              setTailorProfile(currentTailorProfile);
+            }
+          }
+        }
+      }
+      
+      // Get customer profile directly from order's user_id
+      const { data: customerProfileData, error: customerProfileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', order.user_id);
+      
+      let customerProfile = customerProfileData && customerProfileData.length > 0 ? customerProfileData[0] : null;
+      if (!customerProfile) {
+        // Try to create a customer profile automatically if we have enough info
+        // Use tailor email for development purposes or lookup actual user email
+        const email = currentTailorProfile?.email || 'customer@example.com';
+        customerProfile = await ensureProfileExists(order.user_id, email, 'customer');
+        if (customerProfile) {
+          setClientProfiles(prev => ({...prev, [order.user_id]: customerProfile}));
+        }
+      }
+      
+      console.log('Customer profile:', customerProfile ? 'Found' : 'Not found', 
+                 customerProfile ? `(${customerProfile.email})` : '');
+      console.log('Tailor profile:', currentTailorProfile ? 'Found' : 'Not found',
+                 currentTailorProfile ? `(${currentTailorProfile.email})` : '');
+      
+      if (customerProfile && currentTailorProfile) {
+        // Map order status to notification type
+        const notificationType = `order_${newStatus}` as const;
+        
+        console.log(`Attempting to send ${notificationType} notification to ${customerProfile.email}`);
+        
+        try {
+          // Send notification to customer
+          const result = await sendOrderNotification(
+            notificationType,
+            order,
+            customerProfile,
+            additionalData
+          );
+          
+          console.log('Notification result:', result);
+          
+          if (result.success) {
+            console.log(`Notification sent to customer for order ${orderId} status change to ${newStatus}`);
+          } else {
+            console.error(`Failed to send notification: ${result.error}`);
+          }
+        } catch (err) {
+          console.error('Failed to send notification:', err);
+        }
+      } else {
+        console.error('Cannot send notification: missing profile data',
+                     !customerProfile ? 'Customer profile missing' : '',
+                     !currentTailorProfile ? 'Tailor profile missing' : '');
+      }
+
+      // Refresh orders
+      console.log('Refreshing orders...');
+      fetchOrders();
+    } catch (err) {
+      console.error('Error in updateOrderStatus:', err);
     }
-
-    // Refresh orders
-    fetchOrders()
   }
 
   const filteredOrders = orders.filter(order => 
@@ -226,7 +422,7 @@ export default function TailorOrdersPage() {
                 </div>
               </div>
               <div className={styles.orderNumber}>
-                <div className={styles.label}>Client Name: {client?.firstname} {client?.lastname}</div>
+                <div className={styles.label}>Client Name: {clientProfiles[order.user_id]?.firstname} {clientProfiles[order.user_id]?.lastname}</div>
               </div>
             </div>
           </div>
@@ -328,6 +524,10 @@ export default function TailorOrdersPage() {
                     </div>
                   )}
                 </div>
+                <div className={styles.customerInfo}>
+                  <p>Customer: {clientProfiles[order.user_id]?.firstname} {clientProfiles[order.user_id]?.lastname}</p>
+                  <p>Email: {clientProfiles[order.user_id]?.email}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -375,3 +575,81 @@ export default function TailorOrdersPage() {
     </div>
   )
 }
+
+// Update the ensureProfileExists function to use simple string roles
+const ensureProfileExists = async (userId: string, email: string, role: 'tailor' | 'customer' | 'both') => {
+  try {
+    console.log(`Checking if ${role} profile exists for user ${userId}`);
+    
+    // Check if profile exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId);
+      
+    if (checkError) {
+      console.error(`Error checking ${role} profile:`, checkError);
+      return null;
+    }
+    
+    // If profile exists, return it
+    if (existingProfile && existingProfile.length > 0) {
+      console.log(`Profile exists for user ${userId} with role ${existingProfile[0].roles}`);
+      
+      // If the user has a profile but with a different role, update to 'both'
+      if (existingProfile[0].roles !== role && existingProfile[0].roles !== 'both') {
+        console.log(`Updating user ${userId} to role 'both'`);
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            roles: 'both', 
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error('Error updating role:', updateError);
+        } else {
+          // Return the updated profile
+          return { ...existingProfile[0], roles: 'both' };
+        }
+      }
+      
+      return existingProfile[0];
+    }
+    
+    // Create a new profile
+    console.log(`Creating new profile for user ${userId} with role ${role}`);
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user');
+      return null;
+    }
+    
+    // Create profile record
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert([{
+        id: userId,
+        email: email,
+        firstname: role === 'tailor' ? 'Tailor' : 'Customer',
+        lastname: 'User',
+        roles: role, // Simple string now
+        created_at: new Date().toISOString()
+      }])
+      .select();
+      
+    if (createError) {
+      console.error(`Error creating ${role} profile:`, createError);
+      return null;
+    }
+    
+    console.log(`Profile created successfully for user ${userId} with role ${role}`);
+    return newProfile ? newProfile[0] : null;
+  } catch (error) {
+    console.error('Error in ensureProfileExists:', error);
+    return null;
+  }
+};

@@ -151,7 +151,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
       }
 
       const { error: upsertError } = await supabase
-        .from('tailor_profiles')
+        .from('tailor_details')
         .upsert(profileData)
 
       if (upsertError) {

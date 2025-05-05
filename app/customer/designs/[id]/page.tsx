@@ -9,6 +9,7 @@ import OrderConfirmationModal from '../../ui/orderConfirmationModal/OrderConfirm
 import { Measurement } from '../../../lib/types'
 import { IoArrowBack } from "react-icons/io5"
 import { IoChevronDown, IoChevronUp } from "react-icons/io5"
+import { sendOrderNotification } from '../../../lib/notifications'
 
 interface DesignDetail {
   id: string
@@ -107,7 +108,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       setTailorId(brandData.created_by)
 
       const { data: brandName, error: brandNameError } = await supabase
-        .from('tailor_profiles')
+        .from('tailor_details')
         .select('brand_name')
         .eq('id', brandData.created_by)
         .single()
@@ -136,7 +137,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       
       if (user) {
         const { data, error } = await supabase
-          .from('account_details')
+          .from('customer_details')
           .select('street_address, city, state, postal_code, country')
           .eq('user_id', user.id)
           .single();
@@ -164,7 +165,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       
       if (user) {
         const { data, error } = await supabase
-          .from('account_details')
+          .from('customer_details')
           .select('card_number, expiration_date')
           .eq('user_id', user.id)
           .single();
@@ -289,6 +290,51 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       if (error) {
         console.error('Order insertion error:', error);
         throw error;
+      }
+
+      // Fetch customer profile
+      const { data: customerProfile, error: customerProfileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (customerProfileError) {
+        console.error('Error fetching customer profile:', customerProfileError);
+      } else {
+        // Fetch tailor profile
+        const { data: tailorProfile, error: tailorProfileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', designData.created_by)
+          .single();
+
+        if (tailorProfileError) {
+          console.error('Error fetching tailor profile:', tailorProfileError);
+        } else {
+          // Send notifications
+          try {
+            // Send notification to customer
+            await sendOrderNotification(
+              'order_placed',
+              data,
+              customerProfile,
+              { totalAmount: totalPrice }
+            );
+
+            // Send notification to tailor
+            await sendOrderNotification(
+              'order_placed',
+              data,
+              tailorProfile,
+              { totalAmount: totalPrice }
+            );
+            
+            console.log('Order notifications sent successfully');
+          } catch (notificationError) {
+            console.error('Error sending order notifications:', notificationError);
+          }
+        }
       }
 
       toast.success('Order placed successfully!');
