@@ -1,228 +1,283 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-import styles from './AuthDialog.module.css'
 import { IoClose } from 'react-icons/io5'
+import styles from './AuthDialog.module.css'
+import { supabase } from '../lib/supabaseClient'
 
 interface AuthDialogProps {
-    isOpen: boolean
-    onClose: () => void
-    onSubmit: (email: string, password: string) => void
-    onSignUp: (email: string, password: string, firstName: string, lastName: string) => void
-    onGoogleSignIn: () => void
+  isOpen: boolean
+  onClose: () => void
+  onGoogleSignIn: () => void
 }
 
-export function AuthDialog({ isOpen, onClose, onSubmit, onSignUp, onGoogleSignIn }: AuthDialogProps) {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
-    const [isSignUp, setIsSignUp] = useState(false)
-    const [errors, setErrors] = useState<{ 
-        email?: string
-        password?: string
-        firstName?: string
-        lastName?: string 
-    }>({})
-    const [isLoading, setIsLoading] = useState(false)
+export function AuthDialog({ isOpen, onClose, onGoogleSignIn }: AuthDialogProps) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
+  const [infoMessage, setInfoMessage] = useState('')
+  const [generalError, setGeneralError] = useState('')
+  const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string }>({})
+  const [isLoading, setIsLoading] = useState(false)
 
-    const validateForm = () => {
-        const newErrors: typeof errors = {}
+  useEffect(() => {
+    if (isOpen) {
+      console.log("Dialog opened, resetting state...")
+      setInfoMessage('')
+      setGeneralError('')
+      setErrors({})
 
-        if (!email) {
-            newErrors.email = 'Email is required'
-        } else if (!/\S+@\S+\.\S+/.test(email)) {
-            newErrors.email = 'Please enter a valid email'
-        }
+      const idToFocus = isSignUp ? 'signup-email' : 'signin-email'
+      setTimeout(() => document.getElementById(idToFocus)?.focus(), 50)
+    } else {
+      console.log("Dialog closed, resetting loading state.")
+      setIsLoading(false)
+    }
+  }, [isOpen])
 
-        if (!password) {
-            newErrors.password = 'Password is required'
-        } else if (password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters'
-        }
+  useEffect(() => {
+    if (isOpen) {
+      const idToFocus = isSignUp ? 'signup-email' : 'signin-email'
+      document.getElementById(idToFocus)?.focus()
+    }
+  }, [isSignUp, isOpen])
 
-        if (isSignUp) {
-            if (!firstName) newErrors.firstName = 'First name is required'
-            if (!lastName) newErrors.lastName = 'Last name is required'
-        }
+  useEffect(() => {
+    if (!isOpen) return
 
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+    const errorField = Object.keys(errors)[0]
+    if (errorField) {
+      let idToFocus = ''
+      if (errorField === 'email') {
+        idToFocus = isSignUp ? 'signup-email' : 'signin-email'
+      } else if (errorField === 'password') {
+        idToFocus = isSignUp ? 'signup-password' : 'signin-password'
+      } else if (errorField === 'firstName') {
+        idToFocus = 'signup-firstName'
+      } else if (errorField === 'lastName') {
+        idToFocus = 'signup-lastName'
+      }
+      setTimeout(() => document.getElementById(idToFocus)?.focus(), 50)
+    }
+  }, [errors, isSignUp, isOpen])
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {}
+    if (!email) newErrors.email = 'Email is required'
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Please enter a valid email'
+
+    if (!password) newErrors.password = 'Password is required'
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters'
+
+    if (isSignUp) {
+      if (!firstName) newErrors.firstName = 'First name is required'
+      if (!lastName) newErrors.lastName = 'Last name is required'
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!validateForm()) return
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
-        try {
-            setIsLoading(true)
-            if (isSignUp) {
-                await onSignUp(email, password, firstName, lastName)
-            } else {
-                await onSubmit(email, password)
-            }
-        } catch (error) {
-            console.error('Auth error:', error)
-        } finally {
-            setIsLoading(false)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isLoading || !validateForm()) return
+
+    setInfoMessage('')
+    setGeneralError('')
+    setErrors({})
+
+    try {
+      setIsLoading(true)
+
+      if (isSignUp) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              first_name: firstName,
+              last_name: lastName,
+            },
+          },
+        })
+
+        if (signUpError && signUpError.message.includes('User already registered')) {
+          setErrors({ email: 'An account with this email already exists.' })
+          return
         }
-    }
+        
+        if (signUpError) throw signUpError
 
-    const handleGoogleSignIn = async () => {
-        try {
-            setIsLoading(true)
-            await onGoogleSignIn()
-        } catch (error) {
-            console.error('Google sign-in error:', error)
-        } finally {
-            setIsLoading(false)
+        setInfoMessage('🎉 Sign-up successful! Please check your email to verify your account.')
+        setTimeout(() => {
+          setIsSignUp(false)
+          setInfoMessage('📧 Please verify your email before signing in.')
+        }, 4000)
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+        if (error?.message.toLowerCase().includes('invalid login credentials')) {
+          setErrors({ email: 'Invalid email or password.', password: ' ' })
+          return
         }
-    }
 
-    const handleBackgroundClick = (e: React.MouseEvent) => {
-        if (e.target === e.currentTarget) {
-            onClose()
+        if (error?.message.toLowerCase().includes('invalid email')) {
+          setErrors({ email: 'Invalid email format.' })
+          return
         }
-    }
 
-    if (typeof window !== 'undefined') {
-        if (isOpen) {
-          document.body.style.overflow = 'hidden'
-        } else {
-          document.body.style.overflow = 'auto'
+        if (error) throw error
+
+        if (data && !data.user?.email_confirmed_at) {
+          setInfoMessage('📧 Please verify your email before signing in.')
+          await supabase.auth.signOut().catch(console.error)
+          return
         }
+
+        setInfoMessage('✅ Signed in successfully.')
+        setTimeout(() => {
+          onClose()
+        }, 1500)
+      }
+    } catch (error: any) {
+      const message = error.message?.toLowerCase() || ''
+      console.error('Auth error details:', error)
+
+      if (message.includes('email not confirmed') || message.includes('email not verified') || message.includes('verify your email')) {
+        setInfoMessage('📧 Please verify your email before signing in.')
+        supabase.auth.signOut().catch(console.error)
+      } else if (message.includes('user already registered')) {
+        setErrors({ email: 'An account with this email already exists.' })
+      } else if (message.includes('invalid login credentials')) {
+        setErrors({ email: 'Invalid email or password.', password: ' ' })
+      } else if (message.includes('invalid email')) {
+        setErrors({ email: 'Invalid email format.' })
+      } else if (message.includes('password should be longer')) {
+        setErrors({ password: 'Password should be at least 6 characters.' })
+      } else {
+        setGeneralError('An unexpected error occurred. Please try again.')
+      }
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    return (
-        <div className={`${styles.dialog} ${isOpen ? styles.open : ''}`} onClick={handleBackgroundClick}>
-            <div className={`${styles.container} ${isSignUp ? styles.flipped : ''}`}>
-                <div className={`${styles.card} ${isSignUp ? styles.signUp : styles.signIn}`}>
-                    <div className={styles.header}>
-                        <h1 className={styles.title}>{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
-                        <p className={styles.subtitle}>
-                            {!isSignUp
-                                ? 'Enter your details to continue'
-                                : 'Enter your details to create an account'}
-                        </p>
-                    </div>
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose()
+  }
 
-                    <form onSubmit={handleSubmit} className={styles.form}>
-                        <div className={styles.formGroup}>
-                            <label htmlFor="email" className={styles.label}>Email</label>
-                            <input
-                                id="email"
-                                type="email"
-                                className={styles.input}
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isLoading}
-                                autoComplete="username email"
-                            />
-                            {errors.email && <span className={styles.error}>{errors.email}</span>}
-                        </div>
+  if (typeof window !== 'undefined') {
+    document.body.style.overflow = isOpen ? 'hidden' : 'auto'
+  }
 
-                        <div className={styles.formGroup}>
-                            <label htmlFor="password" className={styles.label}>Password</label>
-                            <input
-                                id="password"
-                                type="password"
-                                className={styles.input}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                disabled={isLoading}
-                                autoComplete="current-password"
-                            />
-                            {errors.password && <span className={styles.error}>{errors.password}</span>}
-                        </div>
+  return (
+    <div className={`${styles.dialog} ${isOpen ? styles.open : ''}`} onClick={handleBackgroundClick}>
+      <div className={styles.messageContainer} aria-live="polite">
+        {infoMessage && <div className={styles.infoBanner}>{infoMessage}</div>}
+        {generalError && <div className={styles.errorBanner}>{generalError}</div>}
+      </div>
 
-                        {isSignUp && (
-                            <>
-                                <div className={styles.formGroup}>
-                                    <label htmlFor="firstName" className={styles.label}>First Name</label>
-                                    <input
-                                        id="firstName"
-                                        type="text"
-                                        className={styles.input}
-                                        value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                        disabled={isLoading}
-                                    />
-                                    {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
-                                </div>
+      <div className={`${styles.container} ${isSignUp ? styles.flipped : ''}`}>
+        <div className={`${styles.card} ${isSignUp ? styles.signUp : styles.signIn}`}>
+          <button onClick={onClose} className={styles.closeButton} aria-label="Close dialog">
+            <IoClose size={24} />
+          </button>
 
-                                <div className={styles.formGroup}>
-                                    <label htmlFor="lastName" className={styles.label}>Last Name</label>
-                                    <input
-                                        id="lastName"
-                                        type="text"
-                                        className={styles.input}
-                                        value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
-                                        disabled={isLoading}
-                                    />
-                                    {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
-                                </div>
-                            </>
-                        )}
+          <div className={styles.header}>
+            <h1 className={styles.title}>{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
+            <p className={styles.subtitle}>
+              {!isSignUp ? 'Enter your details to continue' : 'Enter your details to create an account'}
+            </p>
+          </div>
 
-                        <button type="submit" className={styles.submitButton} disabled={isLoading}>
-                            {isLoading && <Loader2 className={styles.loadingSpinner} size={16} />}
-                            {!isSignUp ? 'Sign in' : 'Create account'}
-                        </button>
-                    </form>
-
-                    {!isSignUp && (
-                        <>
-                            <div className={styles.divider}>
-                                <span>or continue with</span>
-                            </div>
-
-                            <button
-                                type="button"
-                                className={styles.googleButton}
-                                onClick={handleGoogleSignIn}
-                                disabled={isLoading}
-                            >
-                                <svg width="18" height="18" viewBox="0 0 18 18">
-                                    <path
-                                        fill="#4285F4"
-                                        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-                                    />
-                                    <path
-                                        fill="#34A853"
-                                        d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-                                    />
-                                    <path
-                                        fill="#FBBC05"
-                                        d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.192 0 7.556 0 9s.348 2.808.957 4.039l3.007-2.332z"
-                                    />
-                                    <path
-                                        fill="#EA4335"
-                                        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
-                                    />
-                                </svg>
-                                Continue with Google
-                            </button>
-                        </>
-                    )}
-
-                    <div className={styles.footer}>
-                        {!isSignUp ? (
-                            <>
-                                Don't have an account?{' '}
-                                <a href="#" onClick={() => setIsSignUp(true)}>Sign up</a>
-                            </>
-                        ) : (
-                            <>
-                                Already have an account?{' '}
-                                <a href="#" onClick={() => setIsSignUp(false)}>Sign in</a>
-                            </>
-                        )}
-                    </div>
-                </div>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formGroup}>
+              <label htmlFor={isSignUp ? 'signup-email' : 'signin-email'} className={styles.label}>Email</label>
+              <input
+                id={isSignUp ? 'signup-email' : 'signin-email'}
+                type="email"
+                className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.email}
+                autoComplete="username email"
+                placeholder="your@email.com"
+              />
+              {errors.email && <span className={styles.error}>{errors.email}</span>}
             </div>
-        </div>
-    )
-}
 
+            <div className={styles.formGroup}>
+              <label htmlFor={isSignUp ? 'signup-password' : 'signin-password'} className={styles.label}>Password</label>
+              <input
+                id={isSignUp ? 'signup-password' : 'signin-password'}
+                type="password"
+                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.password}
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+                placeholder={isSignUp ? 'Choose a password' : 'Enter your password'}
+              />
+              {errors.password && <span className={styles.error}>{errors.password}</span>}
+            </div>
+
+            {isSignUp && (
+              <>
+                <div className={styles.formGroup}>
+                  <label htmlFor="signup-firstName" className={styles.label}>First Name</label>
+                  <input
+                    id="signup-firstName"
+                    type="text"
+                    className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    disabled={isLoading}
+                    aria-invalid={!!errors.firstName}
+                    placeholder="First name"
+                  />
+                  {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="signup-lastName" className={styles.label}>Last Name</label>
+                  <input
+                    id="signup-lastName"
+                    type="text"
+                    className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    disabled={isLoading}
+                    aria-invalid={!!errors.lastName}
+                    placeholder="Last name"
+                  />
+                  {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
+                </div>
+              </>
+            )}
+
+            <button type="submit" className={styles.submitButton} disabled={isLoading}>
+              {isLoading ? <Loader2 className={styles.loadingSpinner} size={16} /> : (!isSignUp ? 'Sign in' : 'Create account')}
+            </button>
+          </form>
+
+
+          <div className={styles.footer}>
+            <button
+              onClick={() => !isLoading && setIsSignUp(!isSignUp)}
+              className={styles.switchButton}
+              disabled={isLoading}
+              type="button"
+            >
+              {!isSignUp ? <>Don't have an account? <span>Sign up</span></> : <>Already have an account? <span>Sign in</span></>}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
