@@ -126,8 +126,10 @@ export default function Dashboard() {
   }
 
   const handleProfileComplete = async (profile: any) => {
-    await refreshProfile()
-    setShowProfileForm(false)
+    
+      await refreshProfile()
+      // Hide the profile form
+      setShowProfileForm(false)
   }
 
   const fetchDashboardStats = async () => {

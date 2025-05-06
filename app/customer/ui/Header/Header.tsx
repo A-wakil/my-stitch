@@ -210,14 +210,14 @@ export function Header() {
             <div className="logout-buttons">
               <Button 
                 variant="secondary" 
-                className="cancel-button"
+                className="cancel-lgt-button"
                 onClick={() => setShowLogoutConfirm(false)}
               >
                 Cancel
               </Button>
               <Button 
                 variant="destructive"
-                className="logout-button"
+                className="lgt-button"
                 onClick={handleSignOut}
               >
                 Logout

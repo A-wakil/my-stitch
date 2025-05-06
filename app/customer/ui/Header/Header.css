@@ -239,7 +239,7 @@
   justify-content: center;
 }
 
-.cancel-button {
+.cancel-lgt-button {
   min-width: 100px;
   background-color: #f3f4f6;
   color: #4b5563;
@@ -247,11 +247,11 @@
   border-radius: 5px;
 }
 
-.cancel-button:hover {
+.cancel-lgt-button:hover {
   background-color: #e5e7eb;
 }
 
-.logout-button {
+.lgt-button {
   min-width: 100px;
   background-color: #ef4444;
   color: white;
@@ -259,7 +259,7 @@
   border-radius: 5px;
 }
 
-.logout-button:hover {
+.lgt-button:hover {
   background-color: #dc2626;
 }
   
