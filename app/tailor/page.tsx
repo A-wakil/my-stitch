@@ -55,8 +55,8 @@ export default function Dashboard() {
   })
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
-  // Combine both loading states
-  const isPageLoading = isLoading || isLoadingStats
+  // Combine both loading states, but only if user is authenticated
+  const isPageLoading = isLoading || (user && isLoadingStats)
 
   useEffect(() => {
     // Check auth status when component mounts
@@ -79,6 +79,9 @@ export default function Dashboard() {
         setTailorProfile(data)
         // Fetch dashboard stats when user is authenticated
         await fetchDashboardStats()
+      } else {
+        // If no user, we can stop loading immediately
+        setIsLoadingStats(false)
       }
       setIsLoading(false)
     })
@@ -100,6 +103,9 @@ export default function Dashboard() {
         setTailorProfile(data)
         // Fetch dashboard stats on initial load
         await fetchDashboardStats()
+      } else {
+        // If no user, we can stop loading immediately
+        setIsLoadingStats(false)
       }
       setIsLoading(false)
     })
