@@ -6,7 +6,7 @@ import styles from './orders.module.css'
 import { Order, Profile } from '../../lib/types'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
-import { sendOrderNotification, notifyOrderParties } from '../../lib/notifications'
+import { sendOrderNotification } from '../../lib/notifications'
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
 export default function TailorOrdersPage() {
@@ -16,57 +16,16 @@ export default function TailorOrdersPage() {
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})  // Track selected image index for each order
   const [clientProfiles, setClientProfiles] = useState<Record<string, Profile>>({})
   const [tailorProfile, setTailorProfile] = useState<Profile | null>(null)
+  const [user, setUser] = useState<any>(null)
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMeasurements, setSelectedMeasurements] = useState<any>(null)
 
   const fetchOrders = async () => {
+    if (!user) return
+    console.log('Current user ID:', user.id)
+    // First fetch orders
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) return
-
-      console.log('Current user ID:', user.id);
-
-      // Fetch tailor profile
-      const { data: tailorProfileData, error: tailorProfileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id);
-
-      if (tailorProfileError) {
-        console.error('Error fetching tailor profile:', tailorProfileError);
-      } else if (tailorProfileData && tailorProfileData.length > 0) {
-        console.log('Found tailor profile:', tailorProfileData[0].email);
-        
-        // Parse roles if stored as a string
-        const profile = tailorProfileData[0];
-        if (typeof profile.roles === 'string') {
-          try {
-            profile.roles = JSON.parse(profile.roles);
-          } catch (e) {
-            console.error('Error parsing roles:', e);
-            profile.roles = ['tailor']; // Default
-          }
-        }
-        
-        setTailorProfile(profile);
-      } else {
-        console.error('Tailor profile not found for user ID:', user.id);
-        
-        // Check if profile exists in the database
-        const { data: checkProfiles, error: checkError } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .limit(5);
-          
-        if (checkError) {
-          console.error('Error checking profiles table:', checkError);
-        } else {
-          console.log('Available profiles in database:', checkProfiles);
-        }
-      }
-
       // First fetch orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
@@ -143,8 +102,28 @@ export default function TailorOrdersPage() {
   }
 
   useEffect(() => {
-    fetchOrders()
+    const loadUserAndProfile = async () => {
+      const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+      if (error) {
+        console.error('Error fetching auth user:', error)
+        return
+      }
+      setUser(currentUser)
+      if (currentUser) {
+        const profile = await ensureProfileExists(
+          currentUser.id,
+          currentUser.email || '',
+          'tailor'
+        )
+        if (profile) setTailorProfile(profile)
+      }
+    }
+    loadUserAndProfile()
   }, [])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [user])
 
   // Add new effect to handle hash-based scrolling
   useEffect(() => {
@@ -204,43 +183,15 @@ export default function TailorOrdersPage() {
 
       console.log('Order updated in database successfully');
 
-      // Get current tailor profile if not already loaded
-      let currentTailorProfile = tailorProfile;
-      if (!currentTailorProfile) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Try to get existing profile first
-          const { data: tailorData, error: tailorError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id);
-            
-          if (tailorData && tailorData.length > 0) {
-            // Check if the profile has tailor or both role
-            const profile = tailorData[0];
-            if (profile.roles === 'tailor' || profile.roles === 'both') {
-              currentTailorProfile = profile;
-              setTailorProfile(currentTailorProfile);
-            } else {
-              // Create or update profile to include tailor role
-              currentTailorProfile = await ensureProfileExists(
-                user.id, 
-                profile.email || user.email || 'tailor@example.com', 
-                'both'
-              );
-              if (currentTailorProfile) {
-                setTailorProfile(currentTailorProfile);
-              }
-            }
-          } else {
-            // Try to create a tailor profile automatically
-            const email = user.email || 'tailor@example.com';
-            currentTailorProfile = await ensureProfileExists(user.id, email, 'tailor');
-            if (currentTailorProfile) {
-              setTailorProfile(currentTailorProfile);
-            }
-          }
-        }
+      // Ensure tailor profile is loaded
+      let currentTailorProfile = tailorProfile
+      if (!currentTailorProfile && user) {
+        currentTailorProfile = await ensureProfileExists(
+          user.id,
+          user.email || '',
+          'tailor'
+        )
+        if (currentTailorProfile) setTailorProfile(currentTailorProfile)
       }
       
       // Get customer profile directly from order's user_id
@@ -576,7 +527,6 @@ export default function TailorOrdersPage() {
   )
 }
 
-// Update the ensureProfileExists function to use simple string roles
 const ensureProfileExists = async (userId: string, email: string, role: 'tailor' | 'customer' | 'both') => {
   try {
     console.log(`Checking if ${role} profile exists for user ${userId}`);
@@ -621,14 +571,7 @@ const ensureProfileExists = async (userId: string, email: string, role: 'tailor'
     
     // Create a new profile
     console.log(`Creating new profile for user ${userId} with role ${role}`);
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error('No authenticated user');
-      return null;
-    }
-    
-    // Create profile record
+    // Create profile record using provided email
     const { data: newProfile, error: createError } = await supabase
       .from('profiles')
       .insert([{

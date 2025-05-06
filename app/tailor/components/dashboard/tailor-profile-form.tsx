@@ -108,7 +108,9 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
 
     try {
       // Validate all required fields including images
-      if (!logo || !banner) {
+      const hasLogo = logo || formData.logo
+      const hasBanner = banner || formData.bannerImage
+      if (!hasLogo || !hasBanner) {
         throw new Error('Please upload both a logo and banner image')
       }
 
@@ -135,27 +137,38 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         throw new Error('Error uploading images. Please try again.')
       }
 
-      // Use a raw SQL query instead of the API - this bypasses the .update() method that's having issues
-      const { data: sqlData, error: sqlError } = await supabase
-        .rpc('update_user_role', { 
-          user_id: user.id,
-          new_role: 'both'
-        });
+      // Check if this is a new profile creation or an update to an existing profile
+      const { data: existingProfile } = await supabase
+        .from('tailor_details')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      const isNewProfile = !existingProfile;
+      
+      // Only update the role if this is a new profile creation
+      if (isNewProfile) {
+        // Use a raw SQL query to update the role
+        const { error: sqlError } = await supabase
+          .rpc('update_user_role', { 
+            user_id: user.id,
+            new_role: 'both'
+          });
 
-      if (sqlError) {
-        console.error('SQL role update error:', sqlError);
-        throw new Error('Error updating profile role. Please try again.');
+        if (sqlError) {
+          console.error('SQL role update error:', sqlError);
+          throw new Error('Error updating profile role. Please try again.');
+        }
       }
 
       const profileData = {
-        // id: user.id, // Assuming 'id' isn't needed here if it auto-links or is already set
         brand_name: formData.brandName,
         tailor_name: formData.tailorName,
         logo_url: logoUrl,
         banner_image_url: bannerUrl,
         address: formData.address,
         phone: formData.phone,
-        email: formData.email, // Might not be needed if linked via user ID
+        email: formData.email,
         bio: formData.bio,
         rating: formData.rating || 0,
         website: formData.website,
