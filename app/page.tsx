@@ -157,10 +157,8 @@ export default function Home() {
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={closeAuthDialog}
-        onSubmit={handleSubmit}
-        onSignUp={handleSignUp}
-        onGoogleSignIn={handleGoogleSignIn}
       />
+      
     </div>
   );
 }

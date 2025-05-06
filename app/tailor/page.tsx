@@ -107,49 +107,6 @@ export default function Dashboard() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const handleSubmit = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
-      setIsAuthDialogOpen(false)
-    } catch (error) {
-      console.error('Error signing in:', error)
-    }
-  }
-
-  const handleSignUp = async (email: string, password: string, firstName: string, lastName: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
-      setIsAuthDialogOpen(false)
-    } catch (error) {
-      console.error('Error signing up:', error)
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-    }
-  }
 
   // Don't allow closing the dialog if user is not authenticated
   const handleCloseDialog = () => {
@@ -278,9 +235,6 @@ export default function Dashboard() {
         <AuthDialog
           isOpen={isAuthDialogOpen}
           onClose={handleCloseDialog}
-          onSubmit={handleSubmit}
-          onSignUp={handleSignUp}
-          onGoogleSignIn={handleGoogleSignIn}
         />
       </div>
     )

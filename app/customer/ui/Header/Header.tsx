@@ -11,6 +11,7 @@ import { supabase } from '../../../lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"
 import { Button } from "../../../tailor/components/ui/button"
+import { Card } from "../../../tailor/components/ui/card"
 
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ export function Header() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
@@ -137,6 +139,7 @@ export function Header() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setShowLogoutConfirm(false)
   }
 
   useEffect(() => {
@@ -186,21 +189,43 @@ export function Header() {
               >
                 <IoPerson />
               </div>
-              {user && <Button onClick={handleSignOut} variant="ghost" size="icon">
+              {user && <Button onClick={() => setShowLogoutConfirm(true)} variant="ghost" size="icon">
                 <LogOut size={15} />
               </Button>}
             </div>
           </div>
         </div>
         <AuthDialog
-          onSubmit={handleSubmit}
-          onSignUp={handleSignUp}
-          onGoogleSignIn={handleGoogleSignIn}
           isOpen={isAuthDialogOpen}
           onClose={closeAuthDialog}
         />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={user} toggleAuthDialog={toggleAuthDialog} />
+
+      {showLogoutConfirm && (
+        <div className="logout-overlay">
+          <Card className="logout-dialog">
+            <h3>Logout Confirmation</h3>
+            <p>Are you sure you want to log out?</p>
+            <div className="logout-buttons">
+              <Button 
+                variant="secondary" 
+                className="cancel-button"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                className="logout-button"
+                onClick={handleSignOut}
+              >
+                Logout
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </>
   )
 }

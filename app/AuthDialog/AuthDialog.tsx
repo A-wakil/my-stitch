@@ -9,10 +9,9 @@ import { supabase } from '../lib/supabaseClient'
 interface AuthDialogProps {
   isOpen: boolean
   onClose: () => void
-  onGoogleSignIn: () => void
 }
 
-export function AuthDialog({ isOpen, onClose, onGoogleSignIn }: AuthDialogProps) {
+export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -100,6 +99,7 @@ export function AuthDialog({ isOpen, onClose, onGoogleSignIn }: AuthDialogProps)
             data: {
               first_name: firstName,
               last_name: lastName,
+              roles: 'customer'
             },
           },
         })

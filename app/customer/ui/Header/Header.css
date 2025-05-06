@@ -198,5 +198,69 @@
   position: relative;
   z-index: 2;
 }
+
+/* Logout Dialog Styles */
+.logout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.logout-dialog {
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+}
+
+.logout-dialog h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.logout-dialog p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.logout-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-button {
+  min-width: 100px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.logout-button {
+  min-width: 100px;
+  background-color: #ef4444;
+  color: white;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.logout-button:hover {
+  background-color: #dc2626;
+}
   
   
