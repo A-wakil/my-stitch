@@ -9,6 +9,7 @@ import OrderConfirmationModal from '../../ui/orderConfirmationModal/OrderConfirm
 import { Measurement } from '../../../lib/types'
 import { IoArrowBack } from "react-icons/io5"
 import { IoChevronDown, IoChevronUp } from "react-icons/io5"
+import { IoInformationCircleOutline } from "react-icons/io5"
 import { sendOrderNotification } from '../../../lib/notifications'
 
 interface DesignDetail {
@@ -81,6 +82,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(true)
   const [showMeasurementDetails, setShowMeasurementDetails] = useState(false)
   const [selectedStyle, setSelectedStyle] = useState<string>('')
+  const [customYards, setCustomYards] = useState<number | null>(null)
+  const [showYardInput, setShowYardInput] = useState(false)
 
   useEffect(() => {
     async function fetchDesign() {
@@ -251,8 +254,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         return;
       }
 
-      // Calculate yards if measurements are available
-      const yards = selectedMeasurement ? calculateYardsNeeded(selectedMeasurement) : 0;
+      // Use the new yard calculation
+      const yards = customYards !== null ? customYards : (selectedStyle ? getRecommendedYards(selectedStyle) : 4.5);
 
       // Format shipping address as a proper JSON string
       const shippingAddressJson = JSON.stringify({
@@ -358,18 +361,31 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     setSelectedMeasurement(measurement);
   };
 
+  const getRecommendedYards = (styleType: string): number => {
+    switch(styleType) {
+      case 'kaftan':
+        return 4.5;
+      case 'agbada':
+        return 3.5;
+      case 'kaftan_agbada':
+        return 8.0;
+      default:
+        return 4.5;
+    }
+  };
+
   const getFabricPrice = (fabric: any, measurement?: Measurement) => {
     // Default values if properties are undefined
     const stitchPrice = fabric.stitchPrice || 0;
     const yardPrice = fabric.yardPrice || 0;
     
-    // If we have measurements, calculate yards needed
-    if (measurement) {
-      const yards = calculateYardsNeeded(measurement);
+    // Calculate based on yards needed
+    if (selectedStyle) {
+      const yards = customYards !== null ? customYards : getRecommendedYards(selectedStyle);
       return stitchPrice + (yards * yardPrice);
     } 
     
-    // Fallback to previous logic if no measurements available
+    // Fallback to previous logic if no style is selected
     if (fabric.price !== undefined) {
       return fabric.price;
     } else if (fabric.stitchPrice !== undefined) {
@@ -378,58 +394,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       return 0; // Default price if none is available
     }
   }
-
-  // Function to calculate yards needed based on measurements and style
-  const calculateYardsNeeded = (measurements: Measurement): number => {
-    // Helper function to calculate Kaftan/Shirt yards
-    const calculateKaftanYards = (measurements: Measurement): number => {
-      const shirtLength = measurements.shirt_length || 0;
-      const sleeveLength = measurements.shoulder_to_wrist || 0;
-      
-      // Body panel calculation (front & back side by side)
-      const bodyPanelYards = (shirtLength + 2) / 36;
-      
-      // Sleeves calculation (both sleeves side by side)
-      const sleevePanelYards = (sleeveLength + 2) / 36;
-      
-      // Add margin for neck facings and details
-      return bodyPanelYards + sleevePanelYards + 0.5;
-    };
-
-    // Helper function to calculate trouser yards
-    const calculateTrouserYards = (measurements: Measurement): number => {
-      const trouserLength = measurements.trouser_length || 0;
-      
-      // Basic trouser calculation plus margin for pockets/facings
-      return ((trouserLength + 2) / 36) + 0.5;
-    };
-
-    // Helper function to calculate Agbada yards
-    const calculateAgbadaYards = (measurements: Measurement): number => {
-      const agbadaLength = measurements.shirt_length ? measurements.shirt_length + 10 : 0; // Adding 10" for typical Agbada length
-      
-      // Two lengths plus margin for embroidery and finishing
-      return (2 * ((agbadaLength + 2) / 36)) + 0.75;
-    };
-
-    // Calculate based on selected style
-    switch(selectedStyle) {
-      case 'kaftan':
-        return Math.ceil(calculateKaftanYards(measurements) * 2) / 2; // Round to nearest 0.5
-
-      case 'kaftan_agbada':
-        const kaftanYards = calculateKaftanYards(measurements);
-        const trouserYards = calculateTrouserYards(measurements);
-        const agbadaYards = calculateAgbadaYards(measurements);
-        return Math.ceil((kaftanYards + trouserYards + agbadaYards) * 2) / 2; // Round to nearest 0.5
-
-      case 'agbada':
-        return Math.ceil(calculateAgbadaYards(measurements) * 2) / 2; // Round to nearest 0.5
-
-      default:
-        return 0;
-    }
-  };
 
   const totalPrice = useMemo(() => {
     if (!design || !design.fabrics[selectedFabric]) return 0;
@@ -509,30 +473,65 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           <div className={styles.description}>
             <p>{design.description}</p>
           </div>
-          
-          {!selectedMeasurement && (
-            <p className={styles.partialPrice}>
-              Total price calculated after measurements are selected
-            </p>
-          )}
+
           
           <div className={styles.priceBreakdown}>
             <p>Stitching Price: ${design.fabrics[selectedFabric].stitchPrice?.toFixed(2) || "0.00"}</p>
             <p>Fabric Price: ${design.fabrics[selectedFabric].yardPrice?.toFixed(2) || "0.00"} per yard</p>
-            {selectedMeasurement && (
+            {selectedStyle && (
               <>
-                {selectedStyle && (
-                  <p>
-                    Selected Style: <span className={styles.styleValue}>
-                      {selectedStyle === 'kaftan' ? 'Kaftan' : 
-                       selectedStyle === 'kaftan_agbada' ? 'Kaftan & Agbada' : 
-                       selectedStyle === 'agbada' ? 'Agbada' : 'None Selected'}
-                    </span>
-                  </p>
-                )}
                 <p>
-                  Estimated fabric: {calculateYardsNeeded(selectedMeasurement).toFixed(2)} yards = ${((design.fabrics[selectedFabric].yardPrice || 0) * calculateYardsNeeded(selectedMeasurement)).toFixed(2)}
+                  Selected Style: <span className={styles.styleValue}>
+                    {selectedStyle === 'kaftan' ? 'Kaftan' : 
+                     selectedStyle === 'kaftan_agbada' ? 'Kaftan & Agbada' : 
+                     selectedStyle === 'agbada' ? 'Agbada' : 'None Selected'}
+                  </span>
                 </p>
+                
+                <div className={styles.yardageSection}>
+                  <div className={styles.yardageToggle}>
+                    <button 
+                      className={`${styles.yardageButton} ${!showYardInput ? styles.activeButton : ''}`}
+                      onClick={() => setShowYardInput(false)}
+                    >
+                      Use Recommended
+                    </button>
+                    <button 
+                      className={`${styles.yardageButton} ${showYardInput ? styles.activeButton : ''}`}
+                      onClick={() => setShowYardInput(true)}
+                    >
+                      Custom Yardage
+                    </button>
+                    <span className={styles.yardageInfo}>
+                      <IoInformationCircleOutline className={styles.infoIcon} />
+                      <div className={styles.yardageTooltip}>
+                        Use "Custom Yardage" if you already know exactly how much fabric you need. 
+                        Otherwise, we recommend using our standard estimates based on your style choice.
+                      </div>
+                    </span>
+                  </div>
+                  
+                  {showYardInput ? (
+                    <div className={styles.customYardInput}>
+                      <label htmlFor="custom-yards">Enter yards needed:</label>
+                      <input 
+                        id="custom-yards"
+                        type="number" 
+                        min="1" 
+                        step="0.5" 
+                        value={customYards || ''}
+                        onChange={(e) => setCustomYards(e.target.value ? parseFloat(e.target.value) : null)}
+                        placeholder="Enter yards..."
+                      />
+                    </div>
+                  ) : (
+                    <p>
+                      Recommended fabric: {getRecommendedYards(selectedStyle).toFixed(1)} yards = 
+                      ${((design.fabrics[selectedFabric].yardPrice || 0) * getRecommendedYards(selectedStyle)).toFixed(2)}
+                    </p>
+                  )}
+                </div>
+                
                 <p className={styles.estimatedTotal}>
                   Total Price: ${totalPrice.toFixed(2)}
                 </p>

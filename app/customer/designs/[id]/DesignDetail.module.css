@@ -61,8 +61,6 @@
 }
 
 .description {
-  margin-bottom: 1.5rem;
-  margin-top: 0.25rem;
   color: #555;
   line-height: 1.5;
   font-size: 1rem;
@@ -345,9 +343,6 @@
   margin: 1rem 0;
 }
 
-.styleSelection {
-  margin-bottom: 2rem;
-}
 
 .styleOptions {
   display: grid;
@@ -396,4 +391,105 @@
   .styleOptions {
     grid-template-columns: 1fr;
   }
+}
+
+/* Yardage selection styles */
+.yardageSection {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.yardageToggle {
+  display: flex;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  overflow: visible;
+  border: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.yardageButton {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background-color: #f9fafb;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.yardageButton.activeButton {
+  background-color: #e5e7eb;
+  font-weight: 500;
+}
+
+.customYardInput {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.customYardInput label {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.customYardInput input {
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 250px;
+}
+
+/* Yardage section header and tooltip styles */
+.yardageSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.yardageInfo {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block;
+  z-index: 10;
+}
+
+.infoIcon {
+  color: #6b7280;
+  font-size: 1.25rem;
+  cursor: help;
+}
+
+.yardageTooltip {
+  visibility: hidden;
+  position: absolute;
+  width: 300px;
+  background-color: #fff;
+  color: #4b5563;
+  text-align: left;
+  padding: 1rem;
+  border-radius: 6px;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  right: 0px;
+  top: calc(100% + 10px);
+  border: 1px solid #e5e7eb;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.yardageInfo:hover .yardageTooltip {
+  visibility: visible;
+  opacity: 1;
 } 
