@@ -39,6 +39,7 @@ interface OrderConfirmationModalProps {
   savedMeasurements: Measurement[];
   onMeasurementChange: (measurement: Measurement | undefined) => void;
   isLoadingMeasurements: boolean;
+  isProcessingOrder?: boolean;
 }
 
 interface AddressForm {
@@ -92,7 +93,8 @@ export default function OrderConfirmationModal({
   isLoadingPayment,
   savedMeasurements,
   onMeasurementChange,
-  isLoadingMeasurements
+  isLoadingMeasurements,
+  isProcessingOrder
 }: OrderConfirmationModalProps) {
   const [isNewAddress, setIsNewAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<AddressForm>({
@@ -700,8 +702,8 @@ export default function OrderConfirmationModal({
           </p>
           <button 
             onClick={onConfirm} 
-            className={`${styles.confirmButton} ${!isOrderValid() ? styles.confirmButtonDisabled : ''}`}
-            disabled={!isOrderValid()}
+            className={`${styles.confirmButton} ${!isOrderValid() || isProcessingOrder ? styles.confirmButtonDisabled : ''}`}
+            disabled={!isOrderValid() || isProcessingOrder}
           >
             {!isOrderValid() ? (
               <span className={styles.invalidOrderMessage}>
@@ -711,6 +713,8 @@ export default function OrderConfirmationModal({
                 {(!orderDetails.shippingAddress || !orderDetails.paymentMethod) && !orderDetails.measurement && ', and '}
                 {!orderDetails.measurement && 'measurement'}
               </span>
+            ) : isProcessingOrder ? (
+              'Processing order...'
             ) : (
               'Place your order'
             )}

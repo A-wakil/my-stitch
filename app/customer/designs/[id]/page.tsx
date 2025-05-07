@@ -84,6 +84,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [selectedStyle, setSelectedStyle] = useState<string>('')
   const [customYards, setCustomYards] = useState<number | null>(null)
   const [showYardInput, setShowYardInput] = useState(false)
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false)
 
   useEffect(() => {
     async function fetchDesign() {
@@ -235,10 +236,14 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   const handleConfirmOrder = async () => {
     try {
+      // Set processing state to true to disable the button
+      setIsProcessingOrder(true);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         toast.error('You must be logged in to place an order');
+        setIsProcessingOrder(false);
         return;
       }
 
@@ -251,6 +256,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       if (!designData?.created_by) {
         toast.error('Invalid design data');
+        setIsProcessingOrder(false);
         return;
       }
 
@@ -292,6 +298,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       if (error) {
         console.error('Order insertion error:', error);
+        setIsProcessingOrder(false);
         throw error;
       }
 
@@ -304,6 +311,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       if (customerProfileError) {
         console.error('Error fetching customer profile:', customerProfileError);
+        setIsProcessingOrder(false);
       } else {
         // Fetch tailor profile
         const { data: tailorProfile, error: tailorProfileError } = await supabase
@@ -314,6 +322,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
         if (tailorProfileError) {
           console.error('Error fetching tailor profile:', tailorProfileError);
+          setIsProcessingOrder(false);
         } else {
           // Send notifications
           try {
@@ -335,10 +344,12 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       toast.success('Order placed successfully!');
       setIsModalOpen(false);
+      // Keep processing true during redirect
       router.push('/customer/orders');
     } catch (error) {
       console.error('Error placing order:', error);
       toast.error('Failed to place order. Please try again.');
+      setIsProcessingOrder(false);
     }
   };
 
@@ -706,6 +717,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         isLoading={isLoading}
         isLoadingPayment={isLoadingPayment}
         isLoadingMeasurements={isLoadingMeasurements}
+        isProcessingOrder={isProcessingOrder}
       />
     </div>
   )
