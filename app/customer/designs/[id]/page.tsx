@@ -451,6 +451,14 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     };
   };
 
+  // Add a check to determine if this is a simple pricing design or has real fabrics
+  const hasRealFabrics = useMemo(() => {
+    if (!design?.fabrics) return false;
+    return design.fabrics.some(fabric => 
+      fabric.name !== "Custom" || (fabric.image && fabric.colors && fabric.colors.length > 0)
+    );
+  }, [design?.fabrics]);
+
   if (!design) {
     return <div>Loading...</div>
   }
@@ -556,43 +564,51 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             </div>
           </div>
 
-          <div className={styles.fabricSelection}>
-            <h3>Fabrics</h3>
-            <div className={styles.fabricOptions}>
-              {design.fabrics.map((fabric, index) => (
-                <div
-                  key={index}
-                  className={`${styles.fabricOption} ${selectedFabric === index ? styles.selectedFabric : ''}`}
-                  onClick={() => {
-                    setSelectedFabric(index);
-                    setSelectedColor(0);
-                  }}
-                >
-                  <img src={fabric.image} alt={fabric.name} />
-                  <span>{fabric.name}</span>
-                </div>
-              ))}
+          {/* Only show Fabrics section if there are real fabrics */}
+          {hasRealFabrics && (
+            <div className={styles.fabricSelection}>
+              <h3>Fabrics</h3>
+              <div className={styles.fabricOptions}>
+                {design.fabrics
+                  .filter(fabric => fabric.name !== "Custom" || (fabric.image && fabric.colors && fabric.colors.length > 0))
+                  .map((fabric, index) => (
+                    <div
+                      key={index}
+                      className={`${styles.fabricOption} ${selectedFabric === index ? styles.selectedFabric : ''}`}
+                      onClick={() => {
+                        setSelectedFabric(index);
+                        setSelectedColor(0);
+                      }}
+                    >
+                      <img src={fabric.image} alt={fabric.name} />
+                      <span>{fabric.name}</span>
+                    </div>
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className={styles.colorSelection}>
-            <h3>Colors</h3>
-            <div className={styles.colorOptions}>
-              {design.fabrics[selectedFabric].colors.map((color, index) => (
-                <div
-                  key={index}
-                  className={styles.colorOption}
-                  onClick={() => setSelectedColor(index)}
-                >
-                  <div 
-                    className={`${styles.colorPill} ${selectedColor === index ? styles.selectedColor : ''}`}
-                    style={{ backgroundColor: color.name }}
-                    title={color.name}
-                  />
-                </div>
-              ))}
+          {/* Only show Colors section if the selected fabric has colors */}
+          {hasRealFabrics && design.fabrics[selectedFabric].colors && design.fabrics[selectedFabric].colors.length > 0 && (
+            <div className={styles.colorSelection}>
+              <h3>Colors</h3>
+              <div className={styles.colorOptions}>
+                {design.fabrics[selectedFabric].colors.map((color, index) => (
+                  <div
+                    key={index}
+                    className={styles.colorOption}
+                    onClick={() => setSelectedColor(index)}
+                  >
+                    <div 
+                      className={`${styles.colorPill} ${selectedColor === index ? styles.selectedColor : ''}`}
+                      style={{ backgroundColor: color.name }}
+                      title={color.name}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Add measurement selection section */}
           <div className={styles.measurementSelection}>
@@ -662,7 +678,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               <div className={styles.noMeasurements}>
                 <p>No measurements found. Please add your measurements in your profile first.</p>
                 <button
-                  onClick={() => router.push('/customer/profile/measurements')}
+                  onClick={() => router.push('/customer/measurements')}
                   className={styles.addMeasurementsButton}
                 >
                   Add Measurements

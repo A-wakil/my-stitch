@@ -42,11 +42,67 @@
   border: 1px solid #e5e7eb;
 }
 
-.sectionTitle {
-  font-weight: 500;
-  font-size: 1rem;
-  color: #000;
+.sectionHeader {
+  display: flex;
+  align-items: center;
   margin-bottom: 1rem;
+  position: relative;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.infoTooltip {
+  position: relative;
+  margin-left: 0.75rem;
+  cursor: help;
+}
+
+.infoIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+}
+
+.tooltipContent {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.tooltipContent p {
+  margin: 0.5rem 0;
+}
+
+.tooltipContent ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.tooltipContent li {
+  margin: 0.25rem 0;
+}
+
+.infoTooltip:hover .tooltipContent {
+  opacity: 1;
+  visibility: visible;
 }
 
 .imageGrid {
@@ -144,6 +200,100 @@
 .durationInput input:hover,
 .durationInput select:hover {
   border-color: #d1d5db;
+}
+
+/* Add styles for fabric toggle and simple pricing UI */
+.fabricToggleContainer {
+  width: 100%;
+}
+
+.fabricToggleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.fabricModeToggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.toggleInput {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.toggleSlider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.toggleInput:checked + .toggleSlider {
+  background-color: #111827;
+}
+
+.toggleInput:checked + .toggleSlider:before {
+  transform: translateX(24px);
+}
+
+.simplePricingContainer {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.simplePricingExplanation {
+  margin-bottom: 1.5rem;
+}
+
+.simplePricingExplanation p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.simplePricingForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 

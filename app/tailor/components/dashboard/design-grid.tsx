@@ -13,6 +13,8 @@ interface Design {
   fabrics: {
     name: string
     image: string
+    yardPrice?: number
+    stitchPrice?: number
     colors: { name: string; image: string }[]
   }[]
 }
@@ -161,31 +163,63 @@ export function DesignGrid() {
                     </div>
                   </div>
                   <h3 className={styles['card-title']}>{design.title}</h3>
-                  <div className={styles['fabric-container']}>
-                    {design.fabrics?.map((fabric, fabricIndex) => (
-                      <div key={fabricIndex} className={styles['fabric-item']}>
-                        <div className={styles['fabric-header']}>
-                          <img 
-                            src={fabric.image || "/placeholder.svg"}
-                            alt={`${fabric.name} fabric`}
-                            className={styles['fabric-image']}
-                          />
-                          <span className={styles['fabric-name']}>{fabric.name}</span>
-                        </div>
-                        <div className={styles['color-list']}>
-                          {fabric.colors?.map((color, colorIndex) => (
-                            <div key={colorIndex} className={styles['color-item']}>
-                              <div 
-                                className={styles['color-swatch']} 
-                                style={{ backgroundColor: color.name }}
-                              />
-                              <span className={styles['color-name']}>{color.name}</span>
-                            </div>
-                          ))}
-                        </div>
+                  
+                  {/* Compact pricing display */}
+                  {design.fabrics && design.fabrics.length > 0 && 
+                    (design.fabrics.length === 1 || 
+                     (design.fabrics.length > 0 && design.fabrics.every(f => f.name === "Custom"))) && (
+                    <div className={styles['compact-pricing']}>
+                      <div className={styles['price-tag']}>
+                        <span>Yard Price: ${design.fabrics[0].yardPrice?.toFixed(2)}</span>
+                        <span className={styles['price-divider']}>|</span>
+                        <span>Stitching: ${design.fabrics[0].stitchPrice?.toFixed(2)}</span>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+                  
+                  {/* Only render fabric section if there are real fabric options (not just placeholder) */}
+                  {design.fabrics && design.fabrics.some(fabric => 
+                    fabric.name !== "Custom" && fabric.image && fabric.colors && fabric.colors.length > 0
+                  ) && (
+                    <div className={styles['fabric-container']}>
+                      {design.fabrics
+                        .filter(fabric => fabric.name !== "Custom" || (fabric.image && fabric.colors && fabric.colors.length > 0))
+                        .map((fabric, fabricIndex) => (
+                          <div key={fabricIndex} className={styles['fabric-item']}>
+                            <div className={styles['fabric-header']}>
+                              <img 
+                                src={fabric.image || "/placeholder.svg"}
+                                alt={`${fabric.name} fabric`}
+                                className={styles['fabric-image']}
+                              />
+                              <span className={styles['fabric-name']}>{fabric.name}</span>
+                            </div>
+                            
+                            {/* Add pricing under each fabric when there are multiple fabrics */}
+                            {design.fabrics && design.fabrics.length > 1 && (
+                              <div className={styles['fabric-pricing']}>
+                                <span>Yard: ${fabric.yardPrice?.toFixed(2)}</span>
+                                <span className={styles['price-divider']}>|</span>
+                                <span>Stitching: ${fabric.stitchPrice?.toFixed(2)}</span>
+                              </div>
+                            )}
+                            
+                            <div className={styles['color-list']}>
+                              {fabric.colors?.map((color, colorIndex) => (
+                                <div key={colorIndex} className={styles['color-item']}>
+                                  <div 
+                                    className={styles['color-swatch']} 
+                                    style={{ backgroundColor: color.name }}
+                                  />
+                                  <span className={styles['color-name']}>{color.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  )}
                   <div className={styles['card-footer']}>
                     <button 
                       className={styles['edit-button']}

@@ -5,13 +5,13 @@ import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
-import { ColorPicker } from "../../components/dashboard/color-picker"
 import { FabricPicker } from "../../components/dashboard/fabric-picker"
 import { ImageUpload } from "../../components/dashboard/image-upload"
 import styles from "./styles/DesignForm.module.css"
 import { Fabric } from "../../types/design"
 import { supabase } from "../../../lib/supabaseClient"
 import { toast } from "react-hot-toast"
+import { Info } from "lucide-react"
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -24,7 +24,7 @@ interface DesignFormProps {
   }
 }
 
-type Duration = number; // This will represent weeks
+type Duration = number | null; // This will represent weeks
 
 // Add interface for errors
 interface FormErrors {
@@ -46,9 +46,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       colors: f.colors.map(c => ({ name: c.name, image: c.image }))
     })) || []
   )
-  const [duration, setDuration] = useState<Duration>(1);
+  const [duration, setDuration] = useState<Duration>(null);
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showFabricPicker, setShowFabricPicker] = useState<boolean>(true)
+  const [simplePricePerYard, setSimplePricePerYard] = useState<string>('')
+  const [simpleStitchingPrice, setSimpleStitchingPrice] = useState<string>('')
 
   useEffect(() => {
     if (initialData) {
@@ -88,6 +91,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       return { valid: false, message: "Please enter a description" }
     }
     
+    // Check if completion time is set
+    if (duration === null) {
+      console.log('[Validation] Missing completion time');
+      return { valid: false, message: "Please specify a completion time" }
+    }
+
     // Check if there are either new images or existing images
     if (images.length === 0 && existingImages.length === 0) {
       console.log('[Validation] Missing images');
@@ -95,40 +104,50 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     }
 
     // For updates, don't require fabrics if none were changed
-    if (fabrics.length === 0 && !isUpdate) {
+    if (!showFabricPicker) {
+      // Simple pricing mode validation
+      if (!simplePricePerYard.trim() || isNaN(parseFloat(simplePricePerYard))) {
+        console.log('[Validation] Missing or invalid simple price per yard');
+        return { valid: false, message: "Please enter a valid price per yard" }
+      }
+      if (!simpleStitchingPrice.trim() || isNaN(parseFloat(simpleStitchingPrice))) {
+        console.log('[Validation] Missing or invalid simple stitching price');
+        return { valid: false, message: "Please enter a valid stitching price" }
+      }
+    } else if (fabrics.length === 0 && !isUpdate) {
       console.log('[Validation] Missing fabrics on new design');
       return { valid: false, message: "Please add at least one fabric" }
-    }
-
-    // When updating an existing design, check if fabrics have changed
-    if (isUpdate) {
-      console.log('[Validation] Processing update - fabrics:', fabrics.length, 
-                  'initialFabrics:', initialData?.fabrics.length);
-      
-      // Special case - always allow updates when only changing basic fields
-      return { valid: true, message: "" };
-    } else {
-      // For new designs, validate all fabrics
-      for (const fabric of fabrics) {
-        if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
-          const missingFields = [];
-          if (!fabric.name) missingFields.push("name");
-          if (!fabric.image) missingFields.push("image");
-          if (!fabric.yardPrice) missingFields.push("yard price");
-          if (!fabric.stitchPrice) missingFields.push("stitching price");
-          
-          const errorMsg = `Please complete all fields for fabric: ${missingFields.join(", ")}`;
-          console.log('[Validation] Error:', errorMsg);
-          return { 
-            valid: false, 
-            message: errorMsg
-          }
-        }
+    } else if (showFabricPicker) {
+      // When updating an existing design, check if fabrics have changed
+      if (isUpdate) {
+        console.log('[Validation] Processing update - fabrics:', fabrics.length, 
+                    'initialFabrics:', initialData?.fabrics.length);
         
-        if (fabric.colors.length === 0) {
-          const errorMsg = `Please add at least one color for ${fabric.name}`;
-          console.log('[Validation] Error:', errorMsg);
-          return { valid: false, message: errorMsg }
+        // Special case - always allow updates when only changing basic fields
+        return { valid: true, message: "" };
+      } else {
+        // For new designs with fabric picker on, validate all fabrics
+        for (const fabric of fabrics) {
+          if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
+            const missingFields = [];
+            if (!fabric.name) missingFields.push("name");
+            if (!fabric.image) missingFields.push("image");
+            if (!fabric.yardPrice) missingFields.push("yard price");
+            if (!fabric.stitchPrice) missingFields.push("stitching price");
+            
+            const errorMsg = `Please complete all fields for fabric: ${missingFields.join(", ")}`;
+            console.log('[Validation] Error:', errorMsg);
+            return { 
+              valid: false, 
+              message: errorMsg
+            }
+          }
+          
+          if (fabric.colors.length === 0) {
+            const errorMsg = `Please add at least one color for ${fabric.name}`;
+            console.log('[Validation] Error:', errorMsg);
+            return { valid: false, message: errorMsg }
+          }
         }
       }
     }
@@ -136,16 +155,35 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, images, existingImages, fabrics, initialData?.id]);
+  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formValidation.valid) {
-      toast.error(formValidation.message, {
-        duration: 2000,
-        position: 'top-center',
-      })
+      // Check specifically for color-related validation errors
+      if (formValidation.message && formValidation.message.includes('color for')) {
+        const fabricName = formValidation.message.split('color for ')[1];
+        toast.error(
+          <div>
+            <strong>Missing colors!</strong>
+            <p>Please add at least one color for fabric: {fabricName}</p>
+          </div>,
+          {
+            duration: 4000,
+            position: 'top-center',
+            style: { 
+              borderLeft: '4px solid red',
+              padding: '16px'
+            }
+          }
+        );
+      } else {
+        toast.error(formValidation.message, {
+          duration: 2000,
+          position: 'top-center',
+        });
+      }
       return
     }
 
@@ -155,52 +193,67 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     formData.append("title", title)
     formData.append("description", description)
     formData.append("existingImages", JSON.stringify(existingImages))
-    formData.append("completion_time", duration.toString())
+    formData.append("completion_time", duration === null ? "" : duration.toString())
     
     // Append new images
     images.forEach((image) => {
       formData.append("images", image)
     })
     
-    // Convert fabrics array to JSON string and handle fabric images
-    const fabricsData = await Promise.all(fabrics.map(async (fabric, index) => {
-      let fabricImageUrl = fabric.image
+    // Handle fabrics data based on mode
+    if (showFabricPicker) {
+      // Convert fabrics array to JSON string and handle fabric images
+      const fabricsData = await Promise.all(fabrics.map(async (fabric, index) => {
+        let fabricImageUrl = fabric.image
 
-      // Upload fabric image to Supabase if it's a File
-      if (fabric.image instanceof File) {
-        const fabricImageKey = `fabrics/${Date.now()}_${fabric.image.name}`
-        formData.append('fabricImages', fabric.image)
-        formData.append('fabricImageKeys', fabricImageKey)
-        fabricImageUrl = fabricImageKey // The API will handle the actual upload
-      }
-
-      // Handle color images
-      const colors = await Promise.all(fabric.colors.map(async (color, colorIndex) => {
-        let colorImageUrl = color.image
-
-        if (color.image instanceof File) {
-          const colorImageKey = `colors/${Date.now()}_${color.image.name}`
-          formData.append('colorImages', color.image)
-          formData.append('colorImageKeys', colorImageKey)
-          colorImageUrl = colorImageKey // The API will handle the actual upload
+        // Upload fabric image to Supabase if it's a File
+        if (fabric.image instanceof File) {
+          const fabricImageKey = `fabrics/${Date.now()}_${fabric.image.name}`
+          formData.append('fabricImages', fabric.image)
+          formData.append('fabricImageKeys', fabricImageKey)
+          fabricImageUrl = fabricImageKey // The API will handle the actual upload
         }
+
+        // Handle color images
+        const colors = await Promise.all(fabric.colors.map(async (color, colorIndex) => {
+          let colorImageUrl = color.image
+
+          if (color.image instanceof File) {
+            const colorImageKey = `colors/${Date.now()}_${color.image.name}`
+            formData.append('colorImages', color.image)
+            formData.append('colorImageKeys', colorImageKey)
+            colorImageUrl = colorImageKey // The API will handle the actual upload
+          }
+
+          return {
+            name: color.name,
+            image: colorImageUrl
+          }
+        }))
 
         return {
-          name: color.name,
-          image: colorImageUrl
+          name: fabric.name,
+          image: fabricImageUrl,
+          yardPrice: fabric.yardPrice,
+          stitchPrice: fabric.stitchPrice,
+          colors
         }
       }))
-
-      return {
-        name: fabric.name,
-        image: fabricImageUrl,
-        yardPrice: fabric.yardPrice,
-        stitchPrice: fabric.stitchPrice,
-        colors
-      }
-    }))
-    
-    formData.append('fabrics', JSON.stringify(fabricsData))
+      
+      formData.append('fabrics', JSON.stringify(fabricsData))
+    } else {
+      // Use simple pricing mode - create a generic fabric entry with just prices
+      const simpleFabricData = [{
+        name: "Custom",
+        image: null,
+        yardPrice: parseFloat(simplePricePerYard),
+        stitchPrice: parseFloat(simpleStitchingPrice),
+        colors: [{ name: "Custom", image: null }]
+      }]
+      
+      formData.append('fabrics', JSON.stringify(simpleFabricData))
+      formData.append('useSimplePricing', 'true')
+    }
 
     // Add the user ID to the form data
     const { data: { user } } = await supabase.auth.getUser()
@@ -233,15 +286,39 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <div className={styles.formGroup}>
-        <Label htmlFor="title" className={styles.label}>
-          Design Title
-        </Label>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Design Title</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Choose a clear, descriptive name for your design.</p>
+              <p>Good examples:</p>
+              <ul>
+                <li>"Classic Oxford Shirt"</li>
+                <li>"Summer Linen Dress"</li>
+                <li>"Tailored Wool Blazer"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
         <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required className={styles.input} />
       </div>
       <div className={styles.formGroup}>
-        <Label htmlFor="description" className={styles.label}>
-          Description
-        </Label>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Description</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Describe your design in detail, including:</p>
+              <ul>
+                <li>Style features (collar type, sleeves, etc.)</li>
+                <li>Recommended occasions or uses</li>
+                <li>Special design elements</li>
+                <li>Fitting information</li>
+              </ul>
+            </div>
+          </div>
+        </div>
         <Textarea
           id="description"
           value={description}
@@ -250,8 +327,47 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           className={styles.textarea}
         />
       </div>
+      <div className={styles.formGroup}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Completion Time (weeks)</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Specify how long it will take to complete this design after order.</p>
+              <p>This information helps customers plan their orders and creates realistic expectations.</p>
+            </div>
+          </div>
+        </div>
+        <input
+          type="number"
+          min="1"
+          value={duration === null ? '' : duration}
+          onChange={(e) => {
+            const value = e.target.value === '' ? null : parseInt(e.target.value);
+            setDuration(value === null ? null : Math.max(1, value || 1));
+          }}
+          placeholder="Enter number of weeks"
+          required
+          className={styles.input}
+        />
+      </div>
       <div className={styles.uploadSection}>
-        <h3 className={styles.sectionTitle}>Images</h3>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Images</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Upload high-quality images of your design.</p>
+              <p>Best practices:</p>
+              <ul>
+                <li>Include front, back and detail views</li>
+                <li>Use good lighting and neutral backgrounds</li>
+                <li>Show the design on a model if possible</li>
+                <li>Recommended resolution: 1000px × 1000px minimum</li>
+              </ul>
+            </div>
+          </div>
+        </div>
         <ImageUpload 
           images={images} 
           setImages={setImages} 
@@ -259,22 +375,81 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         />
       </div>
       <div className={styles.fabricSection}>
-        <h3 className={styles.sectionTitle}>Fabrics</h3>
-        <FabricPicker 
-          fabrics={fabrics} 
-          setFabrics={setFabrics} 
-        />
+        <div className={styles.fabricToggleContainer}>
+          <div className={styles.fabricToggleHeader}>
+            <div className={styles.sectionHeader} style={{ marginBottom: 0 }}>
+              <h2 className={styles.sectionTitle}>Fabric Options</h2>
+              <div className={styles.infoTooltip}>
+                <Info className={styles.infoIcon} />
+                <div className={styles.tooltipContent}>
+                  <p>Choose how to specify fabric options for your design:</p>
+                  <ul>
+                    <li><strong>Detailed mode (toggle ON):</strong> Add specific fabrics with images, colors, and individual pricing</li>
+                    <li><strong>Simple mode (toggle OFF):</strong> Just set basic pricing without fabric details</li>
+                  </ul>
+                  <p>Use simple mode when you don't need to specify different fabric types or colors.</p>
+                </div>
+              </div>
+            </div>
+            <div className={styles.fabricModeToggle}>
+              <label className={styles.toggleLabel}>
+                <span>Detailed fabric options</span>
+                <div className={styles.toggleSwitch}>
+                  <input
+                    type="checkbox"
+                    checked={showFabricPicker}
+                    onChange={() => setShowFabricPicker(!showFabricPicker)}
+                    className={styles.toggleInput}
+                  />
+                  <span className={styles.toggleSlider}></span>
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          {!showFabricPicker ? (
+            <div className={styles.simplePricingContainer}>
+              <div className={styles.simplePricingExplanation}>
+                <p>Enter basic pricing information without specifying fabric options</p>
+              </div>
+              <div className={styles.simplePricingForm}>
+                <div className={styles.formGroup}>
+                  <Label htmlFor="price-per-yard">Price Per Yard ($)</Label>
+                  <Input
+                    id="price-per-yard"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g., 15.99"
+                    value={simplePricePerYard}
+                    onChange={(e) => setSimplePricePerYard(e.target.value)}
+                    required={!showFabricPicker}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <Label htmlFor="stitching-price">Stitching Price ($)</Label>
+                  <Input
+                    id="stitching-price"
+                    type="number"
+                    min="0" 
+                    step="0.01"
+                    placeholder="e.g., 45.00"
+                    value={simpleStitchingPrice}
+                    onChange={(e) => setSimpleStitchingPrice(e.target.value)}
+                    required={!showFabricPicker}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <FabricPicker 
+              fabrics={fabrics} 
+              setFabrics={setFabrics} 
+            />
+          )}
+        </div>
       </div>
-      <div className={styles.formGroup}>
-        <label className={styles.label}>Completion Time (weeks)</label>
-        <input
-          type="number"
-          min="1"
-          value={duration}
-          onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
-          className={styles.input}
-        />
-      </div>
+      
       <Button 
         type="submit" 
         className={`${styles.submitButton} ${(!formValidation.valid || isSubmitting) ? styles.submitButtonDisabled : ''}`}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
@@ -20,6 +20,27 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
   const [editingFabricIndex, setEditingFabricIndex] = useState<number | null>(null)
   const [showEditDetails, setShowEditDetails] = useState<{[key: number]: boolean}>({})
 
+  // Initialize all fabric color sections to be expanded by default
+  useEffect(() => {
+    // Use a ref to track if this is the first render
+    const timeoutId = setTimeout(() => {
+      // Create a map of fabric indices to true (expanded)
+      const expandedState = fabrics.reduce((acc, _, index) => {
+        acc[index] = true;
+        return acc;
+      }, {} as {[key: number]: boolean});
+      
+      setShowEditDetails(prev => {
+        // Only update if the keys are different to avoid unnecessary rerenders
+        const currentKeys = Object.keys(prev).sort().join(',');
+        const newKeys = Object.keys(expandedState).sort().join(',');
+        return currentKeys !== newKeys ? expandedState : prev;
+      });
+    }, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, [fabrics.length]);
+
   const formValidation = useMemo(() => {
     if (!fabricName.trim()) return { valid: false, message: "Please enter a fabric name" }
     if (!fabricPrice) return { valid: false, message: "Please enter a price per yard" }
@@ -37,13 +58,20 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
       return
     }
 
-    setFabrics((prevFabrics) => [...prevFabrics, { 
-      name: fabricName, 
-      image: fabricImage,
-      yardPrice: parseFloat(fabricPrice) || 0,
-      stitchPrice: parseFloat(stitchingPrice) || 0,
-      colors: [] 
-    }])
+    setFabrics((prevFabrics) => {
+      const newFabrics = [...prevFabrics, { 
+        name: fabricName, 
+        image: fabricImage,
+        yardPrice: parseFloat(fabricPrice) || 0,
+        stitchPrice: parseFloat(stitchingPrice) || 0,
+        colors: [] 
+      }];
+      setShowEditDetails(prev => ({
+        ...prev,
+        [newFabrics.length - 1]: true
+      }));
+      return newFabrics;
+    })
     setFabricName("")
     setFabricImage(null)
     setFabricPrice("")
@@ -272,6 +300,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                         <span className={styles.colorCount}>
                           {fabric.colors.length > 0 ? ` (${fabric.colors.length})` : ''}
                         </span>
+                        <span className={styles.requiredIndicator} style={{ color: 'red', marginLeft: '5px' }}>*</span>
                       </h5>
                       <Button
                         type="button"
@@ -313,8 +342,8 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                               </div>
                             ))
                           ) : (
-                            <div className={styles.noColorsMessage}>
-                              No colors added yet
+                            <div className={styles.noColorsMessage} style={{ borderColor: 'red' }}>
+                              <span style={{ color: 'red' }}>⚠️ At least one color is required</span>
                             </div>
                           )}
                         </div>
