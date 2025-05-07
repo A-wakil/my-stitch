@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Pencil, Trash2 } from "lucide-react"
 import styles from "./styles/DesignGrid.module.css"
 import { Spinner } from "../../components/ui/spinner"
+import { ConfirmationModal } from "../../components/ui/confirmation-modal"
 
 interface Design {
   id: string
@@ -23,6 +24,9 @@ export function DesignGrid() {
   const [designs, setDesigns] = useState<Design[] | null>(null)
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [designToDelete, setDesignToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -69,22 +73,36 @@ export function DesignGrid() {
     router.push(`/tailor/designs/${id}/edit`)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this design?")) {
-      try {
-        const response = await fetch(`/api/designs/${id}`, {
-          method: "DELETE",
-        })
-        if (response.ok) {
-          if (designs) {
-            setDesigns(designs.filter((design) => design.id !== id))
-          }
-        } else {
-          console.error("Failed to delete design")
+  const openDeleteModal = (id: string) => {
+    setDesignToDelete(id)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setDesignToDelete(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!designToDelete) return
+    
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/designs/${designToDelete}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        if (designs) {
+          setDesigns(designs.filter((design) => design.id !== designToDelete))
         }
-      } catch (error) {
-        console.error("Error deleting design:", error)
+      } else {
+        console.error("Failed to delete design")
       }
+    } catch (error) {
+      console.error("Error deleting design:", error)
+    } finally {
+      setIsDeleting(false)
+      closeDeleteModal()
     }
   }
 
@@ -235,7 +253,7 @@ export function DesignGrid() {
                       className={styles['delete-button']}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(design.id);
+                        openDeleteModal(design.id);
                       }}
                     >
                       <Trash2 size={20} />
@@ -248,6 +266,17 @@ export function DesignGrid() {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Design"
+        message="Are you sure you want to delete this design? This action cannot be undone."
+        confirmButtonText="Delete"
+        cancelButtonText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+        isProcessing={isDeleting}
+      />
     </div>
   )
 }
