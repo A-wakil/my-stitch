@@ -11,6 +11,7 @@ import { IoArrowBack } from "react-icons/io5"
 import { IoChevronDown, IoChevronUp } from "react-icons/io5"
 import { IoInformationCircleOutline } from "react-icons/io5"
 import { sendOrderNotification, notifyOrderParties } from '../../../lib/notifications'
+import { IoPersonCircleOutline } from "react-icons/io5"
 
 interface DesignDetail {
   id: string
@@ -28,6 +29,13 @@ interface DesignDetail {
   created_by: string
   brand_name: string
   completion_time: number
+  available_styles?: Array<{
+    name: string;
+    display_name: string;
+    description?: string;
+    recommended_yards: number;
+    is_addition?: boolean;
+  }>
 }
 
 interface PaymentMethod {
@@ -85,6 +93,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [customYards, setCustomYards] = useState<number | null>(null)
   const [showYardInput, setShowYardInput] = useState(false)
   const [isProcessingOrder, setIsProcessingOrder] = useState(false)
+  const [tailorDetails, setTailorDetails] = useState<any>(null)
+  const [showTailorProfile, setShowTailorProfile] = useState(false)
 
   useEffect(() => {
     async function fetchDesign() {
@@ -123,6 +133,21 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       }
 
       setBrandName(brandName.brand_name)
+
+      // Set default selected style if available
+      if (data.available_styles && data.available_styles.length > 0) {
+        // Find a non-Agbada addition style as the default
+        const defaultStyle = data.available_styles.find((style: {
+          name: string;
+          is_addition?: boolean;
+        }) => 
+          !style.is_addition && style.name !== 'agbada_addition'
+        );
+        setSelectedStyle(defaultStyle ? defaultStyle.name : 'kaftan');
+      } else {
+        // Fallback to default styles if none are specified
+        setSelectedStyle('kaftan');
+      }
 
       // Merge the brand_name into the design object
       const design = {
@@ -210,6 +235,30 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
     fetchMeasurements();
   }, []);
+
+  // New effect to fetch tailor details
+  useEffect(() => {
+    async function fetchTailorDetails() {
+      if (!tailorId) return;
+
+      const { data, error } = await supabase
+        .from('tailor_details')
+        .select('*')
+        .eq('id', tailorId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching tailor details:', error);
+        return;
+      }
+
+      setTailorDetails(data);
+    }
+
+    if (tailorId) {
+      fetchTailorDetails();
+    }
+  }, [tailorId]);
 
   const handleAddToCart = async () => {
     // Validate measurements first
@@ -366,6 +415,30 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   };
 
   const getRecommendedYards = (styleType: string): number => {
+    // First check if the design has available_styles with recommended_yards
+    if (design?.available_styles) {
+      // Check for the base style
+      const styleOption = design.available_styles.find(style => style.name === styleType);
+      if (styleOption && styleOption.recommended_yards) {
+        // If this is a base style with Agbada, add the Agbada yardage
+        const hasAgbadaAddition = selectedStyle.endsWith('_agbada');
+        
+        if (hasAgbadaAddition) {
+          // Look for the Agbada addition in available styles
+          const agbadaAddition = design.available_styles.find(
+            style => style.name === 'agbada_addition' || style.name === 'agbada'
+          );
+          
+          if (agbadaAddition) {
+            return styleOption.recommended_yards + agbadaAddition.recommended_yards;
+          }
+        }
+        
+        return styleOption.recommended_yards;
+      }
+    }
+
+    // Fallback to default values
     switch(styleType) {
       case 'kaftan':
         return 4.5;
@@ -373,6 +446,18 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         return 3.5;
       case 'kaftan_agbada':
         return 8.0;
+      case 'senator':
+        return 4.0;
+      case 'dashiki':
+        return 3.0;
+      case 'ankara':
+        return 4.0;
+      case 'senator_agbada':
+        return 7.5;
+      case 'dashiki_agbada':
+        return 6.5;
+      case 'ankara_agbada':
+        return 7.5;
       default:
         return 4.5;
     }
@@ -427,6 +512,36 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     );
   }, [design?.fabrics]);
 
+  // New function to check if Agbada can be added to the selected style
+  const canAddAgbada = (styleType: string): boolean => {
+    // Can't add Agbada to Agbada standalone style
+    if (styleType === 'agbada') return false;
+    
+    // Remove _agbada suffix to get the base style name
+    const baseStyleName = styleType.replace('_agbada', '');
+    
+    // Check if design has Agbada addition in available styles
+    if (design?.available_styles) {
+      return design.available_styles.some((style: {name: string}) => 
+        style.name === 'agbada_addition' || style.name === 'agbada'
+      );
+    }
+    
+    // Default to true for backward compatibility
+    return true;
+  };
+
+  // New function to handle toggling Agbada addition
+  const handleAgbadaToggle = () => {
+    if (selectedStyle.includes('_agbada')) {
+      // Remove Agbada from combo style
+      setSelectedStyle(selectedStyle.replace('_agbada', ''));
+    } else {
+      // Add Agbada to current style
+      setSelectedStyle(`${selectedStyle}_agbada`);
+    }
+  };
+
   if (!design) {
     return <div>Loading...</div>
   }
@@ -461,12 +576,33 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               />
             ))}
           </div>
+          
+          {/* Tailor Preview Section */}
+          {tailorDetails && (
+            <div className={styles.tailorPreview} onClick={() => setShowTailorProfile(true)}>
+              <div className={styles.tailorPreviewContent}>
+                <div className={styles.tailorLogo}>
+                  {tailorDetails.logo_url ? (
+                    <img src={tailorDetails.logo_url} alt={tailorDetails.brand_name} />
+                  ) : (
+                    <IoPersonCircleOutline size={40} />
+                  )}
+                </div>
+                <div className={styles.tailorInfo}>
+                  <h3>{tailorDetails.brand_name}</h3>
+                  <p>Designer: {tailorDetails.tailor_name}</p>
+                </div>
+              </div>
+              <button className={styles.viewProfileButton}>View Full Profile</button>
+            </div>
+          )}
+          
           <button 
             className={styles.addToCartButton}
             onClick={handleAddToCart}
-            disabled={loading || !selectedMeasurement}
+            disabled={loading || !selectedMeasurement || isProcessingOrder}
           >
-            {loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order')}
+            {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
           </button>
         </div>
 
@@ -486,9 +622,29 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               <>
                 <p>
                   Selected Style: <span className={styles.styleValue}>
-                    {selectedStyle === 'kaftan' ? 'Kaftan' : 
-                     selectedStyle === 'kaftan_agbada' ? 'Kaftan & Agbada' : 
-                     selectedStyle === 'agbada' ? 'Agbada' : 'None Selected'}
+                    {(() => {
+                      // Check if this is a style from the available_styles array
+                      if (design.available_styles) {
+                        const styleOption = design.available_styles.find(s => s.name === selectedStyle);
+                        if (styleOption) {
+                          return styleOption.display_name;
+                        }
+                      }
+                      
+                      // Fall back to hardcoded styles
+                      switch(selectedStyle) {
+                        case 'kaftan': return 'Kaftan';
+                        case 'kaftan_agbada': return 'Kaftan & Agbada';
+                        case 'agbada': return 'Agbada';
+                        case 'senator': return 'Senator Style';
+                        case 'dashiki': return 'Dashiki';
+                        case 'ankara': return 'Ankara Design';
+                        case 'senator_agbada': return 'Senator & Agbada';
+                        case 'dashiki_agbada': return 'Dashiki & Agbada';
+                        case 'ankara_agbada': return 'Ankara & Agbada';
+                        default: return selectedStyle;
+                      }
+                    })()}
                   </span>
                 </p>
                 
@@ -545,26 +701,102 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
           <div className={styles.styleSelection}>
             <h3>Style Options</h3>
-            <div className={styles.styleOptions}>
-              <div
-                className={`${styles.styleOption} ${selectedStyle === 'kaftan' ? styles.selectedStyle : ''}`}
-                onClick={() => setSelectedStyle('kaftan')}
-              >
-                <span>Kaftan</span>
+            {design.available_styles && design.available_styles.length > 0 ? (
+              // Display tailor-defined styles
+              <div className={styles.styleOptions}>
+                {/* Filter out Agbada addition from main style options */}
+                {design.available_styles
+                  .filter(style => !style.is_addition && style.name !== 'agbada_addition')
+                  .map((style, index) => (
+                    <div
+                      key={index}
+                      className={`${styles.styleOption} ${selectedStyle === style.name || selectedStyle === `${style.name}_agbada` ? styles.selectedStyle : ''}`}
+                      onClick={() => {
+                        // If we're switching styles and currently have Agbada, preserve that choice
+                        const hasAgbada = selectedStyle.includes('_agbada');
+                        setSelectedStyle(hasAgbada && style.name !== 'agbada' ? `${style.name}_agbada` : style.name);
+                      }}
+                    >
+                      <span>{style.display_name}</span>
+                      {style.description && (
+                        <p className={styles.styleDescription}>{style.description}</p>
+                      )}
+                    </div>
+                  ))}
+                
+                {/* Show Agbada toggle for applicable styles */}
+                {selectedStyle && canAddAgbada(selectedStyle) && (
+                  <div className={styles.agbadaAddition}>
+                    <div className={styles.agbadaToggle}>
+                      <input
+                        type="checkbox"
+                        id="agbada-toggle"
+                        checked={selectedStyle.includes('_agbada')}
+                        onChange={handleAgbadaToggle}
+                      />
+                      <label htmlFor="agbada-toggle">
+                        {selectedStyle.includes('_agbada') 
+                          ? 'Remove Agbada from this style (-3.5 yards)' 
+                          : 'Add Agbada to this style (+3.5 yards)'}
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div
-                className={`${styles.styleOption} ${selectedStyle === 'kaftan_agbada' ? styles.selectedStyle : ''}`}
-                onClick={() => setSelectedStyle('kaftan_agbada')}
-              >
-                <span>Kaftan & Agbada</span>
+            ) : (
+              // Fallback to default styles
+              <div className={styles.styleOptions}>
+                <div
+                  className={`${styles.styleOption} ${selectedStyle === 'kaftan' || selectedStyle === 'kaftan_agbada' ? styles.selectedStyle : ''}`}
+                  onClick={() => setSelectedStyle('kaftan')}
+                >
+                  <span>Kaftan</span>
+                </div>
+                <div
+                  className={`${styles.styleOption} ${selectedStyle === 'senator' || selectedStyle === 'senator_agbada' ? styles.selectedStyle : ''}`}
+                  onClick={() => setSelectedStyle('senator')}
+                >
+                  <span>Senator Style</span>
+                </div>
+                <div
+                  className={`${styles.styleOption} ${selectedStyle === 'dashiki' || selectedStyle === 'dashiki_agbada' ? styles.selectedStyle : ''}`}
+                  onClick={() => setSelectedStyle('dashiki')}
+                >
+                  <span>Dashiki</span>
+                </div>
+                <div
+                  className={`${styles.styleOption} ${selectedStyle === 'ankara' || selectedStyle === 'ankara_agbada' ? styles.selectedStyle : ''}`}
+                  onClick={() => setSelectedStyle('ankara')}
+                >
+                  <span>Ankara Design</span>
+                </div>
+                <div
+                  className={`${styles.styleOption} ${selectedStyle === 'agbada' ? styles.selectedStyle : ''}`}
+                  onClick={() => setSelectedStyle('agbada')}
+                >
+                  <span>Agbada</span>
+                </div>
+                
+                {/* Show Agbada toggle for applicable styles */}
+                {selectedStyle && canAddAgbada(selectedStyle) && (
+                  <div className={styles.agbadaAddition}>
+                    <div className={styles.agbadaToggle}>
+                      <input
+                        type="checkbox"
+                        id="agbada-toggle"
+                        checked={selectedStyle.includes('_agbada')}
+                        onChange={handleAgbadaToggle}
+                      />
+                      <label htmlFor="agbada-toggle">
+                        {selectedStyle.includes('_agbada') 
+                          ? 'Remove Agbada from this style (-3.5 yards)' 
+                          : 'Add Agbada to this style (+3.5 yards)'}
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div
-                className={`${styles.styleOption} ${selectedStyle === 'agbada' ? styles.selectedStyle : ''}`}
-                onClick={() => setSelectedStyle('agbada')}
-              >
-                <span>Agbada</span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Only show Fabrics section if there are real fabrics */}
@@ -691,6 +923,73 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           </div>
         </div>
       </div>
+
+      {/* Tailor Full Profile Modal */}
+      {showTailorProfile && tailorDetails && (
+        <div className={styles.modalOverlay} onClick={() => setShowTailorProfile(false)}>
+          <div className={styles.tailorProfileModal} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.closeModalButton} 
+              onClick={() => setShowTailorProfile(false)}
+            >
+              ×
+            </button>
+            
+            <div className={styles.tailorProfileContent}>
+              {tailorDetails.banner_image_url && (
+                <div className={styles.bannerImage}>
+                  <img src={tailorDetails.banner_image_url} alt="Banner" />
+                </div>
+              )}
+              
+              <div className={styles.profileHeader}>
+                <div className={styles.profileLogo}>
+                  {tailorDetails.logo_url ? (
+                    <img src={tailorDetails.logo_url} alt={tailorDetails.brand_name} />
+                  ) : (
+                    <IoPersonCircleOutline size={80} />
+                  )}
+                </div>
+                <div className={styles.profileInfo}>
+                  <h2>{tailorDetails.brand_name}</h2>
+                  <h3>{tailorDetails.tailor_name}</h3>
+                </div>
+              </div>
+              
+              <div className={styles.profileBody}>
+                <div className={styles.infoSection}>
+                  <h4>About</h4>
+                  <p>{tailorDetails.bio || "No bio available"}</p>
+                </div>
+                
+                <div className={styles.infoSection}>
+                  <h4>Experience</h4>
+                  <p>{tailorDetails.experience} years</p>
+                </div>
+                
+                <div className={styles.infoSection}>
+                  <h4>Specializations</h4>
+                  <div className={styles.specializationTags}>
+                    {tailorDetails.specializations?.map((spec: string, index: number) => (
+                      <span key={index} className={styles.specializationTag}>
+                        {spec}
+                      </span>
+                    )) || "No specializations listed"}
+                  </div>
+                </div>
+                
+                <div className={styles.infoSection}>
+                  <h4>Contact Information</h4>
+                  <p>Email: {tailorDetails.email}</p>
+                  <p>Phone: {tailorDetails.phone}</p>
+                  <p>Website: <a href={tailorDetails.website} target="_blank" rel="noopener noreferrer">{tailorDetails.website}</a></p>
+                  <p>Address: {tailorDetails.address}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <OrderConfirmationModal
         isOpen={isModalOpen}

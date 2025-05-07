@@ -125,7 +125,7 @@
   font-weight: 500;
   transition: all 0.2s ease;
   border-radius: 8px;
-  margin-top: 5.5rem;
+  margin-top: 1.5rem;
   width: 100%;
 }
 
@@ -378,6 +378,15 @@
   color: #212529;
 }
 
+.styleDescription {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  font-weight: normal;
+  line-height: 1.3;
+}
+
 .styleValue {
   font-weight: 500;
   color: #212529;
@@ -385,6 +394,12 @@
   padding: 2px 8px;
   background-color: rgba(33, 37, 41, 0.05);
   border-radius: 4px;
+}
+
+@media (max-width: 1024px) {
+  .styleOptions {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -492,4 +507,266 @@
 .yardageInfo:hover .yardageTooltip {
   visibility: visible;
   opacity: 1;
+}
+
+/* Tailor Preview styles */
+.tailorPreview {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tailorPreview:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.tailorPreviewContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.tailorLogo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tailorLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tailorInfo h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.tailorInfo p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.viewProfileButton {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewProfileButton:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Tailor Profile Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.tailorProfileModal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.closeModalButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.closeModalButton:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.tailorProfileContent {
+  width: 100%;
+}
+
+.bannerImage {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.bannerImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+  margin-top: -40px;
+  position: relative;
+}
+
+.profileLogo {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: white;
+  border: 4px solid white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileInfo h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.profileInfo h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+}
+
+.profileBody {
+  padding: 0 2rem 2rem;
+}
+
+.infoSection {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.infoSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.infoSection h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #111827;
+}
+
+.infoSection p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+.specializationTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.specializationTag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+@media (max-width: 640px) {
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+}
+
+.agbadaAddition {
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f0f7ff;
+  border-radius: 8px;
+  border: 1px solid #90cdf4;
+  grid-column: 1 / -1;
+}
+
+.agbadaToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.agbadaToggle input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.agbadaToggle label {
+  font-size: 0.95rem;
+  color: #1e40af;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.agbadaToggle label:hover {
+  color: #3b82f6;
 } 

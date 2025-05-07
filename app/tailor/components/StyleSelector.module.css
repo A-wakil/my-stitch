@@ -1,0 +1,422 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.selectedStylesSection,
+.availableStylesSection {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.selectedStylesSection h3,
+.availableStylesSection h3,
+.customStyleForm h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.noStyles {
+  color: #6b7280;
+  font-style: italic;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.selectedStylesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.selectedStyleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.styleInfo {
+  flex: 1;
+}
+
+.styleInfo h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.styleInfo p {
+  margin: 0 0 0.5rem 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.yardage {
+  font-size: 0.75rem;
+  color: #4b5563;
+  font-weight: 500;
+  background-color: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.removeButton {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.removeButton:hover {
+  background-color: #fecaca;
+}
+
+.styleOptionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.styleOption {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.styleOption:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.styleOption h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.styleOption p {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+  flex-grow: 1;
+}
+
+.styleSelected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  cursor: default;
+}
+
+.styleSelected:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.selectedBadge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: #2563eb;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.addCustomOption {
+  border-style: dashed;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.addIcon {
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.customStyleForm {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.formFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formField:nth-child(2) {
+  grid-column: span 2;
+}
+
+.formField label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.formField input,
+.formField textarea {
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.875rem;
+}
+
+.formField textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancelButton,
+.addButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.cancelButton:hover {
+  background-color: #f3f4f6;
+}
+
+.addButton {
+  background-color: #2563eb;
+  border: none;
+  color: white;
+}
+
+.addButton:hover {
+  background-color: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .formFields {
+    grid-template-columns: 1fr;
+  }
+  
+  .formField:nth-child(2) {
+    grid-column: span 1;
+  }
+}
+
+.styleOptionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.styleTabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+
+.styleTab {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  position: relative;
+}
+
+.styleTab.activeTab {
+  color: #2563eb;
+}
+
+.styleTab.activeTab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2563eb;
+}
+
+.savedStylesSection {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-top: 1rem;
+}
+
+.savedStyleHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.savedIcon {
+  color: #2563eb;
+  font-size: 1.25rem;
+}
+
+.saveForReuseOption {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+}
+
+.saveForReuseOption input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.saveForReuseOption label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.saveIcon {
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+.loadingMessage {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.noSavedStyles {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.noSavedStyles p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.createStyleButton {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.createStyleButton:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.selectedAdditionItem {
+  background-color: #f8f9fa;
+  border-left: 4px solid #2563eb;
+}
+
+.totalYardage {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #f0f9ff;
+  border-radius: 6px;
+  text-align: right;
+}
+
+.totalYardage p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0369a1;
+}
+
+.totalYardage strong {
+  font-size: 1rem;
+  color: #0369a1;
+}
+
+.agbadaAdditionSection {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #e5e7eb;
+} 

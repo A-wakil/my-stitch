@@ -39,6 +39,9 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
+    const availableStyles = formData.get("available_styles") 
+      ? JSON.parse(formData.get("available_styles") as string) 
+      : []
 
     // Process fabrics and their images
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
@@ -50,7 +53,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         description: formData.get("description"),
         fabrics: processedFabrics,
         created_by: created_by,
-        completion_time: parseInt(formData.get("completion_time") as string)
+        completion_time: parseInt(formData.get("completion_time") as string),
+        available_styles: availableStyles
       })
       .eq('id', id)
       .select()

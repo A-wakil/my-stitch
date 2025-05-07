@@ -12,6 +12,7 @@ import { Fabric } from "../../types/design"
 import { supabase } from "../../../lib/supabaseClient"
 import { toast } from "react-hot-toast"
 import { Info } from "lucide-react"
+import StyleSelector from "../../components/StyleSelector"
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -21,6 +22,12 @@ interface DesignFormProps {
     description: string
     images: string[]
     fabrics: Array<Fabric>
+    available_styles?: Array<{
+      name: string;
+      display_name: string;
+      description?: string;
+      recommended_yards: number;
+    }>
   }
 }
 
@@ -52,6 +59,13 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [showFabricPicker, setShowFabricPicker] = useState<boolean>(true)
   const [simplePricePerYard, setSimplePricePerYard] = useState<string>('')
   const [simpleStitchingPrice, setSimpleStitchingPrice] = useState<string>('')
+  const [availableStyles, setAvailableStyles] = useState<Array<{
+    name: string;
+    display_name: string;
+    description?: string;
+    recommended_yards: number;
+    is_addition?: boolean;
+  }>>(initialData?.available_styles || [])
 
   useEffect(() => {
     if (initialData) {
@@ -59,6 +73,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       setTitle(initialData.title)
       setDescription(initialData.description)
       setExistingImages(initialData.images || [])
+      setAvailableStyles(initialData.available_styles || [])
       setFabrics(initialData.fabrics.map((f) => {
         console.log('Processing fabric:', f.name, 'Image:', f.image)
         return {
@@ -101,6 +116,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     if (images.length === 0 && existingImages.length === 0) {
       console.log('[Validation] Missing images');
       return { valid: false, message: "Please upload at least one image" }
+    }
+
+    // Check if at least one style option is selected
+    if (availableStyles.length === 0) {
+      console.log('[Validation] Missing style options');
+      return { valid: false, message: "Please select at least one style option" }
     }
 
     // For updates, don't require fabrics if none were changed
@@ -155,7 +176,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice]);
+  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice, availableStyles]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -194,6 +215,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     formData.append("description", description)
     formData.append("existingImages", JSON.stringify(existingImages))
     formData.append("completion_time", duration === null ? "" : duration.toString())
+    formData.append("available_styles", JSON.stringify(availableStyles))
     
     // Append new images
     images.forEach((image) => {
@@ -373,6 +395,28 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           setImages={setImages} 
           initialImages={existingImages} 
         />
+      </div>
+      <div className={styles.formGroup}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Style Options</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Select which styles are available for this design:</p>
+              <ul>
+                <li>Choose from the base styles (Kaftan, Senator, Dashiki, Ankara)</li>
+                <li>Agbada can be selected as a standalone style or as an add-on to other styles</li>
+                <li>The recommended fabric yardage will be calculated automatically</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className={styles.styleSelection}>
+          <StyleSelector 
+            selectedStyles={availableStyles} 
+            onChange={setAvailableStyles} 
+          />
+        </div>
       </div>
       <div className={styles.fabricSection}>
         <div className={styles.fabricToggleContainer}>
