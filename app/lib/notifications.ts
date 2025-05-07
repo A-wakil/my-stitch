@@ -103,18 +103,34 @@ export async function notifyOrderParties(
 ): Promise<{ customerNotification: { success: boolean; error?: string }; tailorNotification: { success: boolean; error?: string } }> {
   console.log('[NOTIFY] Sending notifications to both customer and tailor');
   
+  // Check if the emails are the same (testing scenario)
+  const isSameEmail = customerProfile.email === tailorProfile.email;
+  
+  // Send customer notification with role indicator if same email
   const customerNotification = await sendOrderNotification(
     type,
     order,
     customerProfile,
-    additionalData
+    {
+      ...additionalData,
+      recipientRole: isSameEmail ? 'CUSTOMER' : undefined
+    }
   );
+
+  // For testing scenarios, if it's the same email, add a delay and role indicator
+  if (isSameEmail) {
+    // Add a small delay to prevent email service throttling
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
 
   const tailorNotification = await sendOrderNotification(
     type,
     order,
     tailorProfile,
-    additionalData
+    {
+      ...additionalData,
+      recipientRole: isSameEmail ? 'TAILOR' : undefined
+    }
   );
 
   console.log('[NOTIFY] Notification results:', 

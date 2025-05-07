@@ -10,7 +10,7 @@ import { Measurement } from '../../../lib/types'
 import { IoArrowBack } from "react-icons/io5"
 import { IoChevronDown, IoChevronUp } from "react-icons/io5"
 import { IoInformationCircleOutline } from "react-icons/io5"
-import { sendOrderNotification } from '../../../lib/notifications'
+import { sendOrderNotification, notifyOrderParties } from '../../../lib/notifications'
 
 interface DesignDetail {
   id: string
@@ -317,18 +317,11 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         } else {
           // Send notifications
           try {
-            // Send notification to customer
-            await sendOrderNotification(
+            // Use the notifyOrderParties helper instead of separate calls
+            await notifyOrderParties(
               'order_placed',
               data,
               customerProfile,
-              { totalAmount: totalPrice }
-            );
-
-            // Send notification to tailor
-            await sendOrderNotification(
-              'order_placed',
-              data,
               tailorProfile,
               { totalAmount: totalPrice }
             );

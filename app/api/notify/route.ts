@@ -12,7 +12,8 @@ type NotificationType =
   | 'order_ready_to_ship'
   | 'order_shipped'
   | 'order_delivered'
-  | 'order_cancelled';
+  | 'order_cancelled'
+  | 'order_pending';
 
 interface NotificationPayload {
   type: NotificationType;
@@ -82,25 +83,78 @@ function generateEmailContent(
 ): { subject: string; content: string } {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mytailormint.com';
   const orderUrl = `${baseUrl}/customer/orders/${orderId}`;
+  const tailorOrderUrl = `${baseUrl}/tailor/orders`;
   
   let subject = '';
   let content = '';
+  
+  const isTailor = additionalData?.recipientRole === 'TAILOR';
+  
+  const rolePrefix = additionalData?.recipientRole ? `[${additionalData.recipientRole}] ` : '';
 
   switch (type) {
     case 'order_placed':
-      subject = `Order #${orderId} Placed Successfully`;
-      content = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Order Confirmation</h2>
-          <p>Hello ${recipientName},</p>
-          <p>Thank you for placing your order with My Tailor Mint. Your order has been received and is being processed.</p>
-          <p><strong>Order ID:</strong> ${orderId}</p>
-          ${additionalData?.totalAmount ? `<p><strong>Total Amount:</strong> $${additionalData.totalAmount}</p>` : ''}
-          <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
-        </div>
-      `;
+      if (isTailor) {
+        subject = `${rolePrefix}New Order Received: #${orderId}`;
+        content = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8d7da; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #f5c6cb;">
+              <h2 style="margin-top: 0; color: #721c24;">New Order Alert</h2>
+              <p style="margin-bottom: 0;">You have received a new order that requires your attention.</p>
+            </div>
+            
+            <h3>Order Details</h3>
+            <p>Hello ${recipientName},</p>
+            <p>A customer has placed a new order with your design. Please review the details and respond promptly.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+              <p style="margin-top: 0;"><strong>Order ID:</strong> ${orderId}</p>
+              ${additionalData?.totalAmount ? `<p><strong>Total Amount:</strong> $${additionalData.totalAmount}</p>` : ''}
+              <p style="margin-bottom: 0;"><strong>Status:</strong> Pending Your Review</p>
+            </div>
+            
+            <p>Please log in to your <a href="${tailorOrderUrl}" style="color: #0066cc; text-decoration: underline;">dashboard</a> to view the complete order details and take action.</p>
+            
+            <div style="background-color: #e8f4f8; padding: 12px; border-left: 4px solid #4da6ff; margin: 15px 0;">
+              <p style="margin: 0;"><strong>Note:</strong> Quick responses to new orders improve customer satisfaction and increase repeat business.</p>
+            </div>
+            
+            <p>Thank you for your partnership with My Tailor Mint.</p>
+            <p>Regards,<br>The My Tailor Mint Team</p>
+          </div>
+        `;
+      } else {
+        subject = `${rolePrefix}Order #${orderId} Placed Successfully`;
+        content = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #d4edda; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #c3e6cb;">
+              <h2 style="margin-top: 0; color: #155724;">Order Confirmed</h2>
+              <p style="margin-bottom: 0;">Thank you for your order!</p>
+            </div>
+            
+            <p>Hello ${recipientName},</p>
+            <p>We're excited to confirm your order has been received and is being processed.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+              <p style="margin-top: 0;"><strong>Order ID:</strong> ${orderId}</p>
+              ${additionalData?.totalAmount ? `<p><strong>Total Amount:</strong> $${additionalData.totalAmount}</p>` : ''}
+              <p style="margin-bottom: 0;"><strong>Status:</strong> Processing</p>
+            </div>
+            
+            <h3>What happens next?</h3>
+            <ol>
+              <li>Your order will be reviewed by the designer</li>
+              <li>Once accepted, your garment will enter production</li>
+              <li>You'll receive updates as your order progresses</li>
+            </ol>
+            
+            <p>You can track your order status at any time by visiting <a href="${orderUrl}" style="color: #0066cc; text-decoration: underline;">your order page</a>.</p>
+            
+            <p>If you have any questions, please don't hesitate to contact us.</p>
+            <p>Regards,<br>The My Tailor Mint Team</p>
+          </div>
+        `;
+      }
       break;
       
     case 'order_accepted':
@@ -240,17 +294,30 @@ function generateEmailContent(
       break;
       
     default:
-      subject = `Update on Your My Tailor Mint Order #${orderId}`;
-      content = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Order Update</h2>
-          <p>Hello ${recipientName},</p>
-          <p>There's an update regarding your order with My Tailor Mint.</p>
-          <p><strong>Order ID:</strong> ${orderId}</p>
-          <p>Please visit <a href="${orderUrl}">your order page</a> for more details.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
-        </div>
-      `;
+      if (isTailor) {
+        subject = `${rolePrefix}Action Required: Order #${orderId} Update`;
+        content = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Order Update</h2>
+            <p>Hello ${recipientName},</p>
+            <p>There's an update regarding order #${orderId} that requires your attention.</p>
+            <p>Please visit <a href="${tailorOrderUrl}">your dashboard</a> for more details.</p>
+            <p>Regards,<br>The My Tailor Mint Team</p>
+          </div>
+        `;
+      } else {
+        subject = `${rolePrefix}Update on Your My Tailor Mint Order #${orderId}`;
+        content = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Order Update</h2>
+            <p>Hello ${recipientName},</p>
+            <p>There's an update regarding your order with My Tailor Mint.</p>
+            <p><strong>Order ID:</strong> ${orderId}</p>
+            <p>Please visit <a href="${orderUrl}">your order page</a> for more details.</p>
+            <p>Regards,<br>The My Tailor Mint Team</p>
+          </div>
+        `;
+      }
   }
 
   return { subject, content };
