@@ -83,6 +83,7 @@ export interface Measurement {
     design?: Design | null
     fabric_yards?: number | null
     style_type?: 'kaftan' | 'kaftan_agbada' | 'agbada' | null
+    rejection_reason?: string | null
   }
 
   export interface Profile {

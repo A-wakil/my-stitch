@@ -7,12 +7,14 @@ import { Order, Profile } from '../../lib/types'
 import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
 import { sendOrderNotification } from '../../lib/notifications'
+import { toast } from 'react-hot-toast'
+
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
 export default function TailorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<OrderStatus>('all')
+  const [activeTab, setActiveTab] = useState<OrderStatus>('pending')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})  // Track selected image index for each order
   const [clientProfiles, setClientProfiles] = useState<Record<string, Profile>>({})
   const [tailorProfile, setTailorProfile] = useState<Profile | null>(null)
@@ -20,6 +22,10 @@ export default function TailorOrdersPage() {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMeasurements, setSelectedMeasurements] = useState<any>(null)
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null)
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null)
 
   const fetchOrders = async () => {
     if (!user) return
@@ -35,7 +41,9 @@ export default function TailorOrdersPage() {
 
       if (ordersError) {
         console.error('Error fetching orders:', ordersError)
-        return
+        setOrders([]);
+        setIsLoading(false);
+        return;
       }
 
       if (ordersData.length === 0) {
@@ -49,7 +57,7 @@ export default function TailorOrdersPage() {
 
       // Then fetch design details for each order that has a design_id
       const ordersWithDesigns = await Promise.all(
-        (ordersData || []).map(async (order) => {
+        ordersData.map(async (order) => {
           if (!order.design_id) return { ...order, design: null }
 
           const { data: designData, error: designError } = await supabase
@@ -94,9 +102,10 @@ export default function TailorOrdersPage() {
       }
 
       setOrders(ordersWithDesigns);
-      setIsLoading(false);
     } catch (err) {
       console.error('Error in fetchOrders:', err);
+      setOrders([]);
+    } finally {
       setIsLoading(false);
     }
   }
@@ -106,6 +115,7 @@ export default function TailorOrdersPage() {
       const { data: { user: currentUser }, error } = await supabase.auth.getUser()
       if (error) {
         console.error('Error fetching auth user:', error)
+        setIsLoading(false);
         return
       }
       setUser(currentUser)
@@ -122,7 +132,9 @@ export default function TailorOrdersPage() {
   }, [])
 
   useEffect(() => {
-    fetchOrders()
+    if(user) {
+      fetchOrders()
+    }
   }, [user])
 
   // Add new effect to handle hash-based scrolling
@@ -148,12 +160,14 @@ export default function TailorOrdersPage() {
   }, [orders])
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    setProcessingOrderId(orderId);
     try {
       console.log(`Updating order ${orderId} to status: ${newStatus}`);
       
       const order = orders.find(o => o.id === orderId);
       if (!order) {
         console.error(`Order ${orderId} not found in local state`);
+        toast.error('Order not found.');
         return;
       }
 
@@ -178,6 +192,7 @@ export default function TailorOrdersPage() {
 
       if (error) {
         console.error('Error updating order:', error);
+        toast.error('Failed to update order status.');
         return;
       }
 
@@ -235,6 +250,7 @@ export default function TailorOrdersPage() {
           
           if (result.success) {
             console.log(`Notification sent to customer for order ${orderId} status change to ${newStatus}`);
+            toast.success(`Order status updated to ${newStatus}.`);
           } else {
             console.error(`Failed to send notification: ${result.error}`);
           }
@@ -249,11 +265,94 @@ export default function TailorOrdersPage() {
 
       // Refresh orders
       console.log('Refreshing orders...');
-      fetchOrders();
+      await fetchOrders();
     } catch (err) {
       console.error('Error in updateOrderStatus:', err);
+      toast.error('An error occurred while updating status.');
+    } finally {
+      setProcessingOrderId(null);
     }
   }
+
+  const handleRejectOrder = (orderId: string) => {
+    setRejectingOrderId(orderId);
+    setRejectionReason('');
+    setIsRejectionModalOpen(true);
+  };
+
+  const submitOrderRejection = async () => {
+    if (!rejectingOrderId || !rejectionReason.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+
+    // Close modal first for better UX
+    setIsRejectionModalOpen(false);
+    
+    setProcessingOrderId(rejectingOrderId);
+    
+    try {
+      const orderToUpdate = orders.find(o => o.id === rejectingOrderId);
+      if (!orderToUpdate) {
+        console.error(`Order ${rejectingOrderId} not found in local state`);
+        toast.error('Order not found for rejection.');
+        return;
+      }
+
+      console.log('Updating order in database with rejection reason...');
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: 'rejected',
+          rejection_reason: rejectionReason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', rejectingOrderId);
+
+      if (error) {
+        console.error('Error updating order:', error);
+        toast.error('Failed to reject order.');
+        return;
+      }
+
+      console.log('Order rejected in database successfully');
+      toast.success('Order rejected successfully.');
+
+      // Send notification to customer about rejection
+      const { data: customerProfileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', orderToUpdate.user_id);
+      
+      let customerProfile = customerProfileData && customerProfileData.length > 0 ? customerProfileData[0] : null;
+      
+      if (customerProfile && tailorProfile) {
+        try {
+          // Send notification to customer
+          await sendOrderNotification(
+            'order_rejected',
+            orderToUpdate,
+            customerProfile,
+            { reason: rejectionReason }
+          );
+          
+          console.log(`Rejection notification sent to customer for order ${rejectingOrderId}`);
+        } catch (err) {
+          console.error('Failed to send rejection notification:', err);
+        }
+      }
+
+      // Clear state and refresh orders
+      setRejectingOrderId(null);
+      setRejectionReason('');
+      await fetchOrders();
+    } catch (err) {
+      console.error('Error in submitOrderRejection:', err);
+      toast.error('An error occurred while rejecting the order.');
+    } finally {
+      setProcessingOrderId(null);
+    }
+  };
 
   const filteredOrders = orders.filter(order => 
     activeTab === 'all' ? true : order.status === activeTab
@@ -280,12 +379,6 @@ export default function TailorOrdersPage() {
       </div>
 
       <div className={styles.tabs}>
-        <button 
-          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All Orders ({orders.length})
-        </button>
         <button 
           className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('pending')}
@@ -317,173 +410,190 @@ export default function TailorOrdersPage() {
           Shipped ({orderCounts['shipped'] || 0})
         </button>
         <button 
-          className={`${styles.tab} ${activeTab === 'rejected' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('rejected')}
+          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('all')}
         >
-          Rejected ({orderCounts['rejected'] || 0})
+          All Orders ({orders.length})
         </button>
       </div>
 
-      {filteredOrders.map(order => (
-        <div 
-          key={order.id} 
-          id={order.id}
-          className={styles.orderCard}
-        >
-          <div className={styles.orderHeader}>
-            <div className={styles.orderInfo}>
-              <div className={styles.orderMeta}>
-                <div>
-                  <div className={styles.label}>ORDER PLACED</div>
-                  <div>{new Date(order.created_at).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <div className={styles.label}>TOTAL</div>
-                  <div>${order.total_amount.toFixed(2)}</div>
-                </div>
-                <div>
-                  <div className={styles.label}>SHIPPING ADDRESS</div>
-                  <div className={styles.shipTo}>
-                    {(() => {
-                      try {
-                        const address = typeof order.shipping_address === 'string' 
-                          ? JSON.parse(order.shipping_address)
-                          : order.shipping_address;
-                        
-                        return [
-                          address?.street_address,
-                          address?.city
-                        ]
-                          .filter(Boolean)
-                          .join(', ');
-                      } catch (e) {
-                        return 'Address not available';
-                      }
-                    })()}
+      {filteredOrders.length > 0 ? (
+        filteredOrders.map(order => (
+          <div 
+            key={order.id} 
+            id={order.id}
+            className={styles.orderCard}
+          >
+            <div className={styles.orderHeader}>
+              <div className={styles.orderInfo}>
+                <div className={styles.orderMeta}>
+                  <div>
+                    <div className={styles.label}>ORDER PLACED</div>
+                    <div>{new Date(order.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <div>
+                    <div className={styles.label}>TOTAL</div>
+                    <div>${order.total_amount.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className={styles.label}>SHIPPING ADDRESS</div>
+                    <div className={styles.shipTo}>
+                      {(() => {
+                        try {
+                          const address = typeof order.shipping_address === 'string' 
+                            ? JSON.parse(order.shipping_address)
+                            : order.shipping_address;
+                          
+                          return [
+                            address?.street_address,
+                            address?.city
+                          ]
+                            .filter(Boolean)
+                            .join(', ');
+                        } catch (e) {
+                          return 'Address not available';
+                        }
+                      })()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className={styles.label}>MEASUREMENTS</div>
+                    <button 
+                      className={styles.measurementsButton}
+                      onClick={() => openMeasurementsModal(order.measurements)}
+                    >
+                      View Measurements
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <div className={styles.label}>MEASUREMENTS</div>
-                  <button 
-                    className={styles.measurementsButton}
-                    onClick={() => openMeasurementsModal(order.measurements)}
-                  >
-                    View Measurements
-                  </button>
+                <div className={styles.orderNumber}>
+                  <div className={styles.label}>Client Name: {clientProfiles[order.user_id]?.firstname} {clientProfiles[order.user_id]?.lastname}</div>
                 </div>
               </div>
-              <div className={styles.orderNumber}>
-                <div className={styles.label}>Client Name: {clientProfiles[order.user_id]?.firstname} {clientProfiles[order.user_id]?.lastname}</div>
+            </div>
+
+            <div className={styles.orderStatus}>
+              <div className={styles.status} data-status={order.status}>
+                {order.status}
               </div>
-            </div>
-          </div>
-
-          <div className={styles.orderStatus}>
-            <div className={styles.status} data-status={order.status}>
-              {order.status}
-            </div>
-            <div className={styles.statusActions}>
-              {order.status === 'pending' && (
-                <>
-                  <button 
-                    className={styles.acceptButton}
-                    onClick={() => updateOrderStatus(order.id, 'accepted')}
-                  >
-                    Accept Order
-                  </button>
-                  <button 
-                    className={styles.rejectButton}
-                    onClick={() => updateOrderStatus(order.id, 'rejected')}
-                  >
-                    Reject Order
-                  </button>
-                </>
-              )}
-              
-              {order.status === 'accepted' && (
-                <button 
-                  className={styles.progressButton}
-                  onClick={() => updateOrderStatus(order.id, 'in_progress')}
-                >
-                  Start Production
-                </button>
-              )}
-
-              {order.status === 'in_progress' && (
-                <button 
-                  className={styles.readyButton}
-                  onClick={() => updateOrderStatus(order.id, 'ready_to_ship')}
-                >
-                  Mark Ready to Ship
-                </button>
-              )}
-
-              {order.status === 'ready_to_ship' && (
-                <button 
-                  className={styles.shipButton}
-                  onClick={() => updateOrderStatus(order.id, 'shipped')}
-                >
-                  Mark as Shipped
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.orderItems}>
-            <div className={styles.orderItem}>
-              <div className={styles.itemImageContainer}>
-                <div className={styles.mainImage}>
-                  {order.design?.images?.[selectedImages[order.id] || 0] && (
-                    <img 
-                      src={order.design.images[selectedImages[order.id] || 0]} 
-                      alt={order.design.title} 
-                      className={styles.designImage}
-                    />
-                  )}
-                </div>
-                <div className={styles.thumbnails}>
-                  {order.design?.images?.map((image, index) => (
-                    <img 
-                      key={index}
-                      src={image}
-                      alt={`${order.design?.title} view ${index + 1}`}
-                      className={`${styles.thumbnail} ${selectedImages[order.id] === index ? styles.activeThumbnail : ''}`}
-                      onClick={() => setSelectedImages(prev => ({
-                        ...prev,
-                        [order.id]: index
-                      }))}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className={styles.itemDetails}>
-                <h3 className={styles.itemTitle}>
-                  {order.design?.title || `Design #${order.design_id}`}
-                </h3>
-                {order.design?.description && (
-                  <p className={styles.designDescription}>{order.design.description}</p>
+              <div className={styles.statusActions}>
+                {order.status === 'pending' && (
+                  <>
+                    <button 
+                      className={styles.acceptButton}
+                      onClick={() => updateOrderStatus(order.id, 'accepted')}
+                      disabled={processingOrderId === order.id}
+                    >
+                      {processingOrderId === order.id ? 'Processing...' : 'Accept Order'}
+                    </button>
+                    <button 
+                      className={styles.rejectButton}
+                      onClick={() => handleRejectOrder(order.id)}
+                      disabled={processingOrderId === order.id}
+                    >
+                      {processingOrderId === order.id ? 'Processing...' : 'Reject Order'}
+                    </button>
+                  </>
                 )}
-                <div className={styles.itemMeta}>
-                  {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
-                  {order.color_name && (
-                    <div className={styles.colorPill}>
-                      <span 
-                        className={styles.colorDot} 
-                        style={{ backgroundColor: order.color_name.toLowerCase() }} 
+                
+                {order.status === 'accepted' && (
+                  <button 
+                    className={styles.progressButton}
+                    onClick={() => updateOrderStatus(order.id, 'in_progress')}
+                    disabled={processingOrderId === order.id}
+                  >
+                    {processingOrderId === order.id ? 'Processing...' : 'Start Production'}
+                  </button>
+                )}
+
+                {order.status === 'in_progress' && (
+                  <button 
+                    className={styles.readyButton}
+                    onClick={() => updateOrderStatus(order.id, 'ready_to_ship')}
+                    disabled={processingOrderId === order.id}
+                  >
+                    {processingOrderId === order.id ? 'Processing...' : 'Mark Ready to Ship'}
+                  </button>
+                )}
+
+                {order.status === 'ready_to_ship' && (
+                  <button 
+                    className={styles.shipButton}
+                    onClick={() => updateOrderStatus(order.id, 'shipped')}
+                    disabled={processingOrderId === order.id}
+                  >
+                    {processingOrderId === order.id ? 'Processing...' : 'Mark as Shipped'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.orderItems}>
+              <div className={styles.orderItem}>
+                <div className={styles.itemImageContainer}>
+                  <div className={styles.mainImage}>
+                    {order.design?.images?.[selectedImages[order.id] || 0] && (
+                      <img 
+                        src={order.design.images[selectedImages[order.id] || 0]} 
+                        alt={order.design.title} 
+                        className={styles.designImage}
                       />
-                      <span>Color: {order.color_name}</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <div className={styles.thumbnails}>
+                    {order.design?.images?.map((image, index) => (
+                      <img 
+                        key={index}
+                        src={image}
+                        alt={`${order.design?.title} view ${index + 1}`}
+                        className={`${styles.thumbnail} ${selectedImages[order.id] === index ? styles.activeThumbnail : ''}`}
+                        onClick={() => setSelectedImages(prev => ({
+                          ...prev,
+                          [order.id]: index
+                        }))}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className={styles.customerInfo}>
-                  <p>Customer: {clientProfiles[order.user_id]?.firstname} {clientProfiles[order.user_id]?.lastname}</p>
-                  <p>Email: {clientProfiles[order.user_id]?.email}</p>
+                <div className={styles.itemDetails}>
+                  <h3 className={styles.itemTitle}>
+                    {order.design?.title || `Design #${order.design_id}`}
+                  </h3>
+                  {order.design?.description && (
+                    <p className={styles.designDescription}>{order.design.description}</p>
+                  )}
+                  <div className={styles.itemMeta}>
+                    {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
+                    {order.color_name && (
+                      <div className={styles.colorPill}>
+                        <span 
+                          className={styles.colorDot} 
+                          style={{ backgroundColor: order.color_name.toLowerCase() }} 
+                        />
+                        <span>Color: {order.color_name}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        ))
+      ) : (
+        <div className={styles.noOrders}>
+          <div className={styles.noOrdersIcon}>📂</div> {/* Using a folder icon for tailors */}
+          <h3 className={styles.noOrdersTitle}>
+            {activeTab === 'all' 
+              ? "You don\'t have any orders yet"
+              : `No ${activeTab.replace(/_/g, ' ')} orders`}
+          </h3>
+          <p className={styles.noOrdersMessage}>
+            {activeTab === 'all'
+              ? "When you receive an order, you'll find it here."
+              : `Check other tabs to view orders in different states.`}
+          </p>
         </div>
-      ))}
+      )}
 
       {isModalOpen && selectedMeasurements && (
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
@@ -519,6 +629,39 @@ export default function TailorOrdersPage() {
                     </div>
                   ));
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRejectionModalOpen && (
+        <div className={styles.rejectionModalOverlay} onClick={() => !processingOrderId && setIsRejectionModalOpen(false)}>
+          <div className={styles.rejectionModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Rejection Reason</h2>
+              <button 
+                className={styles.closeButton}
+                onClick={() => !processingOrderId && setIsRejectionModalOpen(false)}
+                disabled={processingOrderId === rejectingOrderId}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please enter your reason for rejecting the order"
+                className={styles.rejectionReasonInput}
+                disabled={processingOrderId === rejectingOrderId}
+              />
+              <button 
+                className={styles.submitRejectionButton}
+                onClick={submitOrderRejection}
+                disabled={processingOrderId === rejectingOrderId || !rejectionReason.trim()}
+              >
+                {processingOrderId === rejectingOrderId ? 'Submitting...' : 'Submit Rejection'}
+              </button>
             </div>
           </div>
         </div>

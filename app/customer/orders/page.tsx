@@ -7,12 +7,12 @@ import { useRouter } from 'next/navigation'
 import { Order } from '../../lib/types'
 import { IoArrowBack } from 'react-icons/io5'
 
-type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled'
+type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled' | 'rejected'
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<OrderStatus>('all')
+  const [activeTab, setActiveTab] = useState<OrderStatus>('pending')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})
   const router = useRouter()
 
@@ -93,12 +93,6 @@ export default function OrdersPage() {
 
       <div className={styles.tabs}>
         <button 
-          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All Orders ({orders.length})
-        </button>
-        <button 
           className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('pending')}
         >
@@ -123,10 +117,22 @@ export default function OrdersPage() {
           Shipped ({orderCounts['shipped'] || 0})
         </button>
         <button 
+          className={`${styles.tab} ${activeTab === 'rejected' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('rejected')}
+        >
+          Rejected ({orderCounts['rejected'] || 0})
+        </button>
+        <button 
           className={`${styles.tab} ${activeTab === 'cancelled' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('cancelled')}
         >
           Cancelled ({orderCounts['cancelled'] || 0})
+        </button>
+        <button 
+          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('all')}
+        >
+          All Orders ({orders.length})
         </button>
       </div>
 
@@ -178,9 +184,15 @@ export default function OrdersPage() {
             </div>
 
             <div className={styles.orderStatus}>
-              <div className={styles.status}>{order.status}</div>
+              <div className={styles.status} data-status={order.status}>{order.status}</div>
               {order.status === 'shipped' && (
                 <button className={styles.trackButton}>Track package</button>
+              )}
+              {order.status === 'rejected' && order.rejection_reason && (
+                <div className={styles.rejectionReason}>
+                  <p className={styles.rejectionTitle}>Rejection Reason:</p>
+                  <p className={styles.rejectionMessage}>{order.rejection_reason}</p>
+                </div>
               )}
             </div>
 
@@ -237,9 +249,6 @@ export default function OrdersPage() {
                       disabled={!order.design_id}
                     >
                       Buy it again
-                    </button>
-                    <button className={styles.writeReviewButton}>
-                      Write a product review
                     </button>
                   </div>
                 </div>

@@ -82,30 +82,37 @@
   font-size: 1.125rem;
   font-weight: 500;
   text-transform: capitalize;
+  /* Default color, can be overridden by specific status */
+  color: #333;
 }
 
 .status[data-status="pending"] {
-  color: #f59e0b;
+  color: #f59e0b; /* Amber/yellow */
 }
 
 .status[data-status="accepted"] {
-  color: #10b981;
+  color: #10b981; /* Green */
 }
 
 .status[data-status="in_progress"] {
-  color: #3b82f6;
+  color: #3b82f6; /* Blue */
 }
 
 .status[data-status="ready_to_ship"] {
-  color: #8b5cf6;
+  color: #8b5cf6; /* Purple */
 }
 
 .status[data-status="shipped"] {
-  color: #059669;
+  color: #059669; /* Emerald green */
 }
 
 .status[data-status="rejected"] {
-  color: #ef4444;
+  color: #ef4444; /* Red */
+}
+
+.status[data-status="cancelled"] {
+  /* Assuming tailors might also see cancelled orders, though not a tab currently */
+  color: #ef4444; /* Red */
 }
 
 .statusActions {
@@ -401,4 +408,91 @@
 
 .measurementValue {
   color: #333;
+}
+
+/* Rejection modal styles */
+.rejectionModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.rejectionModal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 100vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.rejectionReasonInput {
+  width: 100%;
+  min-height: 150px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  margin-bottom: 15px;
+  resize: vertical;
+}
+
+.submitRejectionButton {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  float: right;
+  margin-bottom: 20px;
+}
+
+.submitRejectionButton:hover {
+  background: #dc2626;
+}
+
+/* No Orders Message Styles */
+.noOrders {
+  text-align: center;
+  padding: 4rem 2rem; /* Adjusted padding slightly */
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  max-width: 600px;
+  margin: 3rem auto; /* Adjusted margin */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.noOrdersIcon {
+  font-size: 3.5rem; /* Slightly smaller icon */
+  margin-bottom: 1.5rem;
+  color: #9ca3af;
+}
+
+.noOrdersTitle {
+  color: #111827;
+  font-size: 1.375rem; /* Adjusted font size */
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.025em;
+}
+
+.noOrdersMessage {
+  color: #6b7280;
+  font-size: 1rem; /* Adjusted font size */
+  margin: 0;
+  line-height: 1.6;
 }

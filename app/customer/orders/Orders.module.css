@@ -125,6 +125,34 @@
   text-transform: capitalize;
 }
 
+.status[data-status="pending"] {
+  color: #f59e0b; /* Amber/yellow for pending */
+}
+
+.status[data-status="accepted"] {
+  color: #10b981; /* Green for accepted/in progress */
+}
+
+.status[data-status="in_progress"] {
+  color: #3b82f6; /* Blue for in progress */
+}
+
+.status[data-status="ready_to_ship"] {
+  color: #8b5cf6; /* Purple for ready to ship */
+}
+
+.status[data-status="shipped"] {
+  color: #059669; /* Emerald green for shipped */
+}
+
+.status[data-status="rejected"] {
+  color: #ef4444; /* Red for rejected */
+}
+
+.status[data-status="cancelled"] {
+  color: #ef4444; /* Red for cancelled */
+}
+
 .trackButton {
   background: #0066cc;
   color: white;
@@ -347,4 +375,29 @@
   font-size: 1.125rem;
   margin: 0;
   line-height: 1.6;
+}
+
+/* Styles for rejection reason */
+.rejectionReason {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-left: 4px solid #ef4444;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-top: 10px;
+  max-width: 600px;
+}
+
+.rejectionTitle {
+  color: #dc2626;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  font-size: 14px;
+}
+
+.rejectionMessage {
+  color: #7f1d1d;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
 }
