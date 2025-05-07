@@ -353,8 +353,23 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
             value={newSpecialization}
             onChange={handleChange}
             onKeyDown={handleSpecializationKeyDown}
-            placeholder="Type and press Enter to add"
+            placeholder="Type a specialization and press Enter to add it"
           />
+          <p className="helper-text">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+              <line x1="6" y1="8" x2="6" y2="8"></line>
+              <line x1="10" y1="8" x2="10" y2="8"></line>
+              <line x1="14" y1="8" x2="14" y2="8"></line>
+              <line x1="18" y1="8" x2="18" y2="8"></line>
+              <line x1="6" y1="12" x2="6" y2="12"></line>
+              <line x1="10" y1="12" x2="10" y2="12"></line>
+              <line x1="14" y1="12" x2="14" y2="12"></line>
+              <line x1="18" y1="12" x2="18" y2="12"></line>
+              <line x1="6" y1="16" x2="18" y2="16"></line>
+            </svg>
+            After typing your specialization, press the <strong>Enter</strong> key to add it to the list
+          </p>
         </div>
       </div>
       <div className="form-group">
