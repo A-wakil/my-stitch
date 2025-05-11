@@ -496,3 +496,15 @@
   margin: 0;
   line-height: 1.6;
 }
+
+.designArchivedBadge {
+  display: inline-block;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: normal;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}

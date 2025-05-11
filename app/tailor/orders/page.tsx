@@ -71,6 +71,13 @@ export default function TailorOrdersPage() {
             return { ...order, design: null }
           }
 
+          // Handle soft-deleted designs - ensure we still render them correctly
+          if (designData && designData.is_deleted) {
+            console.log(`Design ${order.design_id} has been soft-deleted`)
+            // Add a flag to indicate this is a deleted design
+            return { ...order, design: { ...designData, is_soft_deleted: true } }
+          }
+
           return { ...order, design: designData }
         })
       )
@@ -558,6 +565,11 @@ export default function TailorOrdersPage() {
                 <div className={styles.itemDetails}>
                   <h3 className={styles.itemTitle}>
                     {order.design?.title || `Design #${order.design_id}`}
+                    {order.design?.is_soft_deleted && (
+                      <span className={styles.designArchivedBadge}>
+                        (Archived Design)
+                      </span>
+                    )}
                   </h3>
                   {order.design?.description && (
                     <p className={styles.designDescription}>{order.design.description}</p>

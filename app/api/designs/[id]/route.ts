@@ -93,3 +93,31 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 }
 
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  try {
+    const id = await getParamsId(context);
+    const requestBody = await request.json();
+    
+    // Update only the fields provided in the request
+    const { data, error } = await supabase
+      .from('designs')
+      .update(requestBody)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating design:', error);
+      return NextResponse.json({ message: "Design not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ 
+      message: requestBody.is_deleted ? "Design soft-deleted successfully" : "Design updated successfully", 
+      design: data 
+    });
+  } catch (error) {
+    console.error('Error in PATCH design:', error);
+    return NextResponse.json({ message: "Error updating design" }, { status: 500 });
+  }
+}
+
