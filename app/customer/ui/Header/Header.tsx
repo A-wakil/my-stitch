@@ -168,7 +168,7 @@ export function Header() {
           <div className="header-content center">
             <div className="header-title-wrapper">
               <div className="header-line"></div>
-              <h1 className="header-title">Fashion House</h1>
+              <h1 className="header-title">My Tailor Mint</h1>
               <div className="header-line"></div>
             </div>
             <nav className="header-nav">

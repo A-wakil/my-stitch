@@ -64,6 +64,8 @@ export interface Measurement {
     description: string
     images: string[]
     fabrics: string[]
+    is_deleted?: boolean
+    is_soft_deleted?: boolean
   }
   
   export interface Order {

@@ -83,18 +83,18 @@ export default function StyleSelector({ selectedStyles, onChange }: StyleSelecto
 
   // Update the UI when selected styles change
   useEffect(() => {
-    // Check if we have a base style selected
-    const hasBaseStyle = selectedStyles.some(style => 
+    // Check if we have at least one base style selected that's not Agbada
+    const hasNonAgbadaBaseStyle = selectedStyles.some(style => 
       style.name !== 'agbada' && style.name !== 'agbada_addition' && !style.is_addition
     );
 
     // Check if Agbada is selected as a standalone
     const hasAgbadaBase = selectedStyles.some(style => style.name === 'agbada');
 
-    // Only show Agbada addition if we have a base style and not the standalone Agbada
-    setShowAgbadaOption(hasBaseStyle && !hasAgbadaBase);
+    // Only show Agbada addition if we have at least one non-Agbada base style
+    setShowAgbadaOption(hasNonAgbadaBaseStyle);
 
-    // Set the selected base style for UI updates
+    // Set the selected base style for UI updates (can now be multiple)
     const baseStyle = selectedStyles.find(style => 
       style.name !== 'agbada_addition' && !style.is_addition
     );
@@ -135,19 +135,23 @@ export default function StyleSelector({ selectedStyles, onChange }: StyleSelecto
   };
 
   const handleAddBaseStyle = (style: StyleOption) => {
-    // If this is Agbada as a base style, we want to remove any other base styles first
+    // Check if the style is already selected
+    if (selectedStyles.some(s => s.name === style.name)) {
+      return; // Style already selected, do nothing
+    }
+
     if (style.name === 'agbada') {
-      // Remove any existing base styles and the Agbada addition if present
-      const nonBaseStyles = selectedStyles.filter(s => 
-        s.is_addition && s.name !== 'agbada_addition'
+      // Special case: If Agbada is selected as a base style, 
+      // remove any Agbada addition since it doesn't make sense to have both
+      const stylesWithoutAgbadaAddition = selectedStyles.filter(s => 
+        s.name !== 'agbada_addition'
       );
-      onChange([...nonBaseStyles, { ...style }]);
+      onChange([...stylesWithoutAgbadaAddition, { ...style }]);
     } else {
-      // For other base styles, remove any existing base style including standalone Agbada
-      const nonBaseAndNonAgbada = selectedStyles.filter(s => 
-        (s.is_addition && s.name !== 'agbada_addition') || s.name === 'agbada_addition'
-      );
-      onChange([...nonBaseAndNonAgbada, { ...style }]);
+      // For all other styles, just add them to the selection
+      // If we're adding a different base style and standalone Agbada exists,
+      // keep the standalone Agbada (user might want multiple styles)
+      onChange([...selectedStyles, { ...style }]);
     }
   };
 
@@ -330,7 +334,7 @@ export default function StyleSelector({ selectedStyles, onChange }: StyleSelecto
 
         {activeTab === 'preset' && (
           <div className={styles.availableStylesSection}>
-            <h3>Base Style Options</h3>
+            <h3>Style Options <span className={styles.multiSelectHint}>(Select multiple styles as needed)</span></h3>
             <div className={styles.styleOptionsGrid}>
               {baseStyles.map((style) => {
                 const isSelected = selectedStyles.some(s => s.name === style.name);

@@ -75,7 +75,9 @@ export default function OrdersPage() {
   }
 
   const filteredOrders = orders.filter(order => 
-    activeTab === 'all' ? true : order.status === activeTab
+    activeTab === 'all' ? true : 
+    activeTab === 'accepted' ? (order.status === 'accepted' || order.status === 'in_progress') :
+    order.status === activeTab
   )
 
   const orderCounts = orders.reduce((acc, order) => {
@@ -108,7 +110,7 @@ export default function OrdersPage() {
           className={`${styles.tab} ${activeTab === 'accepted' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('accepted')}
         >
-          In Production ({orderCounts['accepted'] || 0})
+          In Production ({(orderCounts['accepted'] || 0) + (orderCounts['in_progress'] || 0)})
         </button>
         <button 
           className={`${styles.tab} ${activeTab === 'ready_to_ship' ? styles.activeTab : ''}`}

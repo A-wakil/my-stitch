@@ -108,17 +108,6 @@ export default function Home() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google'
-      })
-      if (error) throw error
-      closeAuthDialog()
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-    }
-  }
 
   const loadMoreDesigns = useCallback(() => {
     if (!hasMore) return;

@@ -161,6 +161,7 @@ export default function Dashboard() {
         .from('orders')
         .select('total_amount')
         .eq('tailor_id', user.id)
+        .eq('status', 'delivered')
 
       if (ordersError) {
         console.error('Error fetching orders:', ordersError.message)
@@ -302,6 +303,7 @@ export default function Dashboard() {
             <Card className={styles.card}>
               <h3>Revenue</h3>
               <p className={styles.statNumber}>${stats.totalRevenue.toLocaleString()}</p>
+              <p className={styles.statSubtext}>From completed orders</p>
             </Card>
             <Card className={styles.card}>
               <h3>Rating</h3>
