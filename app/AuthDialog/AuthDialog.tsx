@@ -35,7 +35,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
       console.log("Dialog closed, resetting loading state.")
       setIsLoading(false)
     }
-  }, [isOpen])
+  }, [isOpen, isSignUp])
 
   useEffect(() => {
     if (isOpen) {
@@ -142,8 +142,8 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
           onClose()
         }, 1500)
       }
-    } catch (error: any) {
-      const message = error.message?.toLowerCase() || ''
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message?.toLowerCase() || '' : ''
       console.error('Auth error details:', error)
 
       if (message.includes('email not confirmed') || message.includes('email not verified') || message.includes('verify your email')) {
@@ -273,7 +273,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
               disabled={isLoading}
               type="button"
             >
-              {!isSignUp ? <>Don't have an account? <span>Sign up</span></> : <>Already have an account? <span>Sign in</span></>}
+              {!isSignUp ? <>Don&apos;t have an account? <span>Sign up</span></> : <>Already have an account? <span>Sign in</span></>}
             </button>
           </div>
         </div>

@@ -1,24 +1,6 @@
 import { supabase } from '../../lib/supabaseClient'
 import { NextResponse } from 'next/server'
 
-interface Design {
-  id: string;
-  title: string;
-  description: string;
-  images: string[];
-  fabrics: {
-    name: string;
-    image: string;
-    price: number;
-    colors: { name: string; image: string; }[];
-  }[];
-  available_styles?: Array<{
-    name: string;
-    display_name: string;
-    description?: string;
-    recommended_yards: number;
-  }>;
-}
 
 export async function GET() {
   try {
@@ -87,7 +69,6 @@ export async function processFabricsWithImages(fabricsData: any[], formData: For
           console.error('Supabase upload error:', error)
           throw error
         }
-        
         if (data) {
           const urlData = supabase.storage
             .from('fabric-images')
