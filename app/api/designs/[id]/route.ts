@@ -2,19 +2,19 @@ import { supabase } from '../../../lib/supabaseClient'
 import { NextRequest, NextResponse } from "next/server"
 import { processFabricsWithImages } from '../route'
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
+// Updated type definition to match Next.js 15 requirements
+type Params = { id: string }
+
+async function getParamsId(params: Params) {
+  return params.id;
 }
 
-async function getParamsId(context: RouteContext) {
-  return context.params.id;
-}
-
-export async function GET(request: NextRequest, context: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
   try {
-    const id = await getParamsId(context);
+    const id = params.id;
     
     const { data: design, error } = await supabase
       .from('designs')
@@ -33,9 +33,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function PUT(request: NextRequest, context: RouteContext) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
   try {
-    const id = await getParamsId(context);
+    const id = params.id;
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
@@ -72,9 +75,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
   try {
-    const id = await getParamsId(context);
+    const id = params.id;
     
     const { error } = await supabase
       .from('designs')
@@ -93,9 +99,12 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 }
 
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Params }
+) {
   try {
-    const id = await getParamsId(context);
+    const id = params.id;
     const requestBody = await request.json();
     
     // Update only the fields provided in the request
