@@ -26,6 +26,7 @@ interface OrderConfirmationModalProps {
     paymentMethod: string
     total: number
     measurement?: Measurement
+    tailorNotes?: string
   }
   savedAddresses: string[]
   onAddressChange: (address: string) => void
@@ -40,6 +41,7 @@ interface OrderConfirmationModalProps {
   onMeasurementChange: (measurement: Measurement | undefined) => void;
   isLoadingMeasurements: boolean;
   isProcessingOrder?: boolean;
+  onTailorNotesChange?: (notes: string) => void;
 }
 
 interface AddressForm {
@@ -94,7 +96,8 @@ export default function OrderConfirmationModal({
   savedMeasurements,
   onMeasurementChange,
   isLoadingMeasurements,
-  isProcessingOrder
+  isProcessingOrder,
+  onTailorNotesChange
 }: OrderConfirmationModalProps) {
   const [isNewAddress, setIsNewAddress] = useState(false);
   const [addressForm, setAddressForm] = useState<AddressForm>({
@@ -662,6 +665,18 @@ export default function OrderConfirmationModal({
                 No measurement selected. Please select a measurement before placing an order.
               </p>
             )}
+          </div>
+
+          <div className={styles.section}>
+            <h4>Notes for Tailor</h4>
+            <textarea
+              className={styles.tailorNotes}
+              placeholder="Add any specific instructions for the tailor (optional). For example: 'I'd like the sleeves to be shorter' or 'Make the collar wider please'."
+              value={orderDetails.tailorNotes || ''}
+              onChange={(e) => onTailorNotesChange?.(e.target.value)}
+              rows={4}
+            />
+            <p className={styles.notesHelper}>These notes will be attached to your order and visible to the tailor.</p>
           </div>
 
           <div className={styles.section}>

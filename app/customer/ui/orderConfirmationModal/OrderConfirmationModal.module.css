@@ -102,6 +102,10 @@
   text-decoration: underline;
 }
 
+.termsLink:hover {
+  text-decoration: underline;
+}
+
 .confirmButton {
   width: 100%;
   padding: 1rem;
@@ -398,4 +402,29 @@
   border-radius: 50%;
   border: 1px solid #ddd;
   vertical-align: middle;
+}
+
+.tailorNotes {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  resize: vertical;
+  margin-top: 0.5rem;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.tailorNotes:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.notesHelper {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-style: italic;
 } 

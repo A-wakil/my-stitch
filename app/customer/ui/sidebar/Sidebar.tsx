@@ -22,7 +22,7 @@ const mainNavItems = [
 ]
 
 const secondaryNavItems = [
-  { name: 'Create a Tailor Account', path: '/tailor' },
+  { name: 'Your Tailor Account', path: '/tailor' },
   { name: 'Contact Us', path: 'mailto:abdulwakil.ola@gmail.com' },
 ]
 

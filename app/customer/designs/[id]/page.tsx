@@ -95,6 +95,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [isProcessingOrder, setIsProcessingOrder] = useState(false)
   const [tailorDetails, setTailorDetails] = useState<any>(null)
   const [showTailorProfile, setShowTailorProfile] = useState(false)
+  const [tailorNotes, setTailorNotes] = useState<string>('')
 
   useEffect(() => {
     async function fetchDesign() {
@@ -336,7 +337,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         color_name: selectedColor !== null ? design?.fabrics[selectedFabric].colors[selectedColor].name : '',
         style_type: selectedStyle,
         estimated_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        fabric_yards: yards
+        fabric_yards: yards,
+        tailor_notes: tailorNotes || null
       };
 
       const { data, error } = await supabase
@@ -1002,7 +1004,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           shippingAddress: orderShippingAddress,
           paymentMethod: selectedPaymentMethod,
           total: totalPrice,
-          measurement: selectedMeasurement
+          measurement: selectedMeasurement,
+          tailorNotes: tailorNotes
         }}
         savedAddresses={savedAddresses}
         savedPaymentMethods={savedPaymentMethods}
@@ -1013,6 +1016,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           setSelectedMeasurement(measurement);
           // Recalculation happens automatically through the useMemo
         }}
+        onTailorNotesChange={(notes) => setTailorNotes(notes)}
         isLoading={isLoading}
         isLoadingPayment={isLoadingPayment}
         isLoadingMeasurements={isLoadingMeasurements}

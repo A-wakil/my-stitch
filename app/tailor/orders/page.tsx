@@ -585,6 +585,15 @@ export default function TailorOrdersPage() {
                         <span>Color: {order.color_name}</span>
                       </div>
                     )}
+                    {order.fabric_yards && (
+                      <p>Fabric Yards: {order.fabric_yards}</p>
+                    )}
+                    {order.tailor_notes && (
+                      <div className={styles.tailorNotes}>
+                        <h4>Customer Notes:</h4>
+                        <p>{order.tailor_notes}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
