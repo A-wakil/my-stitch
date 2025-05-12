@@ -55,64 +55,165 @@ export default function Dashboard() {
   })
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
-  // Combine both loading states, but only if user is authenticated
-  const isPageLoading = isLoading || (user && isLoadingStats)
+  // Combined page loading state
+  const isPageLoading = isLoading || (user != null && isLoadingStats);
+
+  // Modified fetchDashboardStats to accept userId
+  const fetchDashboardStats = async (userId: string) => {
+    if (!userId) {
+      console.log('No user ID provided to fetchDashboardStats.');
+      setIsLoadingStats(false);
+      setStats({ // Reset stats if no user ID
+        totalDesigns: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+        averageRating: 0,
+        recentDesigns: [],
+        recentOrders: []
+      });
+      return;
+    }
+
+    setIsLoadingStats(true);
+    console.log('Fetching dashboard stats for user:', userId);
+    try {
+      // Fetch total designs count
+      const { data: designs, count: designsCount, error: designsError } = await supabase
+        .from('designs')
+        .select('*', { count: 'exact' }) // head: true can be more efficient for counts if not needing data
+        .eq('created_by', userId);
+
+      if (designsError) {
+        console.error('Error fetching designs:', designsError.message);
+        // Potentially set partial stats or return
+      }
+      console.log('Designs found:', designsCount);
+
+      // Fetch orders for revenue
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('total_amount, status') // Select status for accurate revenue
+        .eq('tailor_id', userId)
+        .in('status', ['delivered']); // Only count revenue from delivered orders
+
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError.message);
+      }
+
+      const totalOrders = orders?.length || 0;
+      const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+
+      // Fetch recent designs
+      const { data: recentDesigns, error: recentDesignsError } = await supabase
+        .from('designs')
+        .select('id, title, created_at, images')
+        .eq('created_by', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (recentDesignsError) {
+        console.error('Error fetching recent designs:', recentDesignsError.message);
+      }
+
+      // Fetch recent orders
+      const { data: recentOrders, error: recentOrdersError } = await supabase
+        .from('orders')
+        .select('id, created_at, total_amount, status')
+        .eq('tailor_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (recentOrdersError) {
+        console.error('Error fetching recent orders:', recentOrdersError.message);
+      }
+
+      setStats({
+        totalDesigns: designsCount || 0,
+        totalOrders,
+        totalRevenue,
+        averageRating: 4.8, // Placeholder, implement actual rating calculation if needed
+        recentDesigns: recentDesigns || [],
+        recentOrders: recentOrders || []
+      });
+      console.log('Dashboard stats updated successfully');
+    } catch (error) {
+      console.error('Error in fetchDashboardStats:', error instanceof Error ? error.message : error);
+      setStats({ // Reset stats on critical error
+        totalDesigns: 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+        averageRating: 0,
+        recentDesigns: [],
+        recentOrders: []
+      });
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
 
   useEffect(() => {
-    // Check auth status when component mounts
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-      setIsAuthDialogOpen(!session?.user)
-      
-      if (session?.user) {
-        // Don't set isLoading to false until all data is loaded
-        const { data, error } = await supabase
-          .from('tailor_details')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching tailor profile:', error)
+    setIsLoading(true); // Indicate that the page is loading initial auth state and data.
+    // isLoadingStats is managed by fetchDashboardStats
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentAuthUser = session?.user ?? null;
+        setUser(currentAuthUser);
+        setIsAuthDialogOpen(!currentAuthUser);
+
+        if (currentAuthUser) {
+          // User is authenticated
+          setIsLoading(true); // Ensure isLoading is true while fetching profile and stats
+          try {
+            console.log('User authenticated, fetching profile and stats...');
+            const { data: profileData, error: profileError } = await supabase
+              .from('tailor_details')
+              .select('*')
+              .eq('id', currentAuthUser.id)
+              .single();
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('Error fetching tailor profile:', profileError);
+            }
+            setTailorProfile(profileData);
+            // Consider if refreshProfile() is essential here and if it has its own loading indicators
+            // await refreshProfile(); 
+
+            await fetchDashboardStats(currentAuthUser.id);
+            console.log('Profile and stats fetching initiated for authenticated user.');
+          } catch (e) {
+            console.error("Error fetching data for authenticated user:", e);
+            // fetchDashboardStats has its own finally for isLoadingStats
+          } finally {
+            // Finished attempting to load data for an authenticated user.
+            setIsLoading(false); 
+            console.log('Main loading false for authenticated user path.');
+          }
+        } else {
+          // No user / user signed out
+          console.log('User not authenticated or session ended.');
+          setTailorProfile(null);
+          setStats({ // Reset stats
+            totalDesigns: 0,
+            totalOrders: 0,
+            totalRevenue: 0,
+            averageRating: 0,
+            recentDesigns: [],
+            recentOrders: []
+          });
+          setIsLoading(false);      // Auth resolved to no user.
+          setIsLoadingStats(false); // No stats to load.
+           console.log('Main loading and stats loading false for unauthenticated user path.');
         }
-        
-        setTailorProfile(data)
-        // Fetch dashboard stats when user is authenticated
-        await fetchDashboardStats()
-      } else {
-        // If no user, we can stop loading immediately
-        setIsLoadingStats(false)
       }
-      setIsLoading(false)
-    })
+    );
 
-    // Initial auth check
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      setUser(user)
-      if (user) {
-        const { data, error } = await supabase
-          .from('tailor_details')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-        
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching tailor profile:', error)
-        }
-        
-        setTailorProfile(data)
-        // Fetch dashboard stats on initial load
-        await fetchDashboardStats()
-      } else {
-        // If no user, we can stop loading immediately
-        setIsLoadingStats(false)
-      }
-      setIsLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
+    return () => {
+      authSubscription.subscription.unsubscribe();
+    };
+  }, [refreshProfile]); // Added refreshProfile as a dependency.
+                        // If fetchDashboardStats is defined inside Dashboard and not memoized,
+                        // it might also need to be a dependency or memoized with useCallback.
 
   // Don't allow closing the dialog if user is not authenticated
   const handleCloseDialog = () => {
@@ -130,88 +231,6 @@ export default function Dashboard() {
       await refreshProfile()
       // Hide the profile form
       setShowProfileForm(false)
-  }
-
-  const fetchDashboardStats = async () => {
-    try {
-      setIsLoadingStats(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        console.log('No user found')
-        return
-      }
-
-      console.log('Fetching stats for user:', user.id)
-
-      // Fetch total designs count
-      const { data: designs, count: designsCount, error: designsError } = await supabase
-        .from('designs')
-        .select('*', { count: 'exact' })
-        .eq('created_by', user.id)
-
-      if (designsError) {
-        console.error('Error fetching designs:', designsError.message)
-        return
-      }
-
-      console.log('Designs found:', designsCount)
-
-      // Fetch orders
-      const { data: orders, error: ordersError } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('tailor_id', user.id)
-        .eq('status', 'delivered')
-
-      if (ordersError) {
-        console.error('Error fetching orders:', ordersError.message)
-        return
-      }
-
-      const totalOrders = orders?.length || 0
-      const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0
-
-      // Fetch recent designs
-      const { data: recentDesigns, error: recentDesignsError } = await supabase
-        .from('designs')
-        .select('id, title, created_at, images')
-        .eq('created_by', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (recentDesignsError) {
-        console.error('Error fetching recent designs:', recentDesignsError.message)
-        return
-      }
-
-      // Fetch recent orders
-      const { data: recentOrders, error: recentOrdersError } = await supabase
-        .from('orders')
-        .select('id, created_at, total_amount, status')
-        .eq('tailor_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (recentOrdersError) {
-        console.error('Error fetching recent orders:', recentOrdersError.message)
-        return
-      }
-
-      setStats({
-        totalDesigns: designsCount || 0,
-        totalOrders,
-        totalRevenue,
-        averageRating: 4.8,
-        recentDesigns: recentDesigns || [],
-        recentOrders: recentOrders || []
-      })
-
-      console.log('Stats updated successfully')
-    } catch (error) {
-      console.error('Error in fetchDashboardStats:', error instanceof Error ? error.message : error)
-    } finally {
-      setIsLoadingStats(false)
-    }
   }
 
   const handleViewAllDesigns = () => {
