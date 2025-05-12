@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from "../tailor/components/ui/card"
 import { Button } from "../tailor/components/ui/button"
@@ -58,114 +58,99 @@ export default function Dashboard() {
   // Combined page loading state
   const isPageLoading = isLoading || (user != null && isLoadingStats);
 
-  // Modified fetchDashboardStats to accept userId
-  const fetchDashboardStats = async (userId: string) => {
+  // Memoize fetchDashboardStats with useCallback
+  const fetchDashboardStats = useCallback(async (userId: string) => {
     if (!userId) {
-      console.log('No user ID provided to fetchDashboardStats.');
+      console.log('[fetchDashboardStats] No user ID provided.');
       setIsLoadingStats(false);
-      setStats({ // Reset stats if no user ID
-        totalDesigns: 0,
-        totalOrders: 0,
-        totalRevenue: 0,
-        averageRating: 0,
-        recentDesigns: [],
-        recentOrders: []
+      setStats({ 
+        totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
+        averageRating: 0, recentDesigns: [], recentOrders: [] 
       });
       return;
     }
 
+    console.log(`[fetchDashboardStats] Starting for user: ${userId}`);
     setIsLoadingStats(true);
-    console.log('Fetching dashboard stats for user:', userId);
     try {
-      // Fetch total designs count
-      const { data: designs, count: designsCount, error: designsError } = await supabase
+      console.log('[fetchDashboardStats] Fetching designs count...');
+      const { count: designsCount, error: designsError } = await supabase
         .from('designs')
-        .select('*', { count: 'exact' }) // head: true can be more efficient for counts if not needing data
+        .select('*', { count: 'exact', head: true }) // Use head:true for count-only
         .eq('created_by', userId);
+      if (designsError) console.error('[fetchDashboardStats] Error fetching designs:', designsError.message);
+      else console.log('[fetchDashboardStats] Designs count fetched:', designsCount);
 
-      if (designsError) {
-        console.error('Error fetching designs:', designsError.message);
-        // Potentially set partial stats or return
-      }
-      console.log('Designs found:', designsCount);
-
-      // Fetch orders for revenue
+      console.log('[fetchDashboardStats] Fetching orders for revenue...');
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
-        .select('total_amount, status') // Select status for accurate revenue
+        .select('total_amount, status')
         .eq('tailor_id', userId)
-        .in('status', ['delivered']); // Only count revenue from delivered orders
-
-      if (ordersError) {
-        console.error('Error fetching orders:', ordersError.message);
-      }
+        .in('status', ['delivered']);
+      if (ordersError) console.error('[fetchDashboardStats] Error fetching orders:', ordersError.message);
+      else console.log('[fetchDashboardStats] Orders for revenue fetched.');
 
       const totalOrders = orders?.length || 0;
       const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
 
-      // Fetch recent designs
+      console.log('[fetchDashboardStats] Fetching recent designs...');
       const { data: recentDesigns, error: recentDesignsError } = await supabase
         .from('designs')
         .select('id, title, created_at, images')
         .eq('created_by', userId)
         .order('created_at', { ascending: false })
         .limit(5);
+      if (recentDesignsError) console.error('[fetchDashboardStats] Error fetching recent designs:', recentDesignsError.message);
+      else console.log('[fetchDashboardStats] Recent designs fetched.');
 
-      if (recentDesignsError) {
-        console.error('Error fetching recent designs:', recentDesignsError.message);
-      }
-
-      // Fetch recent orders
+      console.log('[fetchDashboardStats] Fetching recent orders...');
       const { data: recentOrders, error: recentOrdersError } = await supabase
         .from('orders')
         .select('id, created_at, total_amount, status')
         .eq('tailor_id', userId)
         .order('created_at', { ascending: false })
         .limit(5);
-
-      if (recentOrdersError) {
-        console.error('Error fetching recent orders:', recentOrdersError.message);
-      }
+      if (recentOrdersError) console.error('[fetchDashboardStats] Error fetching recent orders:', recentOrdersError.message);
+      else console.log('[fetchDashboardStats] Recent orders fetched.');
 
       setStats({
         totalDesigns: designsCount || 0,
         totalOrders,
         totalRevenue,
-        averageRating: 4.8, // Placeholder, implement actual rating calculation if needed
+        averageRating: 4.8, 
         recentDesigns: recentDesigns || [],
         recentOrders: recentOrders || []
       });
-      console.log('Dashboard stats updated successfully');
+      console.log('[fetchDashboardStats] Stats updated successfully');
     } catch (error) {
-      console.error('Error in fetchDashboardStats:', error instanceof Error ? error.message : error);
-      setStats({ // Reset stats on critical error
-        totalDesigns: 0,
-        totalOrders: 0,
-        totalRevenue: 0,
-        averageRating: 0,
-        recentDesigns: [],
-        recentOrders: []
+      console.error('[fetchDashboardStats] Error:', error instanceof Error ? error.message : error);
+      setStats({ 
+          totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
+          averageRating: 0, recentDesigns: [], recentOrders: [] 
       });
     } finally {
+      console.log('[fetchDashboardStats] Finished. Setting isLoadingStats to false.');
       setIsLoadingStats(false);
     }
-  };
+  }, [supabase]); // Added supabase as a dependency, assuming it's stable.
+                 // If supabase client instance can change, this might need adjustment.
 
   useEffect(() => {
-    setIsLoading(true); // Indicate that the page is loading initial auth state and data.
-    // isLoadingStats is managed by fetchDashboardStats
+    console.log('[useEffect] Mounting. Setting isLoading to true.');
+    setIsLoading(true); 
 
     const { data: authSubscription } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentAuthUser = session?.user ?? null;
+        console.log(`[useEffect onAuthStateChange] Event: ${event}, User: ${currentAuthUser?.id}`);
         setUser(currentAuthUser);
         setIsAuthDialogOpen(!currentAuthUser);
 
         if (currentAuthUser) {
-          // User is authenticated
-          setIsLoading(true); // Ensure isLoading is true while fetching profile and stats
+          console.log('[useEffect onAuthStateChange] User authenticated. Preparing to fetch data...');
+          setIsLoading(true); // Ensure main loading is true
           try {
-            console.log('User authenticated, fetching profile and stats...');
+            console.log('[useEffect onAuthStateChange] Fetching tailor profile...');
             const { data: profileData, error: profileError } = await supabase
               .from('tailor_details')
               .select('*')
@@ -173,47 +158,44 @@ export default function Dashboard() {
               .single();
 
             if (profileError && profileError.code !== 'PGRST116') {
-              console.error('Error fetching tailor profile:', profileError);
+              console.error('[useEffect onAuthStateChange] Error fetching tailor profile:', profileError);
+            } else {
+              console.log('[useEffect onAuthStateChange] Tailor profile fetched.');
             }
             setTailorProfile(profileData);
-            // Consider if refreshProfile() is essential here and if it has its own loading indicators
-            // await refreshProfile(); 
+            
+            // await refreshProfile(); // Consider if this is truly needed here and its implications
 
+            console.log('[useEffect onAuthStateChange] Calling fetchDashboardStats...');
             await fetchDashboardStats(currentAuthUser.id);
-            console.log('Profile and stats fetching initiated for authenticated user.');
+            console.log('[useEffect onAuthStateChange] fetchDashboardStats call completed.');
+
           } catch (e) {
-            console.error("Error fetching data for authenticated user:", e);
-            // fetchDashboardStats has its own finally for isLoadingStats
+            console.error("[useEffect onAuthStateChange] Error in authenticated user data fetching path:", e);
           } finally {
-            // Finished attempting to load data for an authenticated user.
+            console.log('[useEffect onAuthStateChange] Authenticated path finally block. Setting isLoading to false.');
             setIsLoading(false); 
-            console.log('Main loading false for authenticated user path.');
           }
         } else {
-          // No user / user signed out
-          console.log('User not authenticated or session ended.');
+          console.log('[useEffect onAuthStateChange] User not authenticated or session ended. Resetting state.');
           setTailorProfile(null);
-          setStats({ // Reset stats
-            totalDesigns: 0,
-            totalOrders: 0,
-            totalRevenue: 0,
-            averageRating: 0,
-            recentDesigns: [],
-            recentOrders: []
+          setStats({ 
+            totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
+            averageRating: 0, recentDesigns: [], recentOrders: [] 
           });
-          setIsLoading(false);      // Auth resolved to no user.
-          setIsLoadingStats(false); // No stats to load.
-           console.log('Main loading and stats loading false for unauthenticated user path.');
+          setIsLoading(false);
+          setIsLoadingStats(false); 
         }
       }
     );
 
+    console.log('[useEffect] Subscription created.');
     return () => {
+      console.log('[useEffect] Unsubscribing from auth changes.');
       authSubscription.subscription.unsubscribe();
     };
-  }, [refreshProfile]); // Added refreshProfile as a dependency.
-                        // If fetchDashboardStats is defined inside Dashboard and not memoized,
-                        // it might also need to be a dependency or memoized with useCallback.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshProfile, fetchDashboardStats]); // Added fetchDashboardStats to dependencies. Supabase client from context if used.
 
   // Don't allow closing the dialog if user is not authenticated
   const handleCloseDialog = () => {
