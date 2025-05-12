@@ -37,6 +37,27 @@ interface DashboardStats {
   recentOrders: Order[];
 }
 
+// Add this utility function for timeouts
+function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      clearTimeout(timeoutId);
+      reject(new Error(errorMessage));
+    }, ms);
+    
+    promise.then(
+      (result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
+    );
+  });
+}
+
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -74,44 +95,81 @@ export default function Dashboard() {
     setIsLoadingStats(true);
     try {
       console.log('[fetchDashboardStats] Fetching designs count...');
-      const { count: designsCount, error: designsError } = await supabase
-        .from('designs')
-        .select('*', { count: 'exact', head: true }) // Use head:true for count-only
-        .eq('created_by', userId);
-      if (designsError) console.error('[fetchDashboardStats] Error fetching designs:', designsError.message);
-      else console.log('[fetchDashboardStats] Designs count fetched:', designsCount);
+      const designsResponse = await withTimeout(
+        supabase
+          .from('designs')
+          .select('*', { count: 'exact', head: true })
+          .eq('created_by', userId) as unknown as Promise<any>,
+        8000,
+        'Designs count fetch timed out'
+      );
+      
+      const designsCount = designsResponse.count || 0;
+      if (designsResponse.error) {
+        console.error('[fetchDashboardStats] Error fetching designs:', designsResponse.error.message);
+      } else {
+        console.log('[fetchDashboardStats] Designs count fetched:', designsCount);
+      }
 
       console.log('[fetchDashboardStats] Fetching orders for revenue...');
-      const { data: orders, error: ordersError } = await supabase
-        .from('orders')
-        .select('total_amount, status')
-        .eq('tailor_id', userId)
-        .in('status', ['delivered']);
-      if (ordersError) console.error('[fetchDashboardStats] Error fetching orders:', ordersError.message);
-      else console.log('[fetchDashboardStats] Orders for revenue fetched.');
+      const ordersResponse = await withTimeout(
+        supabase
+          .from('orders')
+          .select('total_amount, status')
+          .eq('tailor_id', userId)
+          .in('status', ['delivered']) as unknown as Promise<any>,
+        8000,
+        'Orders fetch timed out'
+      );
+      
+      const orders = ordersResponse.data || [];
+      if (ordersResponse.error) {
+        console.error('[fetchDashboardStats] Error fetching orders:', ordersResponse.error.message);
+      } else {
+        console.log('[fetchDashboardStats] Orders for revenue fetched.');
+      }
 
-      const totalOrders = orders?.length || 0;
-      const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0;
+      const totalOrders = orders.length || 0;
+      const totalRevenue = orders.reduce((sum: number, order: {total_amount: number}) => 
+        sum + (Number(order.total_amount) || 0), 0) || 0;
 
       console.log('[fetchDashboardStats] Fetching recent designs...');
-      const { data: recentDesigns, error: recentDesignsError } = await supabase
-        .from('designs')
-        .select('id, title, created_at, images')
-        .eq('created_by', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (recentDesignsError) console.error('[fetchDashboardStats] Error fetching recent designs:', recentDesignsError.message);
-      else console.log('[fetchDashboardStats] Recent designs fetched.');
+      const recentDesignsResponse = await withTimeout(
+        supabase
+          .from('designs')
+          .select('id, title, created_at, images')
+          .eq('created_by', userId)
+          .order('created_at', { ascending: false })
+          .limit(5) as unknown as Promise<any>,
+        8000,
+        'Recent designs fetch timed out'
+      );
+      
+      const recentDesigns = recentDesignsResponse.data || [];
+      if (recentDesignsResponse.error) {
+        console.error('[fetchDashboardStats] Error fetching recent designs:', recentDesignsResponse.error.message);
+      } else {
+        console.log('[fetchDashboardStats] Recent designs fetched.');
+      }
 
       console.log('[fetchDashboardStats] Fetching recent orders...');
-      const { data: recentOrders, error: recentOrdersError } = await supabase
-        .from('orders')
-        .select('id, created_at, total_amount, status')
-        .eq('tailor_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (recentOrdersError) console.error('[fetchDashboardStats] Error fetching recent orders:', recentOrdersError.message);
-      else console.log('[fetchDashboardStats] Recent orders fetched.');
+      const recentOrdersResponse = await withTimeout(
+        supabase
+          .from('orders')
+          .select('id, created_at, total_amount, status')
+          .eq('tailor_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(5) as unknown as Promise<any>,
+        8000,
+        'Recent orders fetch timed out'
+      );
+      
+      const recentOrders = recentOrdersResponse.data || [];
+      if (recentOrdersResponse.error) {
+        console.error('[fetchDashboardStats] Error fetching recent orders:', recentOrdersResponse.error.message);
+      } else {
+        console.log('[fetchDashboardStats] Recent orders fetched.');
+      }
 
       setStats({
         totalDesigns: designsCount || 0,
@@ -136,71 +194,108 @@ export default function Dashboard() {
                  // If supabase client instance can change, this might need adjustment.
 
   useEffect(() => {
-    console.log('[useEffect] Mounting. Setting isLoading to true.');
-    setIsLoading(true); 
+    console.log('[useEffect] Mounting dashboard component...');
+    setIsLoading(true);
 
-    const { data: authSubscription } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        const currentAuthUser = session?.user ?? null;
-        console.log(`[useEffect onAuthStateChange] Event: ${event}, User: ${currentAuthUser?.id}`);
-        setUser(currentAuthUser);
-        setIsAuthDialogOpen(!currentAuthUser);
-
-        if (currentAuthUser) {
-          console.log('[useEffect onAuthStateChange] User authenticated. Preparing to fetch data...');
-          setIsLoading(true); 
-          try {
-            console.log(`[useEffect onAuthStateChange] Attempting to fetch tailor profile for user ID: ${currentAuthUser.id}...`);
-            const { data: profileData, error: profileError, status: profileStatus, statusText: profileStatusText } = await supabase
+    const checkAndFetchData = async () => {
+      try {
+        // 1. Get current user with timeout
+        console.log('[checkAndFetchData] Getting current user...');
+        const userResponse = await withTimeout(
+          supabase.auth.getUser(),
+          5000, 
+          'Auth getUser timed out'
+        );
+        
+        if (userResponse.error || !userResponse.data.user) {
+          console.error('[checkAndFetchData] No authenticated user found:', userResponse.error);
+          setUser(null);
+          setIsLoading(false);
+          setIsLoadingStats(false);
+          return;
+        }
+        
+        const currentUser = userResponse.data.user;
+        console.log(`[checkAndFetchData] User authenticated: ${currentUser.id}`);
+        setUser(currentUser);
+        
+        // 2. Fetch tailor profile with timeout
+        console.log('[checkAndFetchData] Fetching tailor profile...');
+        try {
+          const profileResponse = await withTimeout(
+            // Cast this to Promise to avoid TypeScript error
+            supabase
               .from('tailor_details')
               .select('*')
-              .eq('id', currentAuthUser.id)
-              .single();
-
-            console.log(`[useEffect onAuthStateChange] Tailor profile query completed. Status: ${profileStatus}, StatusText: ${profileStatusText}`);
-
-            if (profileError) {
-              console.log(`[useEffect onAuthStateChange] Tailor profile query returned an error object. Code: ${profileError.code}, Message: ${profileError.message}`);
-              if (profileError.code !== 'PGRST116') {
-                console.error('[useEffect onAuthStateChange] Critical error fetching tailor profile:', profileError);
-              } else {
-                console.log('[useEffect onAuthStateChange] Tailor profile not found (PGRST116), which is acceptable if new user.');
-              }
+              .eq('id', currentUser.id)
+              .single() as unknown as Promise<any>,
+            10000,
+            'Tailor profile fetch timed out'
+          );
+          
+          if (profileResponse.error) {
+            if (profileResponse.error.code === 'PGRST116') {
+              console.log('[checkAndFetchData] No tailor profile found - new user');
             } else {
-              console.log('[useEffect onAuthStateChange] Tailor profile data fetched successfully:', profileData);
+              console.error('[checkAndFetchData] Error fetching tailor profile:', profileResponse.error);
             }
-            setTailorProfile(profileData);
-            
-            console.log('[useEffect onAuthStateChange] Calling fetchDashboardStats...');
-            await fetchDashboardStats(currentAuthUser.id);
-            console.log('[useEffect onAuthStateChange] fetchDashboardStats call completed.');
-
-          } catch (e) {
-            console.error("[useEffect onAuthStateChange] Error in authenticated user data fetching path catch block:", e);
-          } finally {
-            console.log('[useEffect onAuthStateChange] Authenticated path finally block. Setting isLoading to false.');
-            setIsLoading(false); 
+          } else {
+            console.log('[checkAndFetchData] Tailor profile fetched successfully');
           }
-        } else {
-          console.log('[useEffect onAuthStateChange] User not authenticated or session ended. Resetting state.');
-          setTailorProfile(null);
-          setStats({ 
-            totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
-            averageRating: 0, recentDesigns: [], recentOrders: [] 
-          });
-          setIsLoading(false);
-          setIsLoadingStats(false); 
+          
+          setTailorProfile(profileResponse.data);
+          
+        } catch (profileFetchError) {
+          console.error('[checkAndFetchData] Failed to fetch profile:', profileFetchError);
+          // Continue with null profile - the UI will handle this case
         }
+        
+        // 3. Fetch dashboard stats with timeout
+        console.log('[checkAndFetchData] Fetching dashboard stats...');
+        try {
+          await fetchDashboardStats(currentUser.id);
+        } catch (statsError) {
+          console.error('[checkAndFetchData] Error fetching dashboard stats:', statsError);
+          // Reset stats to empty state on error
+          setStats({
+            totalDesigns: 0,
+            totalOrders: 0, 
+            totalRevenue: 0,
+            averageRating: 0,
+            recentDesigns: [],
+            recentOrders: []
+          });
+        }
+      } catch (e) {
+        console.error('[checkAndFetchData] Top-level error:', e);
+      } finally {
+        // Always finish loading no matter what
+        console.log('[checkAndFetchData] Setting loading states to false');
+        setIsLoading(false);
+        setIsLoadingStats(false);
       }
-    );
-
-    console.log('[useEffect] Subscription created.');
+    };
+    
+    // Start data fetching
+    checkAndFetchData();
+    
+    // Set up auth state change listener 
+    const { data: authSubscription } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log(`[onAuthStateChange] Auth event: ${event}`);
+      
+      // Only update user state, don't trigger refetches on every auth event
+      // (our manual fetch above handles the initial data loading)
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+      setIsAuthDialogOpen(!newUser);
+    });
+    
     return () => {
-      console.log('[useEffect] Unsubscribing from auth changes.');
+      console.log('[useEffect] Cleanup - unsubscribing from auth changes');
       authSubscription.subscription.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshProfile, fetchDashboardStats]); // Added fetchDashboardStats to dependencies. Supabase client from context if used.
+  }, [fetchDashboardStats, refreshProfile]); // Include both required dependencies
 
   // Don't allow closing the dialog if user is not authenticated
   const handleCloseDialog = () => {
