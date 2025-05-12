@@ -148,30 +148,35 @@ export default function Dashboard() {
 
         if (currentAuthUser) {
           console.log('[useEffect onAuthStateChange] User authenticated. Preparing to fetch data...');
-          setIsLoading(true); // Ensure main loading is true
+          setIsLoading(true); 
           try {
-            console.log('[useEffect onAuthStateChange] Fetching tailor profile...');
-            const { data: profileData, error: profileError } = await supabase
+            console.log(`[useEffect onAuthStateChange] Attempting to fetch tailor profile for user ID: ${currentAuthUser.id}...`);
+            const { data: profileData, error: profileError, status: profileStatus, statusText: profileStatusText } = await supabase
               .from('tailor_details')
               .select('*')
               .eq('id', currentAuthUser.id)
               .single();
 
-            if (profileError && profileError.code !== 'PGRST116') {
-              console.error('[useEffect onAuthStateChange] Error fetching tailor profile:', profileError);
+            console.log(`[useEffect onAuthStateChange] Tailor profile query completed. Status: ${profileStatus}, StatusText: ${profileStatusText}`);
+
+            if (profileError) {
+              console.log(`[useEffect onAuthStateChange] Tailor profile query returned an error object. Code: ${profileError.code}, Message: ${profileError.message}`);
+              if (profileError.code !== 'PGRST116') {
+                console.error('[useEffect onAuthStateChange] Critical error fetching tailor profile:', profileError);
+              } else {
+                console.log('[useEffect onAuthStateChange] Tailor profile not found (PGRST116), which is acceptable if new user.');
+              }
             } else {
-              console.log('[useEffect onAuthStateChange] Tailor profile fetched.');
+              console.log('[useEffect onAuthStateChange] Tailor profile data fetched successfully:', profileData);
             }
             setTailorProfile(profileData);
             
-            // await refreshProfile(); // Consider if this is truly needed here and its implications
-
             console.log('[useEffect onAuthStateChange] Calling fetchDashboardStats...');
             await fetchDashboardStats(currentAuthUser.id);
             console.log('[useEffect onAuthStateChange] fetchDashboardStats call completed.');
 
           } catch (e) {
-            console.error("[useEffect onAuthStateChange] Error in authenticated user data fetching path:", e);
+            console.error("[useEffect onAuthStateChange] Error in authenticated user data fetching path catch block:", e);
           } finally {
             console.log('[useEffect onAuthStateChange] Authenticated path finally block. Setting isLoading to false.');
             setIsLoading(false); 
