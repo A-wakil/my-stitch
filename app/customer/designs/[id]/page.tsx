@@ -12,6 +12,7 @@ import { IoChevronDown, IoChevronUp } from "react-icons/io5"
 import { IoInformationCircleOutline } from "react-icons/io5"
 import { sendOrderNotification, notifyOrderParties } from '../../../lib/notifications'
 import { IoPersonCircleOutline } from "react-icons/io5"
+import { StarRating } from "../../../components/ui/StarRating"
 
 interface DesignDetail {
   id: string
@@ -120,20 +121,31 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         return
       }
 
+      if (!brandData || !brandData.created_by) {
+        console.error('No created_by field found for design')
+        return
+      }
+
       setTailorId(brandData.created_by)
 
+      // Add .maybeSingle() instead of .single() to handle cases with no rows
       const { data: brandName, error: brandNameError } = await supabase
         .from('tailor_details')
         .select('brand_name')
         .eq('id', brandData.created_by)
-        .single()
+        .maybeSingle()
 
       if (brandNameError) {
-        console.error('Error fetching brand:', brandNameError)
+        console.error('Error fetching brand name:', brandNameError)
         return
       }
 
-      setBrandName(brandName.brand_name)
+      if (brandName) {
+        setBrandName(brandName.brand_name)
+      } else {
+        console.log('No brand name found for tailor ID:', brandData.created_by)
+        setBrandName('Unknown Brand')
+      }
 
       // Set default selected style if available
       if (data.available_styles && data.available_styles.length > 0) {
@@ -166,13 +178,16 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Use maybeSingle() instead of single() to handle no rows gracefully
         const { data, error } = await supabase
           .from('customer_details')
           .select('street_address, city, state, postal_code, country')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
-        if (data && !error) {
+        if (error) {
+          console.error('Error fetching customer address:', error);
+        } else if (data) {
           // Only add the address if all required fields exist
           if (data.street_address && data.city && data.state && data.postal_code) {
             const formattedAddress = `${data.street_address}, ${data.city}, ${data.state} ${data.postal_code}, ${data.country || 'United States'}`;
@@ -180,6 +195,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           } else {
             setSavedAddresses([]);
           }
+        } else {
+          // No data found
+          setSavedAddresses([]);
         }
       }
       setIsLoading(false);
@@ -194,13 +212,16 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Use maybeSingle() instead of single() to handle no rows gracefully
         const { data, error } = await supabase
           .from('customer_details')
           .select('card_number, expiration_date')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
-        if (data && !error && data.card_number) {
+        if (error) {
+          console.error('Error fetching payment method:', error);
+        } else if (data && data.card_number) {
           setSavedPaymentMethods([{
             cardNumber: data.card_number,
             expirationDate: data.expiration_date
@@ -246,14 +267,18 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         .from('tailor_details')
         .select('*')
         .eq('id', tailorId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching tailor details:', error);
         return;
       }
 
-      setTailorDetails(data);
+      if (data) {
+        setTailorDetails(data);
+      } else {
+        console.log('No tailor details found for ID:', tailorId);
+      }
     }
 
     if (tailorId) {
@@ -544,6 +569,13 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     }
   };
 
+  const calculateAverageRating = (tailor: any) => {
+    if (tailor?.rating_count && tailor.rating_count > 0 && tailor.rating_sum) {
+      return parseFloat((tailor.rating_sum / tailor.rating_count).toFixed(1));
+    }
+    return null; // Return null instead of 0 for no ratings
+  };
+
   if (!design) {
     return <div>Loading...</div>
   }
@@ -593,6 +625,23 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 <div className={styles.tailorInfo}>
                   <h3>{tailorDetails.brand_name}</h3>
                   <p>Designer: {tailorDetails.tailor_name}</p>
+                  
+                  <div className={styles.ratingDisplay}>
+                    {calculateAverageRating(tailorDetails) !== null ? (
+                      <>
+                        <StarRating 
+                          initialRating={calculateAverageRating(tailorDetails) || 0}
+                          readOnly={true} 
+                          onChange={() => {}} 
+                        />
+                        <span className={styles.ratingCount}>
+                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={styles.noRatings}>No ratings yet</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <button className={styles.viewProfileButton}>View Full Profile</button>
@@ -955,6 +1004,24 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 <div className={styles.profileInfo}>
                   <h2>{tailorDetails.brand_name}</h2>
                   <h3>{tailorDetails.tailor_name}</h3>
+                  
+                  {/* Add rating display in the profile modal */}
+                  <div className={styles.profileRating}>
+                    {calculateAverageRating(tailorDetails) !== null ? (
+                      <>
+                        <StarRating 
+                          initialRating={calculateAverageRating(tailorDetails) || 0}
+                          readOnly={true} 
+                          onChange={() => {}} 
+                        />
+                        <span className={styles.ratingCount}>
+                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={styles.noRatings}>No ratings yet</span>
+                    )}
+                  </div>
                 </div>
               </div>
               

@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from "lucide-react"
 import styles from "./styles/DesignGrid.module.css"
 import { Spinner } from "../../components/ui/spinner"
 import { ConfirmationModal } from "../../components/ui/confirmation-modal"
+import { supabase } from "../../../lib/supabaseClient"
 
 interface Design {
   id: string
@@ -55,7 +56,18 @@ export function DesignGrid() {
   const fetchDesigns = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("/api/designs")
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        console.error("No authenticated user found")
+        setIsLoading(false)
+        return
+      }
+
+      // Fetch only designs created by the current tailor
+      const response = await fetch(`/api/designs?created_by=${user.id}`)
       if (response.ok) {
         const data = await response.json()
         setDesigns(data)

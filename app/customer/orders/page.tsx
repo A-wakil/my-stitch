@@ -6,6 +6,8 @@ import styles from './Orders.module.css'
 import { useRouter } from 'next/navigation'
 import { Order } from '../../lib/types'
 import { IoArrowBack } from 'react-icons/io5'
+import { RatingModal } from '../../components/ui/RatingModal'
+import { toast } from 'react-hot-toast'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled' | 'rejected'
 
@@ -15,6 +17,11 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<OrderStatus>('pending')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})
   const router = useRouter()
+  
+  // Add state for rating modal
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
+  const [ratingOrderId, setRatingOrderId] = useState<string | null>(null)
+  const [ratingTailorId, setRatingTailorId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchOrders() {
@@ -73,6 +80,12 @@ export default function OrdersPage() {
     // Redirect to the design page with pre-selected options
     router.push(`/customer/designs/${order.design_id}?`)
   }
+
+  const handleOpenRatingModal = (orderId: string, tailorId: string) => {
+    setRatingOrderId(orderId);
+    setRatingTailorId(tailorId);
+    setIsRatingModalOpen(true);
+  };
 
   const filteredOrders = orders.filter(order => 
     activeTab === 'all' ? true : 
@@ -263,6 +276,14 @@ export default function OrdersPage() {
                     >
                       Buy it again
                     </button>
+                    {(order.status === 'shipped' || order.status === 'delivered') && (
+                      <button
+                        className={styles.rateButton}
+                        onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
+                      >
+                        Rate this order
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,6 +304,19 @@ export default function OrdersPage() {
               : `Check other tabs to view orders in different states`}
           </p>
         </div>
+      )}
+
+      {isRatingModalOpen && ratingOrderId && ratingTailorId && (
+        <RatingModal
+          isOpen={isRatingModalOpen}
+          onClose={() => setIsRatingModalOpen(false)}
+          orderId={ratingOrderId}
+          tailorId={ratingTailorId}
+          onSuccess={() => {
+            toast.success('Thank you for your rating!');
+            setIsRatingModalOpen(false);
+          }}
+        />
       )}
     </div>
   )

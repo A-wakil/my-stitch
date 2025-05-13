@@ -111,7 +111,6 @@ export default function Dashboard() {
         console.log('[fetchDashboardStats] Designs count fetched:', designsCount);
       }
 
-      console.log('[fetchDashboardStats] Fetching orders for revenue...');
       const ordersResponse = await withTimeout(
         supabase
           .from('orders')
@@ -133,7 +132,6 @@ export default function Dashboard() {
       const totalRevenue = orders.reduce((sum: number, order: {total_amount: number}) => 
         sum + (Number(order.total_amount) || 0), 0) || 0;
 
-      console.log('[fetchDashboardStats] Fetching recent designs...');
       const recentDesignsResponse = await withTimeout(
         supabase
           .from('designs')
@@ -152,7 +150,6 @@ export default function Dashboard() {
         console.log('[fetchDashboardStats] Recent designs fetched.');
       }
 
-      console.log('[fetchDashboardStats] Fetching recent orders...');
       const recentOrdersResponse = await withTimeout(
         supabase
           .from('orders')
@@ -168,14 +165,51 @@ export default function Dashboard() {
       if (recentOrdersResponse.error) {
         console.error('[fetchDashboardStats] Error fetching recent orders:', recentOrdersResponse.error.message);
       } else {
-        console.log('[fetchDashboardStats] Recent orders fetched.');
       }
 
+      let averageRating = 0;
+      try {
+        const ratingResponse = await withTimeout(
+          supabase
+            .from('tailor_details')
+            .select('rating, rating_sum, rating_count')
+            .eq('id', userId) as unknown as Promise<any>,
+          5000,
+          'Tailor rating fetch timed out'
+        );
+        
+        
+        if (ratingResponse.error) {
+          console.error('[fetchDashboardStats] Error fetching tailor rating:', ratingResponse.error);
+        } else if (ratingResponse.data && ratingResponse.data.length > 0) {
+          const ratingData = ratingResponse.data[0]; // Make sure we're accessing the first row
+          
+          // First check if we have sum and count to calculate average
+          if (ratingData.rating_count && ratingData.rating_sum && ratingData.rating_count > 0) {
+            averageRating = ratingData.rating_sum / ratingData.rating_count;
+            console.log(`[fetchDashboardStats] Calculated rating from sum/count: sum=${ratingData.rating_sum}, count=${ratingData.rating_count}, avg=${averageRating.toFixed(1)}`);
+          }
+          // If no rating_count/sum but we have a direct rating, use that
+          else if (ratingData.rating !== null && ratingData.rating !== undefined && ratingData.rating > 0) {
+            averageRating = ratingData.rating;
+          } else {
+            console.log('[fetchDashboardStats] No valid rating data found:', 
+              'rating=', ratingData.rating,
+              'rating_sum=', ratingData.rating_sum,
+              'rating_count=', ratingData.rating_count);
+          }
+        } else {
+        }
+      } catch (ratingError) {
+        console.error('[fetchDashboardStats] Error in rating fetch:', ratingError);
+      }
+      
+      
       setStats({
         totalDesigns: designsCount || 0,
         totalOrders,
         totalRevenue,
-        averageRating: 4.8, 
+        averageRating: parseFloat(averageRating.toFixed(1)),
         recentDesigns: recentDesigns || [],
         recentOrders: recentOrders || []
       });
@@ -187,20 +221,17 @@ export default function Dashboard() {
           averageRating: 0, recentDesigns: [], recentOrders: [] 
       });
     } finally {
-      console.log('[fetchDashboardStats] Finished. Setting isLoadingStats to false.');
       setIsLoadingStats(false);
     }
   }, [supabase]); // Added supabase as a dependency, assuming it's stable.
                  // If supabase client instance can change, this might need adjustment.
 
   useEffect(() => {
-    console.log('[useEffect] Mounting dashboard component...');
     setIsLoading(true);
 
     const checkAndFetchData = async () => {
       try {
         // 1. Get current user with timeout
-        console.log('[checkAndFetchData] Getting current user...');
         const userResponse = await withTimeout(
           supabase.auth.getUser(),
           5000, 
@@ -208,7 +239,6 @@ export default function Dashboard() {
         );
         
         if (userResponse.error || !userResponse.data.user) {
-          console.error('[checkAndFetchData] No authenticated user found:', userResponse.error);
           setUser(null);
           setIsLoading(false);
           setIsLoadingStats(false);
@@ -216,11 +246,8 @@ export default function Dashboard() {
         }
         
         const currentUser = userResponse.data.user;
-        console.log(`[checkAndFetchData] User authenticated: ${currentUser.id}`);
         setUser(currentUser);
         
-        // 2. Fetch tailor profile with timeout
-        console.log('[checkAndFetchData] Fetching tailor profile...');
         try {
           const profileResponse = await withTimeout(
             // Cast this to Promise to avoid TypeScript error
@@ -247,11 +274,9 @@ export default function Dashboard() {
           
         } catch (profileFetchError) {
           console.error('[checkAndFetchData] Failed to fetch profile:', profileFetchError);
-          // Continue with null profile - the UI will handle this case
         }
         
         // 3. Fetch dashboard stats with timeout
-        console.log('[checkAndFetchData] Fetching dashboard stats...');
         try {
           await fetchDashboardStats(currentUser.id);
         } catch (statsError) {
@@ -291,7 +316,6 @@ export default function Dashboard() {
     });
     
     return () => {
-      console.log('[useEffect] Cleanup - unsubscribing from auth changes');
       authSubscription.subscription.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -374,13 +398,13 @@ export default function Dashboard() {
           />
         ) : (
           <>
-            <h1>Create Your Fashion House</h1>
+            <h1>Create Your Tailor Account</h1>
             <p>To get started, you need to create your designer profile.</p>
             <Button 
               onClick={() => setShowProfileForm(true)}
               className={styles.createProfileButton}
             >
-              Create Fashion House
+              Create Tailor Account
             </Button>
           </>
         )}
@@ -408,7 +432,16 @@ export default function Dashboard() {
             </Card>
             <Card className={styles.card}>
               <h3>Rating</h3>
-              <p className={styles.statNumber}>{stats.averageRating.toFixed(1)}</p>
+              <p className={styles.statNumber}>
+                {(stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0) 
+                  ? stats.averageRating.toFixed(1) 
+                  : '-'}
+              </p>
+              {(stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0) ? (
+                <p className={styles.statSubtext}>{`Based on ratings from customers`}</p>
+              ) : (
+                <p className={styles.statSubtext}>No ratings yet</p>
+              )}
             </Card>
 
             <Card className={`${styles.card} ${styles.wideCard}`}>

@@ -114,10 +114,6 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         throw new Error('Please upload both a logo and banner image')
       }
 
-      if (formData.specializations.length === 0) {
-        throw new Error('Please add at least one specialization')
-      }
-
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) throw new Error('Authentication error')
 
@@ -208,7 +204,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         </div>
       )}
       <div className="form-group">
-        <Label htmlFor="brandName">Fashion House Name *</Label>
+        <Label htmlFor="brandName">Brand Name *</Label>
         <Input 
           id="brandName" 
           value={formData.brandName}
@@ -309,13 +305,12 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="website">Website *</Label>
+        <Label htmlFor="website">Website</Label>
         <Input 
           id="website" 
           type="url" 
           value={formData.website}
           onChange={handleChange}
-          required
           placeholder="https://example.com"
         />
       </div>
@@ -332,7 +327,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         />
       </div>
       <div className="form-group">
-        <Label htmlFor="specialization">Specializations *</Label>
+        <Label htmlFor="specialization">Specializations</Label>
         <div className="specializations-container">
           <div className="specializations-tags">
             {formData.specializations.map((spec, index) => (

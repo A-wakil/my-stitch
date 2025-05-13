@@ -2,13 +2,25 @@ import { supabase } from '../../lib/supabaseClient'
 import { NextResponse } from 'next/server'
 
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data: designs, error } = await supabase
+    // Get the created_by query parameter if it exists
+    const url = new URL(request.url)
+    const createdBy = url.searchParams.get('created_by')
+    
+    // Start building the query
+    let query = supabase
       .from('designs')
       .select('*')
       .eq('is_deleted', false)
-      .order('created_at', { ascending: false })
+    
+    // Add created_by filter if the parameter is provided
+    if (createdBy) {
+      query = query.eq('created_by', createdBy)
+    }
+    
+    // Execute the query with ordering
+    const { data: designs, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Supabase error:', error)

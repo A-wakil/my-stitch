@@ -1,0 +1,16 @@
+.starContainer {
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  margin-right: 4px;
+}
+
+.filled {
+  color: #f59e0b; /* Amber color for filled stars */
+}
+
+.empty {
+  color: #d1d5db; /* Light gray for empty stars */
+} 
