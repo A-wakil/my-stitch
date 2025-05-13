@@ -4,6 +4,7 @@ import { AuthProvider } from "./lib/AuthContext";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast'
 import { ProfileProvider } from "./context/ProfileContext";
+import { AuthDialogWrapper } from "./components/AuthDialogWrapper";
 
 import { ReactNode } from 'react'
 
@@ -23,6 +24,7 @@ export default function RootLayout({
           <ProfileProvider>
             {children}
             <Toaster />
+            <AuthDialogWrapper />
           </ProfileProvider>
         </AuthProvider>
       </body>

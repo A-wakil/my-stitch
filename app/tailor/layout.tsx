@@ -6,24 +6,27 @@ import { Sidebar } from "./components/dashboard/sidebar"
 import { Header } from "./components/dashboard/header"
 import { ProfileProvider } from "../context/ProfileContext"
 import { supabase } from "../lib/supabaseClient"
+import { AuthProvider } from "../lib/AuthContext"
+import { AuthDialogWrapper } from "../components/AuthDialogWrapper"
+import { useAuth } from "../lib/AuthContext"
 
-export default function DashboardLayout({
+function DashboardContent({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
+  const { signOut } = useAuth()
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      await signOut()
     } catch (error) {
       console.error('Error signing out:', error)
     }
   }
 
   return (
-    <ProfileProvider>
+    <>
       <Sidebar />
       <div style={{ marginLeft: '250px' }}>
         <Header toggleLogoutDialog={handleLogout} />
@@ -31,7 +34,24 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
-    </ProfileProvider>
+      <AuthDialogWrapper />
+    </>
+  )
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AuthProvider>
+      <ProfileProvider>
+        <DashboardContent>
+          {children}
+        </DashboardContent>
+      </ProfileProvider>
+    </AuthProvider>
   )
 }
 

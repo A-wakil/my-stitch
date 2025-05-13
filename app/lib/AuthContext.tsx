@@ -6,10 +6,13 @@ import { User } from '@supabase/supabase-js'
 interface AuthContextProps {
   user: User | null
   loading: boolean
+  isAuthDialogOpen: boolean
   signInWithGoogle: () => Promise<void>
   signUpWithEmail: (email: string, password: string) => Promise<void>
   signInWithEmail: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  closeAuthDialog: () => void
+  openAuthDialog: () => void
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined)
@@ -17,6 +20,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
 
   useEffect(() => {
     // Fetch the initial session
@@ -30,8 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
+      console.log(`[AuthContext] Auth event: ${event}`)
+      const newUser = session?.user ?? null
+      setUser(newUser)
       setLoading(false)
+      
+      // Show auth dialog when user signs out
+      if (event === 'SIGNED_OUT') {
+        setIsAuthDialogOpen(true)
+      }
     })
 
     // Cleanup subscription on unmount
@@ -39,6 +50,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe()
     }
   }, [])
+
+  // Effect to check if we need to show auth dialog based on path and auth state
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname
+      const isTailorPath = path.startsWith('/tailor')
+      
+      // If on tailor path and not authenticated, show auth dialog
+      if (isTailorPath && !user && !loading) {
+        console.log('[AuthContext] User not authenticated on tailor page, showing auth dialog')
+        setIsAuthDialogOpen(true)
+      }
+    }
+  }, [user, loading])
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
@@ -68,9 +93,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error
   }
 
+  const closeAuthDialog = () => {
+    setIsAuthDialogOpen(false)
+    
+    // If on tailor page and not authenticated, redirect to home
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const isTailorPath = path.startsWith('/tailor');
+      
+      if (isTailorPath && !user) {
+        console.log('[AuthContext] Redirecting unauthenticated user from tailor page to home')
+        window.location.href = '/';
+      }
+    }
+  }
+
+  const openAuthDialog = () => {
+    setIsAuthDialogOpen(true)
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, signInWithGoogle, signUpWithEmail, signInWithEmail, signOut }}
+      value={{ 
+        user, 
+        loading, 
+        isAuthDialogOpen,
+        signInWithGoogle, 
+        signUpWithEmail, 
+        signInWithEmail, 
+        signOut,
+        closeAuthDialog,
+        openAuthDialog
+      }}
     >
       {children}
     </AuthContext.Provider>

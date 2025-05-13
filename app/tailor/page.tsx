@@ -11,6 +11,7 @@ import { IoArrowBack } from "react-icons/io5";
 import { TailorProfileForm } from "./components/dashboard/tailor-profile-form"
 import { useProfile } from "../context/ProfileContext"
 import { Spinner } from "../tailor/components/ui/spinner"
+import { useAuth } from "../lib/AuthContext"
 
 // Add these interfaces at the top of the file, after the imports
 interface Design {
@@ -60,8 +61,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): 
 
 export default function Dashboard() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const { user } = useAuth()
   const [tailorProfile, setTailorProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { hasProfile, refreshProfile } = useProfile()
@@ -231,22 +231,12 @@ export default function Dashboard() {
 
     const checkAndFetchData = async () => {
       try {
-        // 1. Get current user with timeout
-        const userResponse = await withTimeout(
-          supabase.auth.getUser(),
-          5000, 
-          'Auth getUser timed out'
-        );
-        
-        if (userResponse.error || !userResponse.data.user) {
-          setUser(null);
+        // Skip auth check since we're now using the auth context
+        if (!user) {
           setIsLoading(false);
           setIsLoadingStats(false);
           return;
         }
-        
-        const currentUser = userResponse.data.user;
-        setUser(currentUser);
         
         try {
           const profileResponse = await withTimeout(
@@ -254,7 +244,7 @@ export default function Dashboard() {
             supabase
               .from('tailor_details')
               .select('*')
-              .eq('id', currentUser.id)
+              .eq('id', user.id)
               .single() as unknown as Promise<any>,
             10000,
             'Tailor profile fetch timed out'
@@ -278,7 +268,7 @@ export default function Dashboard() {
         
         // 3. Fetch dashboard stats with timeout
         try {
-          await fetchDashboardStats(currentUser.id);
+          await fetchDashboardStats(user.id);
         } catch (statsError) {
           console.error('[checkAndFetchData] Error fetching dashboard stats:', statsError);
           // Reset stats to empty state on error
@@ -304,29 +294,8 @@ export default function Dashboard() {
     // Start data fetching
     checkAndFetchData();
     
-    // Set up auth state change listener 
-    const { data: authSubscription } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log(`[onAuthStateChange] Auth event: ${event}`);
-      
-      // Only update user state, don't trigger refetches on every auth event
-      // (our manual fetch above handles the initial data loading)
-      const newUser = session?.user ?? null;
-      setUser(newUser);
-      setIsAuthDialogOpen(!newUser);
-    });
-    
-    return () => {
-      authSubscription.subscription.unsubscribe();
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchDashboardStats, refreshProfile]); // Include both required dependencies
-
-  // Don't allow closing the dialog if user is not authenticated
-  const handleCloseDialog = () => {
-    if (user) {
-      setIsAuthDialogOpen(false)
-    }
-  }
+  }, [user, fetchDashboardStats, refreshProfile]); // Include user as a dependency
 
   const handleBackToHome = () => {
     router.push('/')
@@ -356,25 +325,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!user) {
-    return (
-      <div className={styles.authContainer}>
-        <Button 
-          onClick={handleBackToHome}
-          className={styles.backButton}
-          variant="outline"
-        >
-          <IoArrowBack width={80}/> Back to Home
-        </Button>
-        <AuthDialog
-          isOpen={isAuthDialogOpen}
-          onClose={handleCloseDialog}
-        />
-      </div>
-    )
-  }
-
-  if (!hasProfile) {
+  if (!hasProfile && user) {
     return (
       <div className={styles.createProfileContainer}>
         {showProfileForm ? (
