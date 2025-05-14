@@ -10,50 +10,50 @@ import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
 
 // Update type to match database column names
 type MeasurementsType = {
-  shoulder_to_elbow: string;
-  shoulder_to_wrist: string;
-  tricep_girth: string;
-  elbow_girth: string;
-  free_hand_girth: string;
-  wrist_girth: string;
-  neck: string;
+  // Shirt Measurements
+  shoulders: string;
+  sleeves: string;
+  round_sleeves: string;
+  wrist: string;
   chest: string;
-  tummy: string;
-  hip: string;
+  waist_shirt: string;
   shirt_length: string;
+  // Trouser Measurements
+  waist: string;
+  hips: string;
+  thigh: string;
+  knee: string;
+  calves: string;
   trouser_length: string;
-  lap_girth: string;
-  knee_girth: string;
-  base_girth: string;
-  waist_girth: string;
-  hip_girth: string;
-  agbada_sleeve: string;
+  ankle_width: string;
+  // Agbada Measurements
   agbada_length: string;
+  agbada_width: string;
 }
 
 export default function MeasurementsPage() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [measurements, setMeasurements] = useState<MeasurementsType>({
-    shoulder_to_elbow: '',
-    shoulder_to_wrist: '',
-    tricep_girth: '',
-    elbow_girth: '',
-    free_hand_girth: '',
-    wrist_girth: '',
-    neck: '',
+    // Shirt Measurements
+    shoulders: '',
+    sleeves: '',
+    round_sleeves: '',
+    wrist: '',
     chest: '',
-    tummy: '',
-    hip: '',
+    waist_shirt: '',
     shirt_length: '',
+    // Trouser Measurements
+    waist: '',
+    hips: '',
+    thigh: '',
+    knee: '',
+    calves: '',
     trouser_length: '',
-    lap_girth: '',
-    knee_girth: '',
-    base_girth: '',
-    waist_girth: '',
-    hip_girth: '',
-    agbada_sleeve: '',
-    agbada_length: ''
+    ankle_width: '',
+    // Agbada Measurements
+    agbada_length: '',
+    agbada_width: ''
   })
   const [measurementsList, setMeasurementsList] = useState<Array<{ id: number, name: string }>>([])
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null)
@@ -97,25 +97,22 @@ export default function MeasurementsPage() {
     async function fetchMeasurementDetails() {
       if (!selectedMeasurementId) {
         setMeasurements({
-          shoulder_to_elbow: '',
-          shoulder_to_wrist: '',
-          tricep_girth: '',
-          elbow_girth: '',
-          free_hand_girth: '',
-          wrist_girth: '',
-          neck: '',
+          shoulders: '',
+          sleeves: '',
+          round_sleeves: '',
+          wrist: '',
           chest: '',
-          tummy: '',
-          hip: '',
+          waist_shirt: '',
           shirt_length: '',
+          waist: '',
+          hips: '',
+          thigh: '',
+          knee: '',
+          calves: '',
           trouser_length: '',
-          lap_girth: '',
-          knee_girth: '',
-          base_girth: '',
-          waist_girth: '',
-          hip_girth: '',
-          agbada_sleeve: '',
-          agbada_length: ''
+          ankle_width: '',
+          agbada_length: '',
+          agbada_width: ''
         })
         return
       }
@@ -131,25 +128,22 @@ export default function MeasurementsPage() {
 
         if (data) {
           const formattedData = {
-            shoulder_to_elbow: data.shoulder_to_elbow?.toString() || '',
-            shoulder_to_wrist: data.shoulder_to_wrist?.toString() || '',
-            tricep_girth: data.tricep_girth?.toString() || '',
-            elbow_girth: data.elbow_girth?.toString() || '',
-            free_hand_girth: data.free_hand_girth?.toString() || '',
-            wrist_girth: data.wrist_girth?.toString() || '',
-            neck: data.neck?.toString() || '',
+            shoulders: data.shoulders?.toString() || '',
+            sleeves: data.sleeves?.toString() || '',
+            round_sleeves: data.round_sleeves?.toString() || '',
+            wrist: data.wrist?.toString() || '',
             chest: data.chest?.toString() || '',
-            tummy: data.tummy?.toString() || '',
-            hip: data.hip?.toString() || '',
+            waist_shirt: data.waist_shirt?.toString() || '',
             shirt_length: data.shirt_length?.toString() || '',
+            waist: data.waist?.toString() || '',
+            hips: data.hips?.toString() || '',
+            thigh: data.thigh?.toString() || '',
+            knee: data.knee?.toString() || '',
+            calves: data.calves?.toString() || '',
             trouser_length: data.trouser_length?.toString() || '',
-            lap_girth: data.lap_girth?.toString() || '',
-            knee_girth: data.knee_girth?.toString() || '',
-            base_girth: data.base_girth?.toString() || '',
-            waist_girth: data.waist_girth?.toString() || '',
-            hip_girth: data.hip_girth?.toString() || '',
-            agbada_sleeve: data.agbada_sleeve?.toString() || '',
-            agbada_length: data.agbada_length?.toString() || ''
+            ankle_width: data.ankle_width?.toString() || '',
+            agbada_length: data.agbada_length?.toString() || '',
+            agbada_width: data.agbada_width?.toString() || ''
           }
           
           setMeasurements(formattedData)
@@ -181,25 +175,22 @@ export default function MeasurementsPage() {
     setIsCreatingNew(true)
     setIsEditing(true)
     setMeasurements({
-      shoulder_to_elbow: '',
-      shoulder_to_wrist: '',
-      tricep_girth: '',
-      elbow_girth: '',
-      free_hand_girth: '',
-      wrist_girth: '',
-      neck: '',
+      shoulders: '',
+      sleeves: '',
+      round_sleeves: '',
+      wrist: '',
       chest: '',
-      tummy: '',
-      hip: '',
+      waist_shirt: '',
       shirt_length: '',
+      waist: '',
+      hips: '',
+      thigh: '',
+      knee: '',
+      calves: '',
       trouser_length: '',
-      lap_girth: '',
-      knee_girth: '',
-      base_girth: '',
-      waist_girth: '',
-      hip_girth: '',
-      agbada_sleeve: '',
-      agbada_length: ''
+      ankle_width: '',
+      agbada_length: '',
+      agbada_width: ''
     })
   }
 
@@ -398,111 +389,88 @@ export default function MeasurementsPage() {
               </h2>
             </div>
             <form className={`measurements-form ${isFormEditable() ? 'editing' : ''}`} onSubmit={handleSubmit}>
+              <div className="video-guide">
+                <p>Watch a measurement guide video:</p>
+                <a href="https://www.youtube.com/watch?v=ky4wjfD_e7w" target="_blank" rel="noopener noreferrer" className="video-link">
+                  📹 How to Take Your Measurements
+                </a>
+              </div>
               <div className="measurements-items">
                 <div className="form-section">
-                  <h3>Sleeve Details</h3>
+                  <h3>Shirt Measurements</h3>
                   <div className="measurement-field">
-                    <span className="measurement-label">Shoulder to Elbow</span>
+                    <span className="measurement-label">Shoulders</span>
+                    <p className="measurement-instruction">
+                      Place the tip of the tape on the farthest point of one shoulder. Trace the tape across the back to the farthest point on the other shoulder.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Shoulder to elbow"
-                      value={measurements.shoulder_to_elbow}
-                      onChange={e => handleInputChange('shoulder_to_elbow', e.target.value)}
+                      placeholder="Shoulders"
+                      value={measurements.shoulders}
+                      onChange={e => handleInputChange('shoulders', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
 
                   <div className="measurement-field">
-                    <span className="measurement-label">Shoulder to Wrist</span>
+                    <span className="measurement-label">Sleeves</span>
+                    <p className="measurement-instruction">
+                      Start at the highest point of the arm, near where it meets the shoulder. Run the tape down to the bony point at the wrist.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Shoulder to wrist"
-                      value={measurements.shoulder_to_wrist}
-                      onChange={e => handleInputChange('shoulder_to_wrist', e.target.value)}
+                      placeholder="Sleeves"
+                      value={measurements.sleeves}
+                      onChange={e => handleInputChange('sleeves', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
 
                   <div className="measurement-field">
-                    <span className="measurement-label">Tricep Girth</span>
+                    <span className="measurement-label">Round Sleeves (Bicep)</span>
+                    <p className="measurement-instruction">
+                      Ask the person to flex their bicep tightly. Wrap the tape around the widest part of the bicep. Add 1 inch for comfort.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Tricep girth"
-                      value={measurements.tricep_girth}
-                      onChange={e => handleInputChange('tricep_girth', e.target.value)}
+                      placeholder="Round Sleeves"
+                      value={measurements.round_sleeves}
+                      onChange={e => handleInputChange('round_sleeves', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
 
                   <div className="measurement-field">
-                    <span className="measurement-label">Elbow Girth</span>
+                    <span className="measurement-label">Wrist</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around the wrist. The point where the tip meets the rest of the tape in a circle is your wrist size.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Elbow girth"
-                      value={measurements.elbow_girth}
-                      onChange={e => handleInputChange('elbow_girth', e.target.value)}
+                      placeholder="Wrist"
+                      value={measurements.wrist}
+                      onChange={e => handleInputChange('wrist', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
 
-                  <div className="measurement-field">
-                    <span className="measurement-label">Free Hand Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Free hand girth"
-                      value={measurements.free_hand_girth}
-                      onChange={e => handleInputChange('free_hand_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-
-                  <div className="measurement-field">
-                    <span className="measurement-label">Wrist Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Wrist girth"
-                      value={measurements.wrist_girth}
-                      onChange={e => handleInputChange('wrist_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-                </div>
-
-                <div className="form-section">
-                  <h3>Upper Body</h3>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Neck</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Neck"
-                      value={measurements.neck}
-                      onChange={e => handleInputChange('neck', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
                   <div className="measurement-field">
                     <span className="measurement-label">Chest</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around the back and bring it to the front at chest level. Ensure the tape is flat and firm across the widest part of the chest. Add 3 inches for comfort.
+                    </p>
                     <input
                       type="number"
                       min="0"
@@ -514,39 +482,34 @@ export default function MeasurementsPage() {
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
+
                   <div className="measurement-field">
-                    <span className="measurement-label">Tummy</span>
+                    <span className="measurement-label">Waist (Shirt)</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around the tummy (called the shirt waist area). Keep it flat and firm with no folds or errors at the back. Add 2 inches for comfort.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Tummy"
-                      value={measurements.tummy}
-                      onChange={e => handleInputChange('tummy', e.target.value)}
+                      placeholder="Waist (Shirt)"
+                      value={measurements.waist_shirt}
+                      onChange={e => handleInputChange('waist_shirt', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Hip</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Hip"
-                      value={measurements.hip}
-                      onChange={e => handleInputChange('hip', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
+
                   <div className="measurement-field">
                     <span className="measurement-label">Shirt Length</span>
+                    <p className="measurement-instruction">
+                      Start at the point where the neck meets the shoulder. Run the tape down to the bone at the base of the thumb.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Shirt length"
+                      placeholder="Shirt Length"
                       value={measurements.shirt_length}
                       onChange={e => handleInputChange('shirt_length', e.target.value)}
                       disabled={!isFormEditable()}
@@ -556,14 +519,97 @@ export default function MeasurementsPage() {
                 </div>
 
                 <div className="form-section">
-                  <h3>Lower Body</h3>
+                  <h3>Trouser Measurements</h3>
                   <div className="measurement-field">
-                    <span className="measurement-label">Trouser Length</span>
+                    <span className="measurement-label">Waist</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around where the trouser waistband sits. Ensure the person is wearing trousers for accuracy. The tape must be flat and firm with no folds at the back.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Trouser length"
+                      placeholder="Waist"
+                      value={measurements.waist}
+                      onChange={e => handleInputChange('waist', e.target.value)}
+                      disabled={!isFormEditable()}
+                    />
+                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
+                  </div>
+                  <div className="measurement-field">
+                    <span className="measurement-label">Hips</span>
+                    <p className="measurement-instruction">
+                      Run the tape around the widest part of the hips, including the bottom. Ensure nothing is in the pockets. Keep it firm and comfortable—no slack or tightness.
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Hips"
+                      value={measurements.hips}
+                      onChange={e => handleInputChange('hips', e.target.value)}
+                      disabled={!isFormEditable()}
+                    />
+                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
+                  </div>
+                  <div className="measurement-field">
+                    <span className="measurement-label">Thigh</span>
+                    <p className="measurement-instruction">
+                      Place the tape through the crotch and wrap it around the thickest part of the thigh. Slightly pull diagonally for a natural shape. Ensure pockets are empty.
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Thigh"
+                      value={measurements.thigh}
+                      onChange={e => handleInputChange('thigh', e.target.value)}
+                      disabled={!isFormEditable()}
+                    />
+                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
+                  </div>
+                  <div className="measurement-field">
+                    <span className="measurement-label">Knee</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around the knee. Keep the tape flat and comfortable, ensuring room for movement.
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Knee"
+                      value={measurements.knee}
+                      onChange={e => handleInputChange('knee', e.target.value)}
+                      disabled={!isFormEditable()}
+                    />
+                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
+                  </div>
+                  <div className="measurement-field">
+                    <span className="measurement-label">Calves</span>
+                    <p className="measurement-instruction">
+                      Wrap the tape around the widest part of the calf. Ensure it's comfortable and allows for movement.
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Calves"
+                      value={measurements.calves}
+                      onChange={e => handleInputChange('calves', e.target.value)}
+                      disabled={!isFormEditable()}
+                    />
+                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
+                  </div>
+                  <div className="measurement-field">
+                    <span className="measurement-label">Trouser Length</span>
+                    <p className="measurement-instruction">
+                      Start at the waistline where the trousers sit. Trace the tape straight down to about 2 inches after the ankle bone.
+                    </p>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="Trouser Length"
                       value={measurements.trouser_length}
                       onChange={e => handleInputChange('trouser_length', e.target.value)}
                       disabled={!isFormEditable()}
@@ -571,66 +617,17 @@ export default function MeasurementsPage() {
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
                   <div className="measurement-field">
-                    <span className="measurement-label">Lap Girth</span>
+                    <span className="measurement-label">Ankle Width</span>
+                    <p className="measurement-instruction">
+                      Ask the client to remove their shoes. Wrap the tape diagonally around the joint where the leg meets the foot.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Lap girth"
-                      value={measurements.lap_girth}
-                      onChange={e => handleInputChange('lap_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Knee Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Knee girth"
-                      value={measurements.knee_girth}
-                      onChange={e => handleInputChange('knee_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Base Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Base girth"
-                      value={measurements.base_girth}
-                      onChange={e => handleInputChange('base_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Waist Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Waist girth"
-                      value={measurements.waist_girth}
-                      onChange={e => handleInputChange('waist_girth', e.target.value)}
-                      disabled={!isFormEditable()}
-                    />
-                    {!isFormEditable() && <span className="measurement-unit">inches</span>}
-                  </div>
-                  <div className="measurement-field">
-                    <span className="measurement-label">Hip Girth</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Hip girth"
-                      value={measurements.hip_girth}
-                      onChange={e => handleInputChange('hip_girth', e.target.value)}
+                      placeholder="Ankle Width"
+                      value={measurements.ankle_width}
+                      onChange={e => handleInputChange('ankle_width', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -640,27 +637,33 @@ export default function MeasurementsPage() {
                 <div className="form-section">
                   <h3>Agbada Measurements</h3>
                   <div className="measurement-field">
-                    <span className="measurement-label">Agbada Sleeve</span>
+                    <span className="measurement-label">Agbada Length</span>
+                    <p className="measurement-instruction">
+                      Start at the point where the neck meets the shoulder. Run the tape down past the knee to the desired length of your agbada.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Agbada sleeve"
-                      value={measurements.agbada_sleeve}
-                      onChange={e => handleInputChange('agbada_sleeve', e.target.value)}
+                      placeholder="Agbada Length"
+                      value={measurements.agbada_length}
+                      onChange={e => handleInputChange('agbada_length', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
                   </div>
                   <div className="measurement-field">
-                    <span className="measurement-label">Agbada Length</span>
+                    <span className="measurement-label">Agbada Width</span>
+                    <p className="measurement-instruction">
+                      Ask the person to stretch both arms out to the sides at shoulder level, forming a straight horizontal line. Measure from the tip of one wrist across the back to the tip of the opposite wrist.
+                    </p>
                     <input
                       type="number"
                       min="0"
                       step="0.1"
-                      placeholder="Agbada length"
-                      value={measurements.agbada_length}
-                      onChange={e => handleInputChange('agbada_length', e.target.value)}
+                      placeholder="Agbada Width"
+                      value={measurements.agbada_width}
+                      onChange={e => handleInputChange('agbada_width', e.target.value)}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}

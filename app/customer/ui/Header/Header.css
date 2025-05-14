@@ -104,16 +104,17 @@
   }
 
   .right-icons{
-    /* width: 50px; */
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     margin: 0 20px 0 20px;
     column-gap: 20px;
-
   }
 
+  .right-icons > :global(.currencyToggle) {
+    margin-right: 8px;
+  }
 
 /* Sidebar styles */
 .sidebar {

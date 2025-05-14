@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/button"
 import { Card } from "../../components/ui/card"
 import styles from "./header.module.css"
 import { useState } from "react"
+import { CurrencyToggle } from "../../../components/ui/CurrencyToggle"
 
 interface HeaderProps {
   toggleLogoutDialog: () => Promise<void>
@@ -14,6 +15,7 @@ export function Header({ toggleLogoutDialog }: HeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.buttonGroup}>
+        <CurrencyToggle />
         <Button variant="ghost" size="icon">
           <Bell size={20} />
         </Button>

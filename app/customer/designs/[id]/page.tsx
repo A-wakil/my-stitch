@@ -13,6 +13,7 @@ import { IoInformationCircleOutline } from "react-icons/io5"
 import { sendOrderNotification, notifyOrderParties } from '../../../lib/notifications'
 import { IoPersonCircleOutline } from "react-icons/io5"
 import { StarRating } from "../../../components/ui/StarRating"
+import { useCurrency } from '../../../context/CurrencyContext'
 
 interface DesignDetail {
   id: string
@@ -67,6 +68,8 @@ interface OrderDetails {
 }
 
 export default function DesignDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { formatAmount, convertToPreferred } = useCurrency()
+
   // Unwrap the promise to get the actual params
   const { id } = use(params)
 
@@ -97,6 +100,10 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [tailorDetails, setTailorDetails] = useState<any>(null)
   const [showTailorProfile, setShowTailorProfile] = useState(false)
   const [tailorNotes, setTailorNotes] = useState<string>('')
+  const [formattedStitchPrice, setFormattedStitchPrice] = useState<string>('')
+  const [formattedYardPrice, setFormattedYardPrice] = useState<string>('')
+  const [formattedTotalPrice, setFormattedTotalPrice] = useState<string>('')
+  const [formattedYardTotal, setFormattedYardTotal] = useState<string>('')
 
   useEffect(() => {
     async function fetchDesign() {
@@ -286,6 +293,121 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     }
   }, [tailorId]);
 
+  const getRecommendedYards = (styleType: string): number => {
+    // First check if the design has available_styles with recommended_yards
+    if (design?.available_styles) {
+      // Check for the base style
+      const styleOption = design.available_styles.find(style => style.name === styleType);
+      if (styleOption && styleOption.recommended_yards) {
+        // If this is a base style with Agbada, add the Agbada yardage
+        const hasAgbadaAddition = selectedStyle.endsWith('_agbada');
+        
+        if (hasAgbadaAddition) {
+          // Look for the Agbada addition in available styles
+          const agbadaAddition = design.available_styles.find(
+            style => style.name === 'agbada_addition' || style.name === 'agbada'
+          );
+          
+          if (agbadaAddition) {
+            return styleOption.recommended_yards + agbadaAddition.recommended_yards;
+          }
+        }
+        
+        return styleOption.recommended_yards;
+      }
+    }
+
+    // Fallback to default values
+    switch(styleType) {
+      case 'kaftan':
+        return 4.5;
+      case 'agbada':
+        return 3.5;
+      case 'kaftan_agbada':
+        return 8.0;
+      case 'senator':
+        return 4.0;
+      case 'dashiki':
+        return 3.0;
+      case 'ankara':
+        return 4.0;
+      case 'senator_agbada':
+        return 7.5;
+      case 'dashiki_agbada':
+        return 6.5;
+      case 'ankara_agbada':
+        return 7.5;
+      default:
+        return 4.5;
+    }
+  };
+
+  const getFabricPrice = (fabric: any, measurement?: Measurement) => {
+    // Default values if properties are undefined
+    const stitchPrice = fabric.stitchPrice || 0;
+    const yardPrice = fabric.yardPrice || 0;
+    
+    // Calculate based on yards needed
+    if (selectedStyle) {
+      const yards = customYards !== null ? customYards : getRecommendedYards(selectedStyle);
+      return stitchPrice + (yards * yardPrice);
+    } 
+    
+    // Fallback to previous logic if no style is selected
+    if (fabric.price !== undefined) {
+      return fabric.price;
+    } else if (fabric.stitchPrice !== undefined) {
+      return fabric.stitchPrice;
+    } else {
+      return 0; // Default price if none is available
+    }
+  }
+
+  const totalPrice = useMemo(() => {
+    if (!design || !design.fabrics[selectedFabric]) return 0;
+    
+    return getFabricPrice(design.fabrics[selectedFabric], selectedMeasurement);
+  }, [design, selectedFabric, selectedMeasurement, selectedStyle, customYards, getRecommendedYards]);
+
+  useEffect(() => {
+    async function updatePrices() {
+      if (!design?.fabrics[selectedFabric]) return
+
+      const stitchPrice = design.fabrics[selectedFabric].stitchPrice || 0
+      const yardPrice = design.fabrics[selectedFabric].yardPrice || 0
+      const total = totalPrice
+
+      const convertedStitchPrice = await convertToPreferred(stitchPrice, 'USD')
+      const convertedYardPrice = await convertToPreferred(yardPrice, 'USD')
+      const convertedTotal = await convertToPreferred(total, 'USD')
+
+      setFormattedStitchPrice(formatAmount(convertedStitchPrice))
+      setFormattedYardPrice(formatAmount(convertedYardPrice))
+      setFormattedTotalPrice(formatAmount(convertedTotal))
+
+      if (selectedStyle) {
+        const yardTotal = (yardPrice || 0) * getRecommendedYards(selectedStyle)
+        const convertedYardTotal = await convertToPreferred(yardTotal, 'USD')
+        setFormattedYardTotal(formatAmount(convertedYardTotal))
+      }
+    }
+
+    updatePrices()
+  }, [design, selectedFabric, totalPrice, selectedStyle, convertToPreferred, formatAmount, getRecommendedYards]);
+
+  const mapDesignToOrderFormat = (design: DesignDetail, brandName: string) => {
+    return {
+      title: design.title,
+      fabrics: design.fabrics.map(fabric => ({
+        name: fabric.name,
+        price: getFabricPrice(fabric, selectedMeasurement),
+        colors: fabric.colors.map(color => ({ name: color.name }))
+      })),
+      brand_name: brandName,
+      completion_time: design.completion_time || 1
+    };
+  };
+
   const handleAddToCart = async () => {
     // Validate measurements first
     if (!selectedMeasurement) {
@@ -441,96 +563,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     setSelectedMeasurement(measurement);
   };
 
-  const getRecommendedYards = (styleType: string): number => {
-    // First check if the design has available_styles with recommended_yards
-    if (design?.available_styles) {
-      // Check for the base style
-      const styleOption = design.available_styles.find(style => style.name === styleType);
-      if (styleOption && styleOption.recommended_yards) {
-        // If this is a base style with Agbada, add the Agbada yardage
-        const hasAgbadaAddition = selectedStyle.endsWith('_agbada');
-        
-        if (hasAgbadaAddition) {
-          // Look for the Agbada addition in available styles
-          const agbadaAddition = design.available_styles.find(
-            style => style.name === 'agbada_addition' || style.name === 'agbada'
-          );
-          
-          if (agbadaAddition) {
-            return styleOption.recommended_yards + agbadaAddition.recommended_yards;
-          }
-        }
-        
-        return styleOption.recommended_yards;
-      }
-    }
-
-    // Fallback to default values
-    switch(styleType) {
-      case 'kaftan':
-        return 4.5;
-      case 'agbada':
-        return 3.5;
-      case 'kaftan_agbada':
-        return 8.0;
-      case 'senator':
-        return 4.0;
-      case 'dashiki':
-        return 3.0;
-      case 'ankara':
-        return 4.0;
-      case 'senator_agbada':
-        return 7.5;
-      case 'dashiki_agbada':
-        return 6.5;
-      case 'ankara_agbada':
-        return 7.5;
-      default:
-        return 4.5;
-    }
-  };
-
-  const getFabricPrice = (fabric: any, measurement?: Measurement) => {
-    // Default values if properties are undefined
-    const stitchPrice = fabric.stitchPrice || 0;
-    const yardPrice = fabric.yardPrice || 0;
-    
-    // Calculate based on yards needed
-    if (selectedStyle) {
-      const yards = customYards !== null ? customYards : getRecommendedYards(selectedStyle);
-      return stitchPrice + (yards * yardPrice);
-    } 
-    
-    // Fallback to previous logic if no style is selected
-    if (fabric.price !== undefined) {
-      return fabric.price;
-    } else if (fabric.stitchPrice !== undefined) {
-      return fabric.stitchPrice;
-    } else {
-      return 0; // Default price if none is available
-    }
-  }
-
-  const totalPrice = useMemo(() => {
-    if (!design || !design.fabrics[selectedFabric]) return 0;
-    
-    return getFabricPrice(design.fabrics[selectedFabric], selectedMeasurement);
-  }, [design, selectedFabric, selectedMeasurement, selectedStyle]);
-
-  // Add a helper function to transform design data for the OrderConfirmationModal
-  const mapDesignToOrderFormat = (design: DesignDetail, brandName: string) => {
-    return {
-      title: design.title,
-      fabrics: design.fabrics.map(fabric => ({
-        name: fabric.name,
-        price: getFabricPrice(fabric, selectedMeasurement), // Use calculated price
-        colors: fabric.colors.map(color => ({ name: color.name }))
-      })),
-      brand_name: brandName,
-      completion_time: design.completion_time || 1
-    };
-  };
-
   // Add a check to determine if this is a simple pricing design or has real fabrics
   const hasRealFabrics = useMemo(() => {
     if (!design?.fabrics) return false;
@@ -667,8 +699,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
           
           <div className={styles.priceBreakdown}>
-            <p>Stitching Price: ${design.fabrics[selectedFabric].stitchPrice?.toFixed(2) || "0.00"}</p>
-            <p>Fabric Price: ${design.fabrics[selectedFabric].yardPrice?.toFixed(2) || "0.00"} per yard</p>
+            <p>Stitching Price: {formattedStitchPrice}</p>
+            <p>Fabric Price: {formattedYardPrice} per yard</p>
             {selectedStyle && (
               <>
                 <p>
@@ -737,14 +769,13 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                     </div>
                   ) : (
                     <p>
-                      Recommended fabric: {getRecommendedYards(selectedStyle).toFixed(1)} yards = 
-                      ${((design.fabrics[selectedFabric].yardPrice || 0) * getRecommendedYards(selectedStyle)).toFixed(2)}
+                      Recommended fabric: {getRecommendedYards(selectedStyle).toFixed(1)} yards = {formattedYardTotal}
                     </p>
                   )}
                 </div>
                 
                 <p className={styles.estimatedTotal}>
-                  Total Price: ${totalPrice.toFixed(2)}
+                  Total Price: {formattedTotalPrice}
                 </p>
               </>
             )}

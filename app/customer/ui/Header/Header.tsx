@@ -12,6 +12,7 @@ import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"
 import { Button } from "../../../tailor/components/ui/button"
 import { Card } from "../../../tailor/components/ui/card"
+import { CurrencyToggle } from "../../../components/ui/CurrencyToggle"
 
 
 interface SidebarProps {
@@ -177,6 +178,7 @@ export function Header() {
           </div>
           <div className='header-content'>
             <div className='right-icons'>
+              <CurrencyToggle />
               <div
                 className=''
                 onClick={user ? undefined : toggleAuthDialog}

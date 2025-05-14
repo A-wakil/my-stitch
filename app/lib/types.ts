@@ -1,3 +1,32 @@
+// Currency types
+export type CurrencyCode = 'USD' | 'NGN';
+
+export interface ExchangeRate {
+  from: CurrencyCode;
+  to: CurrencyCode;
+  rate: number;
+  timestamp: number;
+}
+
+export interface Currency {
+  code: CurrencyCode;
+  symbol: string;
+  name: string;
+}
+
+export const CURRENCIES: Record<CurrencyCode, Currency> = {
+  USD: {
+    code: 'USD',
+    symbol: '$',
+    name: 'US Dollar'
+  },
+  NGN: {
+    code: 'NGN',
+    symbol: '₦',
+    name: 'Nigerian Naira'
+  }
+};
+
 export interface AccountDetails {
     id: string;
     user_id: string;
@@ -19,7 +48,7 @@ export interface AccountDetails {
     
     // Preferences
     language: 'en' | 'es';
-    currency: 'usd' | 'eur';
+    preferred_currency: CurrencyCode;
     email_notifications: boolean;
     sms_notifications: boolean;
     
@@ -74,6 +103,8 @@ export interface Measurement {
     tailor_id: string
     status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'cancelled'
     total_amount: number
+    currency_code: CurrencyCode
+    exchange_rate?: number  // Store the exchange rate at time of order
     created_at: string
     updated_at: string
     estimated_completion_date: string | null

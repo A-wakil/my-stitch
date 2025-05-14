@@ -7,6 +7,7 @@ import styles from "./styles/DesignGrid.module.css"
 import { Spinner } from "../../components/ui/spinner"
 import { ConfirmationModal } from "../../components/ui/confirmation-modal"
 import { supabase } from "../../../lib/supabaseClient"
+import { useCurrency } from '../../../context/CurrencyContext'
 
 interface Design {
   id: string
@@ -22,7 +23,9 @@ interface Design {
 }
 
 export function DesignGrid() {
+  const { formatAmount, convertToPreferred } = useCurrency()
   const [designs, setDesigns] = useState<Design[] | null>(null)
+  const [formattedPrices, setFormattedPrices] = useState<Record<string, { yardPrice: string, stitchPrice: string }>>({})
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -52,6 +55,35 @@ export function DesignGrid() {
       }
     }
   }, [designs])
+
+  useEffect(() => {
+    async function updatePrices() {
+      if (!designs) return
+      
+      const newPrices: Record<string, { yardPrice: string, stitchPrice: string }> = {}
+      
+      for (const design of designs) {
+        if (design.fabrics && design.fabrics.length > 0) {
+          for (const [index, fabric] of design.fabrics.entries()) {
+            const yardPrice = fabric.yardPrice || 0
+            const stitchPrice = fabric.stitchPrice || 0
+            
+            const convertedYardPrice = await convertToPreferred(yardPrice, 'USD')
+            const convertedStitchPrice = await convertToPreferred(stitchPrice, 'USD')
+            
+            newPrices[`${design.id}-${index}`] = {
+              yardPrice: formatAmount(convertedYardPrice),
+              stitchPrice: formatAmount(convertedStitchPrice)
+            }
+          }
+        }
+      }
+      
+      setFormattedPrices(newPrices)
+    }
+    
+    updatePrices()
+  }, [designs, convertToPreferred, formatAmount])
 
   const fetchDesigns = async () => {
     try {
@@ -229,9 +261,9 @@ export function DesignGrid() {
                      (design.fabrics.length > 0 && design.fabrics.every(f => f.name === "Custom"))) && (
                     <div className={styles['compact-pricing']}>
                       <div className={styles['price-tag']}>
-                        <span>Yard Price: ${design.fabrics[0].yardPrice?.toFixed(2)}</span>
+                        <span>Yard Price: {formattedPrices[`${design.id}-0`]?.yardPrice}</span>
                         <span className={styles['price-divider']}>|</span>
-                        <span>Stitching: ${design.fabrics[0].stitchPrice?.toFixed(2)}</span>
+                        <span>Stitching: {formattedPrices[`${design.id}-0`]?.stitchPrice}</span>
                       </div>
                     </div>
                   )}
@@ -257,9 +289,9 @@ export function DesignGrid() {
                             {/* Add pricing under each fabric when there are multiple fabrics */}
                             {design.fabrics && design.fabrics.length > 1 && (
                               <div className={styles['fabric-pricing']}>
-                                <span>Yard: ${fabric.yardPrice?.toFixed(2)}</span>
+                                <span>Yard: {formattedPrices[`${design.id}-${fabricIndex}`]?.yardPrice}</span>
                                 <span className={styles['price-divider']}>|</span>
-                                <span>Stitching: ${fabric.stitchPrice?.toFixed(2)}</span>
+                                <span>Stitching: {formattedPrices[`${design.id}-${fabricIndex}`]?.stitchPrice}</span>
                               </div>
                             )}
                             

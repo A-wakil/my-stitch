@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast'
 import { ProfileProvider } from "./context/ProfileContext"
 import { AuthDialogWrapper } from "./components/AuthDialogWrapper"
 import { PostHogProvider } from "./providers/PostHogProvider"
+import { CurrencyProvider } from "./context/CurrencyContext"
 
 interface RootLayoutProps {
   children: ReactNode
@@ -23,9 +24,11 @@ export default function RootLayout({
         <PostHogProvider>
           <AuthProvider>
             <ProfileProvider>
-              {children}
-              <Toaster />
-              <AuthDialogWrapper />
+              <CurrencyProvider>
+                {children}
+                <Toaster />
+                <AuthDialogWrapper />
+              </CurrencyProvider>
             </ProfileProvider>
           </AuthProvider>
         </PostHogProvider>

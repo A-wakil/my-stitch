@@ -6,6 +6,7 @@ import { X, Plus, Info, Edit, Check, ChevronDown, ChevronUp } from "lucide-react
 import { Fabric} from "../../types/design"
 import styles from './styles/FabricPicker.module.css'
 import toast from "react-hot-toast"
+import { useCurrency } from '../../../context/CurrencyContext'
 
 interface FabricPickerProps {
   fabrics: Fabric[]
@@ -13,12 +14,14 @@ interface FabricPickerProps {
 }
 
 export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
+  const { formatAmount, convertToPreferred } = useCurrency()
   const [fabricName, setFabricName] = useState("")
   const [fabricImage, setFabricImage] = useState<File | null>(null)
   const [fabricPrice, setFabricPrice] = useState("")
   const [stitchingPrice, setStitchingPrice] = useState("")
   const [editingFabricIndex, setEditingFabricIndex] = useState<number | null>(null)
   const [showEditDetails, setShowEditDetails] = useState<{[key: number]: boolean}>({})
+  const [formattedPrices, setFormattedPrices] = useState<Record<number, { yardPrice: string, stitchPrice: string }>>({})
 
   // Initialize all fabric color sections to be expanded by default
   useEffect(() => {
@@ -40,6 +43,29 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
     
     return () => clearTimeout(timeoutId);
   }, [fabrics.length]);
+
+  useEffect(() => {
+    async function updatePrices() {
+      const newPrices: Record<number, { yardPrice: string, stitchPrice: string }> = {}
+      
+      for (const [index, fabric] of fabrics.entries()) {
+        const yardPrice = fabric.yardPrice || 0
+        const stitchPrice = fabric.stitchPrice || 0
+        
+        const convertedYardPrice = await convertToPreferred(yardPrice, 'USD')
+        const convertedStitchPrice = await convertToPreferred(stitchPrice, 'USD')
+        
+        newPrices[index] = {
+          yardPrice: formatAmount(convertedYardPrice),
+          stitchPrice: formatAmount(convertedStitchPrice)
+        }
+      }
+      
+      setFormattedPrices(newPrices)
+    }
+    
+    updatePrices()
+  }, [fabrics, convertToPreferred, formatAmount])
 
   const formValidation = useMemo(() => {
     if (!fabricName.trim()) return { valid: false, message: "Please enter a fabric name" }
@@ -261,11 +287,11 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                       <>
                         <div className={styles.priceTag}>
                           <span className={styles.priceLabel}>Yard Price:</span>
-                          <span className={styles.priceValue}>${fabric.yardPrice.toFixed(2)}</span>
+                          <span className={styles.priceValue}>{formattedPrices[fabricIndex]?.yardPrice}</span>
                         </div>
                         <div className={styles.priceTag}>
                           <span className={styles.priceLabel}>Stitching:</span>
-                          <span className={styles.priceValue}>${fabric.stitchPrice.toFixed(2)}</span>
+                          <span className={styles.priceValue}>{formattedPrices[fabricIndex]?.stitchPrice}</span>
                         </div>
                       </>
                     )}
