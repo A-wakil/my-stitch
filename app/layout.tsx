@@ -1,12 +1,12 @@
 'use client'
 
-import { AuthProvider } from "./lib/AuthContext";
-import "./globals.css";
-import { Toaster } from 'react-hot-toast'
-import { ProfileProvider } from "./context/ProfileContext";
-import { AuthDialogWrapper } from "./components/AuthDialogWrapper";
-
 import { ReactNode } from 'react'
+import { AuthProvider } from "./lib/AuthContext"
+import "./globals.css"
+import { Toaster } from 'react-hot-toast'
+import { ProfileProvider } from "./context/ProfileContext"
+import { AuthDialogWrapper } from "./components/AuthDialogWrapper"
+import { PostHogProvider } from "./providers/PostHogProvider"
 
 interface RootLayoutProps {
   children: ReactNode
@@ -20,14 +20,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <AuthProvider>
-          <ProfileProvider>
-            {children}
-            <Toaster />
-            <AuthDialogWrapper />
-          </ProfileProvider>
-        </AuthProvider>
+        <PostHogProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              {children}
+              <Toaster />
+              <AuthDialogWrapper />
+            </ProfileProvider>
+          </AuthProvider>
+        </PostHogProvider>
       </body>
     </html>
-  );
+  )
 }
