@@ -80,4 +80,35 @@
 
 .logoutButton:hover {
   background-color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .header {
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    height: 3.5rem;
+  }
+  .buttonGroup {
+    gap: 0.5rem;
+  }
+  
+  /* Tooltip styles for mobile */
+  .iconButton {
+    position: relative;
+  }
+  
+  .iconButton[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+  }
 } 

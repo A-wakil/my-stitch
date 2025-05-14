@@ -104,6 +104,26 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [formattedYardPrice, setFormattedYardPrice] = useState<string>('')
   const [formattedTotalPrice, setFormattedTotalPrice] = useState<string>('')
   const [formattedYardTotal, setFormattedYardTotal] = useState<string>('')
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Add effect to detect viewport size
+  useEffect(() => {
+    // Function to update state based on window width
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchDesign() {
@@ -643,8 +663,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             ))}
           </div>
           
-          {/* Tailor Preview Section */}
-          {tailorDetails && (
+          {/* Tailor Preview Section - desktop only */}
+          {tailorDetails && !isMobile && (
             <div className={styles.tailorPreview} onClick={() => setShowTailorProfile(true)}>
               <div className={styles.tailorPreviewContent}>
                 <div className={styles.tailorLogo}>
@@ -680,13 +700,16 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             </div>
           )}
           
-          <button 
-            className={styles.addToCartButton}
-            onClick={handleAddToCart}
-            disabled={loading || !selectedMeasurement || isProcessingOrder}
-          >
-            {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
-          </button>
+          {/* Button displayed at the bottom of the screen on mobile, but here on desktop */}
+          {!isMobile && (
+            <button 
+              className={styles.addToCartButton}
+              onClick={handleAddToCart}
+              disabled={loading || !selectedMeasurement || isProcessingOrder}
+            >
+              {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
+            </button>
+          )}
         </div>
 
         {/* Right side - Product details */}
@@ -697,6 +720,42 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             <p>{design.description}</p>
           </div>
 
+          {/* Tailor Preview Section - mobile only */}
+          {tailorDetails && isMobile && (
+            <div className={styles.tailorPreview} onClick={() => setShowTailorProfile(true)}>
+              <div className={styles.tailorPreviewContent}>
+                <div className={styles.tailorLogo}>
+                  {tailorDetails.logo_url ? (
+                    <img src={tailorDetails.logo_url} alt={tailorDetails.brand_name} />
+                  ) : (
+                    <IoPersonCircleOutline size={40} />
+                  )}
+                </div>
+                <div className={styles.tailorInfo}>
+                  <h3>{tailorDetails.brand_name}</h3>
+                  <p>Designer: {tailorDetails.tailor_name}</p>
+                  
+                  <div className={styles.ratingDisplay}>
+                    {calculateAverageRating(tailorDetails) !== null ? (
+                      <>
+                        <StarRating 
+                          initialRating={calculateAverageRating(tailorDetails) || 0}
+                          readOnly={true} 
+                          onChange={() => {}} 
+                        />
+                        <span className={styles.ratingCount}>
+                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={styles.noRatings}>No ratings yet</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button className={styles.viewProfileButton}>View Full Profile</button>
+            </div>
+          )}
           
           <div className={styles.priceBreakdown}>
             <p>Stitching Price: {formattedStitchPrice}</p>
@@ -1005,6 +1064,17 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           </div>
         </div>
       </div>
+
+      {/* Mobile-only button fixed at bottom of screen */}
+      {isMobile && (
+        <button 
+          className={styles.addToCartButton}
+          onClick={handleAddToCart}
+          disabled={loading || !selectedMeasurement || isProcessingOrder}
+        >
+          {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
+        </button>
+      )}
 
       {/* Tailor Full Profile Modal */}
       {showTailorProfile && tailorDetails && (

@@ -1,9 +1,12 @@
+'use client'
+
 import React, { useState, useEffect, MouseEvent } from 'react'
 import styles from './OrderConfirmationModal.module.css'
 import { IoClose } from 'react-icons/io5'
 import { supabase } from '../../../lib/supabaseClient'
 import { toast } from 'react-hot-toast'
 import { Measurement } from '../../../lib/types'
+import { loadStripe } from '@stripe/stripe-js'
 
 interface OrderConfirmationModalProps {
   isOpen: boolean
@@ -81,6 +84,9 @@ const calculateDeliveryDates = (completionTime: number) => {
     })
   };
 };
+
+// Initialize Stripe in client
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function OrderConfirmationModal({
   isOpen,
@@ -371,6 +377,36 @@ export default function OrderConfirmationModal({
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  // Stripe checkout handler
+  const handleStripeCheckout = async () => {
+    if (!isOrderValid()) {
+      toast.error('Please complete all required fields');
+      return;
+    }
+    const stripe = await stripePromise;
+    const items = [
+      {
+        price_data: {
+          currency: 'usd',
+          product_data: { name: orderDetails.design.title },
+          unit_amount: Math.round(orderDetails.total * 100),
+        },
+        quantity: 1,
+      },
+    ];
+    const res = await fetch('/api/stripe/checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    const data = await res.json();
+    if (data.sessionId) {
+      await stripe?.redirectToCheckout({ sessionId: data.sessionId });
+    } else {
+      toast.error('Error creating checkout session');
     }
   };
 
@@ -715,24 +751,12 @@ export default function OrderConfirmationModal({
             By placing your order, you agree to our{' '}
             <a href="#">privacy notice</a> and <a href="#">conditions of use</a>.
           </p>
-          <button 
-            onClick={onConfirm} 
+          <button
+            onClick={handleStripeCheckout}
             className={`${styles.confirmButton} ${!isOrderValid() || isProcessingOrder ? styles.confirmButtonDisabled : ''}`}
             disabled={!isOrderValid() || isProcessingOrder}
           >
-            {!isOrderValid() ? (
-              <span className={styles.invalidOrderMessage}>
-                {!orderDetails.shippingAddress && 'Add shipping address'}
-                {!orderDetails.paymentMethod && !orderDetails.shippingAddress && ', '}
-                {!orderDetails.paymentMethod && 'payment method'}
-                {(!orderDetails.shippingAddress || !orderDetails.paymentMethod) && !orderDetails.measurement && ', and '}
-                {!orderDetails.measurement && 'measurement'}
-              </span>
-            ) : isProcessingOrder ? (
-              'Processing order...'
-            ) : (
-              'Place your order'
-            )}
+            {isProcessingOrder ? 'Redirecting to Stripe...' : 'Pay with Stripe'}
           </button>
         </div>
       </div>

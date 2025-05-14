@@ -263,5 +263,46 @@
 .lgt-button:hover {
   background-color: #dc2626;
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+    height: 3.5rem;
+  }
+  .header-container {
+    align-items: center;
+  }
+
+  /* Hide Orders button */
+  .header-content:first-child .left-sub:nth-of-type(2) {
+    display: none;
+  }
+
+  /* Hide Menu text, keep icon */
+  .left-sub .menu-text {
+    display: none;
+  }
+
+  /* Reduce gap for menu icon */
+  .header-content:first-child .left-sub {
+    margin: 0 0.5rem;
+    gap: 4px;
+  }
+
+  /* Shrink title font */
+  .header-content.center .header-title {
+    font-size: 1rem;
+    padding: 0;
+  }
+
+  /* Reset title wrapper offset for true centering */
+  .header-title-wrapper {
+    position: static !important;
+    right: auto !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+}
   
   

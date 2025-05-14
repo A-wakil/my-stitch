@@ -146,4 +146,102 @@
     font-size: 1.2rem;
     color: #666666;
 }
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+    .container {
+        padding-left: 4rem;
+        padding-right: 4rem;
+    }
+    
+    .title {
+        padding-right: 60px;
+        font-size: 1.75rem;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .headerRow {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    
+    .title {
+        font-size: 1.5rem;
+        padding-right: 0;
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        width: 100%;
+    }
+    
+    .backButton {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .gridContainer {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .formRow {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .section {
+        padding: 1.25rem;
+    }
+    
+    .sectionTitle {
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .saveButton {
+        width: 100%;
+    }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+    .container {
+        padding: 0.75rem;
+    }
+    
+    .headerRow {
+        margin-bottom: 1rem;
+    }
+    
+    .title {
+        font-size: 1.25rem;
+    }
+    
+    .backButton {
+        font-size: 0.9rem;
+        padding: 0.4rem;
+    }
+    
+    .section {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .input, 
+    .select {
+        padding: 0.65rem;
+        font-size: 0.9rem;
+    }
+    
+    .label {
+        font-size: 0.85rem;
+    }
+}
   

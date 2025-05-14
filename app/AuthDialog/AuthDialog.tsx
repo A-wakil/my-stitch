@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { Loader2 } from 'lucide-react'
 import { IoClose } from 'react-icons/io5'
 import styles from './AuthDialog.module.css'
@@ -22,6 +22,13 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
 
+  // Generate unique IDs for inputs to avoid duplicates
+  const uniqueId = useId()
+  const emailInputId = isSignUp ? `signup-email-${uniqueId}` : `signin-email-${uniqueId}`
+  const passwordInputId = isSignUp ? `signup-password-${uniqueId}` : `signin-password-${uniqueId}`
+  const firstNameInputId = `signup-firstName-${uniqueId}`
+  const lastNameInputId = `signup-lastName-${uniqueId}`
+
   useEffect(() => {
     if (isOpen) {
       console.log("Dialog opened, resetting state...")
@@ -29,8 +36,8 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
       setGeneralError('')
       setErrors({})
 
-      const idToFocus = isSignUp ? 'signup-email' : 'signin-email'
-      setTimeout(() => document.getElementById(idToFocus)?.focus(), 50)
+      // Focus email input on open
+      setTimeout(() => document.getElementById(emailInputId)?.focus(), 50)
     } else {
       console.log("Dialog closed, resetting loading state.")
       setIsLoading(false)
@@ -39,25 +46,26 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
 
   useEffect(() => {
     if (isOpen) {
-      const idToFocus = isSignUp ? 'signup-email' : 'signin-email'
-      document.getElementById(idToFocus)?.focus()
+      // Refocus email when toggling between sign-in and sign-up
+      document.getElementById(emailInputId)?.focus()
     }
   }, [isSignUp, isOpen])
 
   useEffect(() => {
     if (!isOpen) return
 
+    // Focus the first field with an error
     const errorField = Object.keys(errors)[0]
     if (errorField) {
       let idToFocus = ''
       if (errorField === 'email') {
-        idToFocus = isSignUp ? 'signup-email' : 'signin-email'
+        idToFocus = emailInputId
       } else if (errorField === 'password') {
-        idToFocus = isSignUp ? 'signup-password' : 'signin-password'
+        idToFocus = passwordInputId
       } else if (errorField === 'firstName') {
-        idToFocus = 'signup-firstName'
+        idToFocus = firstNameInputId
       } else if (errorField === 'lastName') {
-        idToFocus = 'signup-lastName'
+        idToFocus = lastNameInputId
       }
       setTimeout(() => document.getElementById(idToFocus)?.focus(), 50)
     }
@@ -195,9 +203,9 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.formGroup}>
-              <label htmlFor={isSignUp ? 'signup-email' : 'signin-email'} className={styles.label}>Email</label>
+              <label htmlFor={emailInputId} className={styles.label}>Email</label>
               <input
-                id={isSignUp ? 'signup-email' : 'signin-email'}
+                id={emailInputId}
                 type="email"
                 className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
                 value={email}
@@ -211,9 +219,9 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
             </div>
 
             <div className={styles.formGroup}>
-              <label htmlFor={isSignUp ? 'signup-password' : 'signin-password'} className={styles.label}>Password</label>
+              <label htmlFor={passwordInputId} className={styles.label}>Password</label>
               <input
-                id={isSignUp ? 'signup-password' : 'signin-password'}
+                id={passwordInputId}
                 type="password"
                 className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
                 value={password}
@@ -229,9 +237,9 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
             {isSignUp && (
               <>
                 <div className={styles.formGroup}>
-                  <label htmlFor="signup-firstName" className={styles.label}>First Name</label>
+                  <label htmlFor={firstNameInputId} className={styles.label}>First Name</label>
                   <input
-                    id="signup-firstName"
+                    id={firstNameInputId}
                     type="text"
                     className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
                     value={firstName}
@@ -244,9 +252,9 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="signup-lastName" className={styles.label}>Last Name</label>
+                  <label htmlFor={lastNameInputId} className={styles.label}>Last Name</label>
                   <input
-                    id="signup-lastName"
+                    id={lastNameInputId}
                     type="text"
                     className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
                     value={lastName}

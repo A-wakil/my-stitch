@@ -28,4 +28,20 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Mobile currency toggle size reduction */
+@media (max-width: 768px) {
+  .currencyToggle {
+    /* Reduce width if needed or allow full-width */
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+
+  .select {
+    padding: 0.25rem 1rem 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background-position: right 0.25rem center;
+    background-size: 1em 1em;
+  }
 } 

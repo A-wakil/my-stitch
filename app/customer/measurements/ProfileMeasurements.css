@@ -129,6 +129,7 @@ button[type="submit"]:hover {
   border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
 .new-measurement-button {
@@ -343,6 +344,41 @@ input:disabled {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .measurements-page {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .measurements-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+  }
+
+  .measurements-sidebar.collapsed {
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+    border-bottom: none;
+  }
+  
+  .sidebar-toggle {
+    display: flex;
+  }
+  
+  .modal-content {
+    padding: 1rem;
+  }
+  
+  .measurements-items {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
   .measurement-field {
     flex-direction: column;
     align-items: flex-start;
@@ -351,14 +387,107 @@ input:disabled {
   .measurement-field input {
     width: 100%;
     margin-top: 0.25rem;
+    text-align: left;
   }
   
   .measurement-unit {
-    margin-left: auto;
+    position: absolute;
+    right: 1.5rem;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+  }
+  
+  .form-buttons button {
+    width: 100%;
+  }
+  
+  .header-section h2 {
+    font-size: 1.5rem;
+  }
+  
+  .video-guide {
+    padding: 0.75rem;
+  }
+  
+  .video-link {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  button[type="submit"] {
+    width: 100%;
+    max-width: 100%;
+    margin: 1rem 0 0;
+  }
+  
+  .measurement-instruction {
+    padding-left: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .measurement-item-content {
+    max-width: 75%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
-/* ... rest of existing styles ... */
+/* Small mobile styles */
+@media (max-width: 480px) {
+  .modal-content, 
+  .measurements-sidebar {
+    padding: 0.75rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .back-button {
+    font-size: 0.9rem;
+  }
+  
+  .header-section h2 {
+    font-size: 1.25rem;
+  }
+  
+  .measurement-name-input {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+  
+  .measurement-item {
+    padding: 0.4rem;
+  }
+  
+  .no-measurement-selected h2 {
+    font-size: 1.25rem;
+  }
+  
+  .no-measurement-selected p {
+    font-size: 0.9rem;
+  }
+  
+  .form-section h3 {
+    font-size: 1.1rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+  
+  input, select {
+    padding: 0.65rem;
+    font-size: 0.9rem;
+  }
+  
+  .measurement-label {
+    font-size: 0.85rem;
+  }
+}
 
 .form-buttons {
   display: flex;
@@ -442,4 +571,28 @@ button[type="submit"]:hover {
 
 .video-link:hover {
   background-color: #000;
+}
+
+.sidebar-toggle {
+  display: none;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  width: 100%;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-toggle:hover {
+  background-color: #e9ecef;
+}
+
+.sidebar-toggle svg {
+  margin-left: 0.5rem;
 } 

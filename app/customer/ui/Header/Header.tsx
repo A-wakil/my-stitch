@@ -159,7 +159,7 @@ export function Header() {
           <div className='header-content'>
             <div className='left-sub' onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
               <IoMenu />
-              Menu
+              <span className='menu-text'>Menu</span>
             </div>
             <div className='left-sub' onClick={!user ? toggleAuthDialog : () => router.push('/customer/orders')} style={{ cursor: 'pointer' }}>
               Orders

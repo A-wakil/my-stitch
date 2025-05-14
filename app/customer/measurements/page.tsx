@@ -7,6 +7,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import { supabase } from "../../lib/supabaseClient"
 import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 // Update type to match database column names
 type MeasurementsType = {
@@ -61,6 +62,31 @@ export default function MeasurementsPage() {
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [activeMenu, setActiveMenu] = useState<number | null>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  
+  // Check if the screen is mobile size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+      // Auto-collapse sidebar on mobile
+      if (window.innerWidth <= 768) {
+        setSidebarCollapsed(true);
+      } else {
+        setSidebarCollapsed(false);
+      }
+    };
+    
+    // Initial check
+    checkIsMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   useEffect(() => {
     async function fetchMeasurements() {
@@ -170,6 +196,27 @@ export default function MeasurementsPage() {
     }
   }, [])
 
+  // Close sidebar when clicking outside of it on mobile
+  useEffect(() => {
+    function handleClickOutsideSidebar(event: MouseEvent) {
+      if (isMobile && !sidebarCollapsed && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setSidebarCollapsed(true);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutsideSidebar);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideSidebar);
+    }
+  }, [isMobile, sidebarCollapsed]);
+
+  // Auto-collapse sidebar after selection on mobile
+  useEffect(() => {
+    if (isMobile && selectedMeasurementId) {
+      setSidebarCollapsed(true);
+    }
+  }, [selectedMeasurementId, isMobile]);
+
   const handleNewMeasurement = () => {
     setSelectedMeasurementId(null)
     setIsCreatingNew(true)
@@ -192,6 +239,11 @@ export default function MeasurementsPage() {
       agbada_length: '',
       agbada_width: ''
     })
+
+    // Expand sidebar if collapsed on mobile when creating new
+    if (isMobile && sidebarCollapsed) {
+      setSidebarCollapsed(false);
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -297,9 +349,18 @@ export default function MeasurementsPage() {
     }
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+  
+  // Get the current measurement name
+  const currentMeasurementName = isCreatingNew 
+    ? "New Measurement"
+    : measurementsList.find(m => m.id === selectedMeasurementId)?.name || 'Your Measurements';
+
   return (
     <div className="measurements-page">
-      <div className="measurements-sidebar">
+      <div ref={sidebarRef} className={`measurements-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <button onClick={() => router.push('/')} className="back-button">
           <IoArrowBack size={24} />
           <span>Back</span>
@@ -370,6 +431,23 @@ export default function MeasurementsPage() {
         </div>
       </div>
 
+      {/* Mobile sidebar toggle button */}
+      {isMobile && (
+        <button className="sidebar-toggle" onClick={toggleSidebar}>
+          {sidebarCollapsed ? (
+            <>
+              <span>Select Measurement</span>
+              <FiChevronDown />
+            </>
+          ) : (
+            <>
+              <span>Hide Measurement List</span>
+              <FiChevronUp />
+            </>
+          )}
+        </button>
+      )}
+
       <div className="modal-content">
         {(isCreatingNew || selectedMeasurementId) ? (
           <>
@@ -384,7 +462,7 @@ export default function MeasurementsPage() {
                     className="measurement-name-input"
                   />
                 ) : (
-                  measurementsList.find(m => m.id === selectedMeasurementId)?.name || 'Your Measurements'
+                  currentMeasurementName
                 )}
               </h2>
             </div>

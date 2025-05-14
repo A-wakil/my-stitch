@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './Orders.module.css'
 import { useRouter } from 'next/navigation'
@@ -8,6 +8,7 @@ import { Order } from '../../lib/types'
 import { IoArrowBack } from 'react-icons/io5'
 import { RatingModal } from '../../components/ui/RatingModal'
 import { toast } from 'react-hot-toast'
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled' | 'rejected'
 
@@ -16,12 +17,41 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<OrderStatus>('pending')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTabsExpanded, setIsTabsExpanded] = useState(false)
   const router = useRouter()
+  const tabsRef = useRef<HTMLDivElement>(null)
   
   // Add state for rating modal
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [ratingOrderId, setRatingOrderId] = useState<string | null>(null)
   const [ratingTailorId, setRatingTailorId] = useState<string | null>(null)
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Initial check
+    checkIsMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  // Scroll active tab into view
+  useEffect(() => {
+    if (tabsRef.current) {
+      const activeTabElement = tabsRef.current.querySelector(`.${styles.activeTab}`);
+      if (activeTabElement) {
+        activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -98,6 +128,32 @@ export default function OrdersPage() {
     return acc
   }, {} as Record<string, number>)
 
+  const toggleTabs = () => {
+    setIsTabsExpanded(!isTabsExpanded);
+  };
+
+  // Simplified tab display for mobile view
+  const getTabLabel = (status: OrderStatus) => {
+    switch(status) {
+      case 'pending': return 'Pending';
+      case 'accepted': return 'In Production';
+      case 'ready_to_ship': return 'Ready to Ship';
+      case 'shipped': return 'Shipped';
+      case 'rejected': return 'Rejected';
+      case 'cancelled': return 'Cancelled';
+      case 'all': return 'All Orders';
+      default: return status.replace(/_/g, ' ');
+    }
+  };
+
+  // Get the count for a tab
+  const getTabCount = (status: OrderStatus) => {
+    if (status === 'accepted') {
+      return (orderCounts['accepted'] || 0) + (orderCounts['in_progress'] || 0);
+    }
+    return orderCounts[status] || 0;
+  };
+
   if (isLoading) {
     return <div className={styles.loading}>Loading your orders...</div>
   }
@@ -105,56 +161,93 @@ export default function OrdersPage() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <button onClick={() => router.back()} className={styles.backButton}>
+        <button onClick={() => router.back()} className={styles.backButton} aria-label="Go back">
           <IoArrowBack size={24} />
           <span>Back</span>
         </button>
         <h1 className={styles.pageTitle}>Your Orders</h1>
       </div>
 
-      <div className={styles.tabs}>
-        <button 
-          className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('pending')}
-        >
-          Pending ({orderCounts['pending'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'accepted' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('accepted')}
-        >
-          In Production ({(orderCounts['accepted'] || 0) + (orderCounts['in_progress'] || 0)})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'ready_to_ship' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('ready_to_ship')}
-        >
-          Ready to Ship ({orderCounts['ready_to_ship'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'shipped' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('shipped')}
-        >
-          Shipped ({orderCounts['shipped'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'rejected' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('rejected')}
-        >
-          Rejected ({orderCounts['rejected'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'cancelled' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('cancelled')}
-        >
-          Cancelled ({orderCounts['cancelled'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All Orders ({orders.length})
-        </button>
+      {isMobile && (
+        <div className={styles.mobileTabSelector} onClick={toggleTabs}>
+          <span>{getTabLabel(activeTab)} ({getTabCount(activeTab)})</span>
+          {isTabsExpanded ? <FiChevronUp /> : <FiChevronDown />}
+        </div>
+      )}
+
+      <div className={styles.tabsContainer}>
+        <div ref={tabsRef} className={`${styles.tabs} ${isMobile && !isTabsExpanded ? styles.tabsCollapsed : ''}`}>
+          <button 
+            className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('pending');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'pending'}
+          >
+            Pending ({orderCounts['pending'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'accepted' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('accepted');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'accepted'}
+          >
+            In Production ({(orderCounts['accepted'] || 0) + (orderCounts['in_progress'] || 0)})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'ready_to_ship' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('ready_to_ship');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'ready_to_ship'}
+          >
+            Ready to Ship ({orderCounts['ready_to_ship'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'shipped' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('shipped');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'shipped'}
+          >
+            Shipped ({orderCounts['shipped'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'rejected' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('rejected');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'rejected'}
+          >
+            Rejected ({orderCounts['rejected'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'cancelled' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('cancelled');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'cancelled'}
+          >
+            Cancelled ({orderCounts['cancelled'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('all');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+            aria-pressed={activeTab === 'all'}
+          >
+            All Orders ({orders.length})
+          </button>
+        </div>
       </div>
 
       {filteredOrders.length > 0 ? (
@@ -205,7 +298,7 @@ export default function OrdersPage() {
             </div>
 
             <div className={styles.orderStatus}>
-              <div className={styles.status} data-status={order.status}>{order.status}</div>
+              <div className={styles.status} data-status={order.status}>{order.status.replace(/_/g, ' ')}</div>
               {order.status === 'shipped' && (
                 <button className={styles.trackButton}>Track package</button>
               )}

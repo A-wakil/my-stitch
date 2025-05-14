@@ -3,7 +3,10 @@
   margin: 0 auto;
   padding: 2rem;
   background: #f9f9f9;
-  margin-top: 3rem;
+  position: relative;
+  min-height: 100vh;
+  margin-top: 0;
+  padding-top: 7rem;
 }
 
 .pageHeader {
@@ -11,6 +14,9 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .pageTitle {
@@ -284,6 +290,16 @@
   padding: 3rem;
   color: #666;
   font-size: 1.125rem;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
+.tabsContainer {
+  position: relative;
+  margin-bottom: 2rem;
 }
 
 .tabs {
@@ -320,6 +336,34 @@
   color: #007185;
   border-bottom-color: #007185;
   font-weight: 500;
+}
+
+.mobileTabSelector {
+  display: none;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobileTabSelector svg {
+  margin-left: 0.5rem;
+}
+
+.tabsCollapsed {
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .measurementsButton {
@@ -536,4 +580,226 @@
   font-size: 0.95rem;
   line-height: 1.5;
   white-space: pre-line;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 1024px) {
+  .container {
+    padding: 1.5rem;
+    padding-top: 7rem;
+    margin-top: 0;
+  }
+  
+  .orderMeta {
+    gap: 2rem;
+  }
+  
+  .mainImage {
+    width: 180px;
+    height: 180px;
+  }
+  
+  .pageTitle {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+    padding-top: 6rem;
+    margin-top: 0;
+  }
+  
+  .pageHeader {
+    margin-bottom: 1.5rem;
+  }
+  
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+  
+  .orderCard {
+    margin-bottom: 1.5rem;
+  }
+  
+  .orderHeader, .orderItems, .orderStatus {
+    padding: 1rem;
+  }
+  
+  .orderInfo {
+    flex-direction: column;
+  }
+  
+  .orderMeta {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .orderNumber {
+    text-align: left;
+    margin-top: 1rem;
+  }
+  
+  .orderStatus {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .statusActions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .acceptButton, .rejectButton, .progressButton, .readyButton, .shipButton {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  
+  .orderItem {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .itemImageContainer {
+    width: 100%;
+    align-items: center;
+  }
+  
+  .mainImage {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  
+  .thumbnails {
+    justify-content: center;
+  }
+  
+  .mobileTabSelector {
+    display: flex;
+  }
+  
+  .tabsContainer {
+    position: relative;
+  }
+  
+  .tabs {
+    position: absolute;
+    background: white;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    padding: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    align-items: stretch;
+    max-height: 300px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    margin-bottom: 0;
+  }
+  
+  .tab {
+    text-align: left;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #eee;
+    border-left: 3px solid transparent;
+  }
+  
+  .tab:last-child {
+    border-bottom: none;
+  }
+  
+  .activeTab {
+    border-bottom-color: #eee;
+    border-left-color: #007185;
+    background-color: #f8f9fa;
+  }
+  
+  .rejectionModal, .modal {
+    width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+  
+  .itemTitle {
+    font-size: 1.1rem;
+  }
+  
+  .designDescription {
+    font-size: 0.875rem;
+  }
+  
+  .thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .modalHeader h2 {
+    font-size: 1.1rem;
+  }
+  
+  .closeButton {
+    font-size: 1.25rem;
+  }
+  
+  .measurementRow {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .measurementValue {
+    font-weight: 400;
+  }
+  
+  .noOrders {
+    padding: 3rem 1rem;
+  }
+  
+  .noOrdersTitle {
+    font-size: 1.2rem;
+  }
+  
+  .noOrdersMessage {
+    font-size: 0.9rem;
+  }
+  
+  .colorPill {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .tailorNotes {
+    padding: 0.75rem;
+  }
+  
+  .tailorNotes h4 {
+    font-size: 0.9rem;
+  }
+  
+  .tailorNotes p {
+    font-size: 0.85rem;
+  }
+  
+  .status {
+    font-size: 1rem;
+  }
+  
+  .acceptButton, .rejectButton, .progressButton, .readyButton, .shipButton {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
 }

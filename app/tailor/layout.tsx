@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sidebar } from "./components/dashboard/sidebar"
 import { Header } from "./components/dashboard/header"
@@ -16,6 +16,15 @@ function DashboardContent({
   children: React.ReactNode
 }) {
   const { signOut } = useAuth()
+  const [isMobile, setIsMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -27,9 +36,33 @@ function DashboardContent({
 
   return (
     <>
-      <Sidebar />
-      <div style={{ marginLeft: '250px' }}>
-        <Header toggleLogoutDialog={handleLogout} />
+      {(!isMobile || sidebarOpen) && (
+        <div
+          style={isMobile ? {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100vh',
+            backgroundColor: 'white',
+            zIndex: 1000,
+            overflowY: 'auto'
+          } : {}}
+        >
+          <Sidebar
+            isMobile={isMobile}
+            toggleSidebar={() => setSidebarOpen(open => !open)}
+          />
+        </div>
+      )}
+      <div style={{ marginLeft: isMobile ? 0 : '250px' }}>
+        <Header 
+          toggleLogoutDialog={handleLogout} 
+          toggleSidebar={() => setSidebarOpen(open => !open)}
+          isMobile={isMobile}
+        />
         <main className="p-4 bg-gray-100">
           {children}
         </main>

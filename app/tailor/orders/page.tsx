@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './orders.module.css'
 import { Order, Profile } from '../../lib/types'
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
 import { sendOrderNotification } from '../../lib/notifications'
 import { toast } from 'react-hot-toast'
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
 
@@ -26,6 +27,27 @@ export default function TailorOrdersPage() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null)
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTabsExpanded, setIsTabsExpanded] = useState(false)
+  const tabsRef = useRef<HTMLDivElement>(null)
+
+  // Add effect to detect viewport size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const fetchOrders = async () => {
     if (!user) return
@@ -375,8 +397,30 @@ export default function TailorOrdersPage() {
     setIsModalOpen(true)
   }
 
+  const toggleTabs = () => {
+    setIsTabsExpanded(!isTabsExpanded);
+  };
+
+  // Get a nice label for the current tab
+  const getTabLabel = (status: OrderStatus) => {
+    switch(status) {
+      case 'pending': return 'Pending';
+      case 'accepted': return 'Accepted';
+      case 'in_progress': return 'In Progress';
+      case 'ready_to_ship': return 'Ready to Ship';
+      case 'shipped': return 'Shipped';
+      case 'rejected': return 'Rejected';
+      case 'all': return 'All Orders';
+      default: return String(status).replace(/_/g, ' ');
+    }
+  };
+
   if (isLoading) {
-    return <Spinner />
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spinner />
+      </div>
+    )
   }
 
   return (
@@ -385,43 +429,73 @@ export default function TailorOrdersPage() {
         <h1 className={styles.pageTitle}>Your Orders</h1>
       </div>
 
-      <div className={styles.tabs}>
-        <button 
-          className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('pending')}
+      {isMobile && (
+        <div className={styles.mobileTabSelector} onClick={toggleTabs}>
+          <span>{getTabLabel(activeTab)} ({activeTab === 'all' ? orders.length : (orderCounts[activeTab] || 0)})</span>
+          {isTabsExpanded ? <FiChevronUp /> : <FiChevronDown />}
+        </div>
+      )}
+
+      <div className={styles.tabsContainer}>
+        <div 
+          ref={tabsRef} 
+          className={`${styles.tabs} ${isMobile && !isTabsExpanded ? styles.tabsCollapsed : ''}`}
         >
-          Pending ({orderCounts['pending'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'accepted' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('accepted')}
-        >
-          Accepted ({orderCounts['accepted'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'in_progress' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('in_progress')}
-        >
-          In Progress ({orderCounts['in_progress'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'ready_to_ship' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('ready_to_ship')}
-        >
-          Ready to Ship ({orderCounts['ready_to_ship'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'shipped' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('shipped')}
-        >
-          Shipped ({orderCounts['shipped'] || 0})
-        </button>
-        <button 
-          className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All Orders ({orders.length})
-        </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('pending');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            Pending ({orderCounts['pending'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'accepted' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('accepted');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            Accepted ({orderCounts['accepted'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'in_progress' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('in_progress');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            In Progress ({orderCounts['in_progress'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'ready_to_ship' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('ready_to_ship');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            Ready to Ship ({orderCounts['ready_to_ship'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'shipped' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('shipped');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            Shipped ({orderCounts['shipped'] || 0})
+          </button>
+          <button 
+            className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('all');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            All Orders ({orders.length})
+          </button>
+        </div>
       </div>
 
       {filteredOrders.length > 0 ? (
