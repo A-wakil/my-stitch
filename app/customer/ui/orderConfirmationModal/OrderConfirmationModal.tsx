@@ -14,6 +14,7 @@ interface OrderConfirmationModalProps {
   onConfirm: () => void
   orderDetails: {
     design: {
+      id: string;
       title: string
       fabrics: Array<{
         name: string
@@ -26,7 +27,6 @@ interface OrderConfirmationModalProps {
     selectedFabric: number
     selectedColor: number | null
     shippingAddress: string
-    paymentMethod: string
     total: number
     measurement?: Measurement
     tailorNotes?: string
@@ -34,12 +34,6 @@ interface OrderConfirmationModalProps {
   savedAddresses: string[]
   onAddressChange: (address: string) => void
   isLoading: boolean
-  savedPaymentMethods: Array<{
-    cardNumber: string;
-    expirationDate: string;
-  }>;
-  onPaymentMethodChange: (method: string) => void;
-  isLoadingPayment: boolean;
   savedMeasurements: Measurement[];
   onMeasurementChange: (measurement: Measurement | undefined) => void;
   isLoadingMeasurements: boolean;
@@ -54,13 +48,6 @@ interface AddressForm {
   state: string;
   zipCode: string;
   country: string;
-}
-
-interface PaymentForm {
-  cardNumber: string;
-  expirationDate: string;
-  cvv: string;
-  cardholderName: string;
 }
 
 const calculateDeliveryDates = (completionTime: number) => {
@@ -96,9 +83,6 @@ export default function OrderConfirmationModal({
   savedAddresses,
   onAddressChange,
   isLoading,
-  savedPaymentMethods,
-  onPaymentMethodChange,
-  isLoadingPayment,
   savedMeasurements,
   onMeasurementChange,
   isLoadingMeasurements,
@@ -114,25 +98,12 @@ export default function OrderConfirmationModal({
     zipCode: '',
     country: 'United States'
   });
-  const [isNewPayment, setIsNewPayment] = useState(false);
-  const [paymentForm, setPaymentForm] = useState<PaymentForm>({
-    cardNumber: '',
-    expirationDate: '',
-    cvv: '',
-    cardholderName: ''
-  });
 
   useEffect(() => {
     if (!isLoading && savedAddresses.length === 0) {
       setIsNewAddress(true);
     }
   }, [isLoading, savedAddresses]);
-
-  useEffect(() => {
-    if (!isLoadingPayment && savedPaymentMethods.length === 0) {
-      setIsNewPayment(true);
-    }
-  }, [isLoadingPayment, savedPaymentMethods]);
 
   if (!isOpen) return null
 
@@ -212,136 +183,6 @@ export default function OrderConfirmationModal({
     });
   };
 
-  const handlePaymentFormChange = (field: keyof PaymentForm) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPaymentForm(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-  };
-
-  const validatePaymentForm = () => {
-    if (!paymentForm.cardholderName.trim()) {
-      toast.error('Cardholder name is required');
-      return false;
-    }
-
-    if (!paymentForm.cardNumber.trim()) {
-      toast.error('Card number is required');
-      return false;
-    }
-
-    // Validate card number (16 digits, can include spaces)
-    const cardNumberClean = paymentForm.cardNumber.replace(/\s/g, '');
-    if (!/^\d{16}$/.test(cardNumberClean)) {
-      toast.error('Please enter a valid 16-digit card number');
-      return false;
-    }
-
-    if (!paymentForm.expirationDate.trim()) {
-      toast.error('Expiration date is required');
-      return false;
-    }
-
-    // Validate expiration date (MM/YY format)
-    const expRegex = /^(0[1-9]|1[0-2])\/([0-9]{2})$/;
-    if (!expRegex.test(paymentForm.expirationDate)) {
-      toast.error('Please enter a valid expiration date (MM/YY)');
-      return false;
-    }
-
-    // Validate expiration date is not in the past
-    const [month, year] = paymentForm.expirationDate.split('/');
-    const expDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
-    const today = new Date();
-    if (expDate < today) {
-      toast.error('Card has expired');
-      return false;
-    }
-
-    if (!paymentForm.cvv.trim()) {
-      toast.error('CVV is required');
-      return false;
-    }
-
-    // Validate CVV (3 or 4 digits)
-    if (!/^\d{3,4}$/.test(paymentForm.cvv)) {
-      toast.error('Please enter a valid CVV (3 or 4 digits)');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSavePayment = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    
-    if (validatePaymentForm()) {
-      const formattedCard = `Visa •••• ${paymentForm.cardNumber.slice(-4)}`;
-      onPaymentMethodChange(formattedCard);
-      setIsNewPayment(false);
-      setPaymentForm({
-        cardNumber: '',
-        expirationDate: '',
-        cvv: '',
-        cardholderName: ''
-      });
-      toast.success('Payment method saved successfully');
-    }
-  };
-
-  const handleChangePayment = () => {
-    setIsNewPayment(true);
-    onPaymentMethodChange('');
-    setPaymentForm({
-      cardNumber: '',
-      expirationDate: '',
-      cvv: '',
-      cardholderName: ''
-    });
-  };
-
-  // Add input formatting handlers
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    const groups = cleaned.match(/(\d{1,4})/g);
-    return groups ? groups.join(' ').substr(0, 19) : '';
-  };
-
-  const formatExpirationDate = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length >= 2) {
-      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
-    }
-    return cleaned;
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCardNumber(e.target.value);
-    setPaymentForm(prev => ({ ...prev, cardNumber: formatted }));
-  };
-
-  const handleExpirationDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatExpirationDate(e.target.value);
-    setPaymentForm(prev => ({ ...prev, expirationDate: formatted }));
-  };
-
-  const handleCVVChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setPaymentForm(prev => ({ ...prev, cvv: value }));
-  };
-
-  const handlePaymentMethodChange = (value: string) => {
-    if (value === 'new') {
-      setIsNewPayment(true);
-      onPaymentMethodChange('');
-    } else {
-      setIsNewPayment(false);
-      onPaymentMethodChange(value);
-    }
-  };
-
   const handleMeasurementChange = (measurementId: string) => {
     if (measurementId === '') {
       onMeasurementChange(undefined);
@@ -355,10 +196,9 @@ export default function OrderConfirmationModal({
 
   const isOrderValid = () => {
     const hasValidAddress = Boolean(orderDetails.shippingAddress);
-    const hasValidPayment = Boolean(orderDetails.paymentMethod);
     const hasValidMeasurement = Boolean(orderDetails.measurement);
     
-    return hasValidAddress && hasValidPayment && hasValidMeasurement;
+    return hasValidAddress && hasValidMeasurement;
   };
 
   const handleAddressChange = (value: string) => {
@@ -386,27 +226,71 @@ export default function OrderConfirmationModal({
       toast.error('Please complete all required fields');
       return;
     }
-    const stripe = await stripePromise;
-    const items = [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: { name: orderDetails.design.title },
-          unit_amount: Math.round(orderDetails.total * 100),
+
+    try {
+      // Set loading state
+      onConfirm();
+
+      // Log the request payload for debugging
+      const payload = {
+        orderDetails: {
+          design: {
+            title: orderDetails.design.title,
+            fabrics: orderDetails.design.fabrics,
+            id: orderDetails.design.id,
+          },
+          selectedFabric: orderDetails.selectedFabric,
+          selectedColor: orderDetails.selectedColor,
+          shippingAddress: orderDetails.shippingAddress,
+          measurement: orderDetails.measurement,
+          tailorNotes: orderDetails.tailorNotes,
+          total: orderDetails.total,
+        }
+      };
+
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        quantity: 1,
-      },
-    ];
-    const res = await fetch('/api/stripe/checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
-    });
-    const data = await res.json();
-    if (data.sessionId) {
-      await stripe?.redirectToCheckout({ sessionId: data.sessionId });
-    } else {
-      toast.error('Error creating checkout session');
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error?.message || 
+          `Server responded with ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (!data.sessionId) {
+        throw new Error('No session ID returned from server');
+      }
+
+      // Get Stripe instance
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Failed to load payment system');
+      }
+
+      // Redirect to Stripe Checkout
+      const { error: redirectError } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId
+      });
+
+      if (redirectError) {
+        throw new Error(redirectError.message || 'Failed to redirect to checkout');
+      }
+    } catch (err: any) {
+      // Log the full error for debugging
+      console.error('Checkout error details:', {
+        message: err.message,
+        stack: err.stack,
+        error: err
+      });
     }
   };
 
@@ -554,120 +438,6 @@ export default function OrderConfirmationModal({
                         type="button"
                       >
                         Save Address
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          <div className={styles.section}>
-            <h4>Pay with</h4>
-            {orderDetails.paymentMethod && !isNewPayment ? (
-              <div className={styles.savedInfo}>
-                <p>{orderDetails.paymentMethod}</p>
-                <button 
-                  onClick={handleChangePayment}
-                  className={styles.changeButton}
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <>
-                {savedPaymentMethods.length > 0 && (
-                  <select 
-                    value={isNewPayment ? 'new' : orderDetails.paymentMethod}
-                    onChange={(e) => handlePaymentMethodChange(e.target.value)}
-                    className={styles.paymentSelect}
-                  >
-                    <option value="">Select a payment method...</option>
-                    {savedPaymentMethods.map((method, index) => (
-                      <option key={index} value={`Visa •••• ${method.cardNumber.slice(-4)}`}>
-                        Visa •••• {method.cardNumber.slice(-4)}
-                      </option>
-                    ))}
-                    <option value="new">+ Add new payment method</option>
-                  </select>
-                )}
-                
-                {isNewPayment && (
-                  <div className={styles.newPaymentForm}>
-                    <div className={styles.formField}>
-                      <label htmlFor="cardholderName">Cardholder Name *</label>
-                      <input
-                        id="cardholderName"
-                        type="text"
-                        value={paymentForm.cardholderName}
-                        onChange={handlePaymentFormChange('cardholderName')}
-                        placeholder="John Doe"
-                        className={styles.paymentInput}
-                        maxLength={50}
-                        required
-                      />
-                    </div>
-
-                    <div className={styles.formField}>
-                      <label htmlFor="cardNumber">Card Number *</label>
-                      <input
-                        id="cardNumber"
-                        type="text"
-                        value={paymentForm.cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="1234 5678 9012 3456"
-                        className={styles.paymentInput}
-                        maxLength={19}
-                        required
-                      />
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formField}>
-                        <label htmlFor="expirationDate">Expiration Date (MM/YY) *</label>
-                        <input
-                          id="expirationDate"
-                          type="text"
-                          value={paymentForm.expirationDate}
-                          onChange={handleExpirationDateChange}
-                          placeholder="MM/YY"
-                          className={styles.paymentInput}
-                          maxLength={5}
-                          required
-                        />
-                      </div>
-
-                      <div className={styles.formField}>
-                        <label htmlFor="cvv">CVV *</label>
-                        <input
-                          id="cvv"
-                          type="text"
-                          value={paymentForm.cvv}
-                          onChange={handleCVVChange}
-                          placeholder="123"
-                          className={styles.paymentInput}
-                          maxLength={4}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className={styles.formButtons}>
-                      {savedPaymentMethods.length > 0 && (
-                        <button 
-                          onClick={handleChangePayment}
-                          className={styles.cancelBtn}
-                          type="button"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                      <button 
-                        onClick={handleSavePayment}
-                        className={`${styles.saveAddressBtn} ${savedPaymentMethods.length === 0 ? styles.fullWidth : ''}`}
-                        type="button"
-                      >
-                        Save Payment Method
                       </button>
                     </div>
                   </div>

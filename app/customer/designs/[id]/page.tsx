@@ -86,9 +86,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [savedAddresses, setSavedAddresses] = useState<string[]>([])
   const [orderShippingAddress, setOrderShippingAddress] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState<PaymentMethod[]>([])
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("")
-  const [isLoadingPayment, setIsLoadingPayment] = useState(true)
   const [savedMeasurements, setSavedMeasurements] = useState<Measurement[]>([])
   const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | undefined>(undefined)
   const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(true)
@@ -233,36 +230,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     fetchUserAddress();
   }, []);
 
-  useEffect(() => {
-    async function fetchPaymentMethod() {
-      setIsLoadingPayment(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // Use maybeSingle() instead of single() to handle no rows gracefully
-        const { data, error } = await supabase
-          .from('customer_details')
-          .select('card_number, expiration_date')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Error fetching payment method:', error);
-        } else if (data && data.card_number) {
-          setSavedPaymentMethods([{
-            cardNumber: data.card_number,
-            expirationDate: data.expiration_date
-          }]);
-          setSelectedPaymentMethod(`•••• ${data.card_number.slice(-4)}`);
-        } else {
-          setSavedPaymentMethods([]);
-        }
-      }
-      setIsLoadingPayment(false);
-    }
-
-    fetchPaymentMethod();
-  }, []);
 
   useEffect(() => {
     async function fetchMeasurements() {
@@ -574,10 +541,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const handleAddressUpdate = (address: string) => {
     setOrderShippingAddress(address)
   }
-
-  const handlePaymentMethodUpdate = (paymentMethod: string) => {
-    setSelectedPaymentMethod(paymentMethod);
-  };
 
   const handleMeasurementUpdate = (measurement: Measurement | undefined) => {
     setSelectedMeasurement(measurement);
@@ -1170,23 +1133,19 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           selectedFabric,
           selectedColor,
           shippingAddress: orderShippingAddress,
-          paymentMethod: selectedPaymentMethod,
           total: totalPrice,
           measurement: selectedMeasurement,
           tailorNotes: tailorNotes
         }}
         savedAddresses={savedAddresses}
-        savedPaymentMethods={savedPaymentMethods}
         savedMeasurements={savedMeasurements}
         onAddressChange={handleAddressUpdate}
-        onPaymentMethodChange={handlePaymentMethodUpdate}
         onMeasurementChange={(measurement) => {
           setSelectedMeasurement(measurement);
           // Recalculation happens automatically through the useMemo
         }}
         onTailorNotesChange={(notes) => setTailorNotes(notes)}
         isLoading={isLoading}
-        isLoadingPayment={isLoadingPayment}
         isLoadingMeasurements={isLoadingMeasurements}
         isProcessingOrder={isProcessingOrder}
       />

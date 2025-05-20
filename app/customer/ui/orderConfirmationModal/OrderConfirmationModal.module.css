@@ -255,68 +255,6 @@
   width: 100%; /* Take full width when there's no cancel button */
 }
 
-.paymentSelect {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-
-.paymentSelect:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-.newPaymentForm {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.paymentInput {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  width: 100%;
-}
-
-.paymentInput:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-}
-
-.savedInfo {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.375rem;
-  margin-top: 0.5rem;
-}
-
-.changeButton {
-  padding: 0.25rem 0.75rem;
-  background-color: transparent;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.changeButton:hover {
-  background-color: #f3f4f6;
-  border-color: #9ca3af;
-}
-
 .measurementSelect {
   margin-top: 1rem;
 }
