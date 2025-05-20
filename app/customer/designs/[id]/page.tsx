@@ -384,6 +384,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   const mapDesignToOrderFormat = (design: DesignDetail, brandName: string) => {
     return {
+      id: design.id,
       title: design.title,
       fabrics: design.fabrics.map(fabric => ({
         name: fabric.name,
