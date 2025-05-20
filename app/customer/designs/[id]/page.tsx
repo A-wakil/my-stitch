@@ -392,7 +392,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         colors: fabric.colors.map(color => ({ name: color.name }))
       })),
       brand_name: brandName,
-      completion_time: design.completion_time || 1
+      completion_time: design.completion_time || 1,
+      tailor_id: design.created_by
     };
   };
 
@@ -1136,7 +1137,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           shippingAddress: orderShippingAddress,
           total: totalPrice,
           measurement: selectedMeasurement,
-          tailorNotes: tailorNotes
+          tailorNotes: tailorNotes,
+          userEmail: tailorDetails?.email
         }}
         savedAddresses={savedAddresses}
         savedMeasurements={savedMeasurements}

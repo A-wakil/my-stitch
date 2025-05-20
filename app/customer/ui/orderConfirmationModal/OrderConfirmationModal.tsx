@@ -23,6 +23,7 @@ interface OrderConfirmationModalProps {
       }>
       brand_name: string
       completion_time: number
+      tailor_id: string;
     }
     selectedFabric: number
     selectedColor: number | null
@@ -30,6 +31,7 @@ interface OrderConfirmationModalProps {
     total: number
     measurement?: Measurement
     tailorNotes?: string
+    userEmail?: string;
   }
   savedAddresses: string[]
   onAddressChange: (address: string) => void
@@ -238,6 +240,7 @@ export default function OrderConfirmationModal({
             title: orderDetails.design.title,
             fabrics: orderDetails.design.fabrics,
             id: orderDetails.design.id,
+            tailor_id: orderDetails.design.tailor_id,
           },
           selectedFabric: orderDetails.selectedFabric,
           selectedColor: orderDetails.selectedColor,
@@ -245,6 +248,7 @@ export default function OrderConfirmationModal({
           measurement: orderDetails.measurement,
           tailorNotes: orderDetails.tailorNotes,
           total: orderDetails.total,
+          email: orderDetails.userEmail,
         }
       };
 

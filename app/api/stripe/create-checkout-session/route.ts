@@ -86,6 +86,8 @@ export async function POST(request: Request) {
         tailorNotes: orderDetails.tailorNotes || '',
         selectedFabric: orderDetails.selectedFabric?.toString() || '',
         selectedColor: orderDetails.selectedColor?.toString() || '',
+        designId: orderDetails.design.id || '',
+        tailorId: orderDetails.design.tailor_id || '',
       },
       shipping_options: [
         {
