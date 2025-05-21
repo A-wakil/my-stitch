@@ -62,3 +62,38 @@
     height: 30vh;
   }
 }
+
+/* Add to existing styles */
+
+.no-results {
+  text-align: center;
+  padding: 2rem 0;
+  background-color: #f9f9f9;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-results p {
+  margin-bottom: 0.75rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.clear-filters-btn {
+  background-color: #000;
+  color: white;
+  border: none;
+  padding: 0.35rem 0.8rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  background-color: #333;
+}

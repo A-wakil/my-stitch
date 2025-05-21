@@ -42,7 +42,6 @@ export async function PUT(
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = []
 
     // Process fabrics and their images
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
@@ -55,7 +54,8 @@ export async function PUT(
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        available_styles: availableStyles
+        gender: formData.get("gender") as string,
+        age_group: formData.get("age_group") as string
       })
       .eq('id', id)
       .select()

@@ -12,6 +12,7 @@ import { Fabric } from "../../types/design"
 import { supabase } from "../../../lib/supabaseClient"
 import { toast } from "react-hot-toast"
 import { Info } from "lucide-react"
+import { Toaster } from 'react-hot-toast'
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -21,6 +22,8 @@ interface DesignFormProps {
     description: string
     images: string[]
     fabrics: Array<Fabric>
+    gender?: 'male' | 'female' | null
+    age_group?: 'adult' | 'kids' | null
   }
 }
 
@@ -52,6 +55,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [showFabricPicker, setShowFabricPicker] = useState<boolean>(true)
   const [simplePricePerYard, setSimplePricePerYard] = useState<string>('')
   const [simpleStitchingPrice, setSimpleStitchingPrice] = useState<string>('')
+  const [gender, setGender] = useState<'male' | 'female' | null>(
+    initialData?.gender !== undefined ? initialData.gender : null
+  )
+  const [ageGroup, setAgeGroup] = useState<'adult' | 'kids' | null>(
+    initialData?.age_group !== undefined ? initialData.age_group : null
+  )
 
   useEffect(() => {
     if (initialData) {
@@ -95,6 +104,17 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     if (duration === null) {
       console.log('[Validation] Missing completion time');
       return { valid: false, message: "Please specify a completion time" }
+    }
+
+    // Add validation for gender and age group
+    if (!gender) {
+      console.log('[Validation] Missing gender');
+      return { valid: false, message: "Please select a gender category" }
+    }
+
+    if (!ageGroup) {
+      console.log('[Validation] Missing age group');
+      return { valid: false, message: "Please select an age group" }
     }
 
     // Check if there are either new images or existing images
@@ -155,13 +175,14 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice]);
+  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice, gender, ageGroup]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formValidation.valid) {
       // Check specifically for color-related validation errors
+      console.log('[ handleSubmit ] Validation failed. Message:', formValidation.message, 'Valid:', formValidation.valid);
       if (formValidation.message && formValidation.message.includes('color for')) {
         const fabricName = formValidation.message.split('color for ')[1];
         toast.error(
@@ -179,6 +200,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           }
         );
       } else {
+        console.log('[ handleSubmit ] About to show generic toast for:', formValidation.message);
         toast.error(formValidation.message, {
           duration: 2000,
           position: 'top-center',
@@ -194,6 +216,13 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     formData.append("description", description)
     formData.append("existingImages", JSON.stringify(existingImages))
     formData.append("completion_time", duration === null ? "" : duration.toString())
+
+    if (gender !== null) {
+      formData.append("gender", gender)
+    }
+    if (ageGroup !== null) {
+      formData.append("age_group", ageGroup)
+    }
     
     // Append new images
     images.forEach((image) => {
@@ -285,6 +314,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
+      <Toaster />
       <div className={styles.formGroup}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Design Title</h2>
@@ -326,6 +356,75 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           required
           className={styles.textarea}
         />
+      </div>
+      <div className={styles.categorySection}>
+        <div className={styles.formGroup}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Gender</h2>
+            <div className={styles.infoTooltip}>
+              <Info className={styles.infoIcon} />
+              <div className={styles.tooltipContent}>
+                <p>Select which gender this design is intended for.</p>
+              </div>
+            </div>
+          </div>
+          <div className={styles.radioGroup}>
+            <label className={`${styles.radioLabel} ${gender === 'male' ? styles.selected : ''}`}>
+              <input
+                type="radio"
+                name="gender"
+                value="male"
+                checked={gender === 'male'}
+                onChange={() => setGender('male')}
+              />
+              <span>Male</span>
+            </label>
+            <label className={`${styles.radioLabel} ${gender === 'female' ? styles.selected : ''}`}>
+              <input
+                type="radio"
+                name="gender"
+                value="female"
+                checked={gender === 'female'}
+                onChange={() => setGender('female')}
+              />
+              <span>Female</span>
+            </label>
+          </div>
+        </div>
+
+        <div className={styles.formGroup}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Age Group</h2>
+            <div className={styles.infoTooltip}>
+              <Info className={styles.infoIcon} />
+              <div className={styles.tooltipContent}>
+                <p>Select which age group this design is intended for.</p>
+              </div>
+            </div>
+          </div>
+          <div className={styles.radioGroup}>
+            <label className={`${styles.radioLabel} ${ageGroup === 'adult' ? styles.selected : ''}`}>
+              <input
+                type="radio"
+                name="ageGroup"
+                value="adult"
+                checked={ageGroup === 'adult'}
+                onChange={() => setAgeGroup('adult')}
+              />
+              <span>Adult</span>
+            </label>
+            <label className={`${styles.radioLabel} ${ageGroup === 'kids' ? styles.selected : ''}`}>
+              <input
+                type="radio"
+                name="ageGroup"
+                value="kids"
+                checked={ageGroup === 'kids'}
+                onChange={() => setAgeGroup('kids')}
+              />
+              <span>Kids</span>
+            </label>
+          </div>
+        </div>
       </div>
       <div className={styles.formGroup}>
         <div className={styles.sectionHeader}>

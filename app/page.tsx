@@ -5,6 +5,7 @@ import "./page.css"
 import { useState, useCallback, useEffect } from 'react'
 import { Header } from "./customer/ui/Header/Header"
 import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
+import { DesignFilters } from "./customer/ui/DesignFilters"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { AuthDialog } from "./AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
@@ -22,6 +23,8 @@ type Design = {
     price: number
     colors: Array<{ name: string; image: string | File | null }>
   }>
+  gender?: string | null
+  age_group?: string | null
 }
 
 export default function Home() {
@@ -30,6 +33,10 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
+  const [filters, setFilters] = useState<{ gender: string | null; ageGroup: string | null }>({
+    gender: null,
+    ageGroup: null
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -42,16 +49,29 @@ export default function Home() {
 
   const fetchDesigns = async () => {
     try {
-      const { data, error } = await supabase
-        .from('designs')
-        .select('*')
-        .range(0, 9)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
+      // Build the URL with query parameters for filters
+      let apiUrl = '/api/designs?';
+      
+      if (filters.gender) {
+        apiUrl += `gender=${filters.gender}&`;
+      }
+      
+      if (filters.ageGroup) {
+        apiUrl += `age_group=${filters.ageGroup}&`;
+      }
+      
+      // Remove trailing & if present
+      apiUrl = apiUrl.endsWith('&') ? apiUrl.slice(0, -1) : apiUrl;
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
       setDesigns(data);
-      setHasMore(data.length === 10);
+      setHasMore(data.length >= 10);
     } catch (error) {
       console.error('Error fetching designs:', error);
     }
@@ -59,7 +79,18 @@ export default function Home() {
 
   useEffect(() => {
     fetchDesigns()
-  }, [])
+  }, [filters]) // Re-fetch when filters change
+
+  // No need for client-side filtering since we're filtering in the database query
+  const filteredDesigns = designs;
+  
+  const handleFilterChange = (newFilters: { gender: string | null; ageGroup: string | null }) => {
+    setFilters(newFilters);
+  };
+
+  const clearAllFilters = () => {
+    setFilters({ gender: null, ageGroup: null });
+  };
 
   const handleDesignClick = (design: Design) => {
     if (!user) {
@@ -131,23 +162,37 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
       <main className="main-content container">
-        <div className="gallery-grid">
-          {designs.map((design, index) => (
-            <GalleryImage
-              key={`${design.title}-${index}`}
-              images={design.images}
-              alt={design.title}
-              onClick={() => handleDesignClick(design)}
-            />
-          ))}
-        </div>
+        <DesignFilters filters={filters} onFilterChange={handleFilterChange} />
+        
+        {filteredDesigns.length === 0 ? (
+          <div className="no-results">
+            <p>No designs match your selected filters.</p>
+            <button 
+              className="clear-filters-btn"
+              onClick={clearAllFilters}
+            >
+              Clear Filters
+            </button>
+          </div>
+        ) : (
+          <div className="gallery-grid">
+            {filteredDesigns.map((design, index) => (
+              <GalleryImage
+                key={`${design.title}-${index}`}
+                images={design.images}
+                alt={design.title}
+                onClick={() => handleDesignClick(design)}
+              />
+            ))}
+          </div>
+        )}
+        
         {isFetching && hasMore && <p className="loading-message">Loading more...</p>}
       </main>
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={closeAuthDialog}
       />
-      
     </div>
   );
 }

@@ -296,4 +296,62 @@
   gap: 1.5rem;
 }
 
+/* Styles for Gender and Age Group sections */
+.categorySection {
+  display: flex;
+  gap: 2rem; /* Spacing between Gender and Age Group */
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.categorySection .formGroup {
+  flex: 1; /* Each group takes equal space */
+}
+
+.radioGroup {
+  display: flex;
+  gap: 1rem; /* Spacing between radio options */
+  margin-top: 0.5rem;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  background-color: #fff;
+  flex-grow: 1; /* Make labels take available space */
+  justify-content: center; /* Center content within the label */
+}
+
+.radioLabel input[type="radio"] {
+  display: none; /* Hide the default radio button */
+}
+
+.radioLabel span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.radioLabel:hover {
+  border-color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.radioLabel.selected {
+  background-color: #111827; /* Dark background for selected */
+  border-color: #111827;
+}
+
+.radioLabel.selected span {
+  color: #fff; /* White text for selected */
+}
+
 

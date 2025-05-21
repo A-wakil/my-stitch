@@ -4,9 +4,11 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
-    // Get the created_by query parameter if it exists
+    // Get query parameters
     const url = new URL(request.url)
     const createdBy = url.searchParams.get('created_by')
+    const gender = url.searchParams.get('gender')
+    const ageGroup = url.searchParams.get('age_group')
     
     // Start building the query
     let query = supabase
@@ -14,9 +16,17 @@ export async function GET(request: Request) {
       .select('*')
       .eq('is_deleted', false)
     
-    // Add created_by filter if the parameter is provided
+    // Add filters if parameters are provided
     if (createdBy) {
       query = query.eq('created_by', createdBy)
+    }
+    
+    if (gender) {
+      query = query.eq('gender', gender)
+    }
+    
+    if (ageGroup) {
+      query = query.eq('age_group', ageGroup)
     }
     
     // Execute the query with ordering
@@ -112,7 +122,6 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = []
     
     console.log('Processing design submission...')
     console.log('Created by:', created_by)
@@ -132,7 +141,8 @@ export async function POST(request: Request) {
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        available_styles: availableStyles
+        gender: formData.get("gender") as string,
+        age_group: formData.get("age_group") as string
       })
       .select()
       .single()
@@ -161,7 +171,6 @@ export async function PUT(request: Request) {
     const designId = formData.get("id")
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = []
     
     const imageUrls = await processImages(formData, 'design-images')
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)
@@ -175,7 +184,8 @@ export async function PUT(request: Request) {
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        available_styles: availableStyles
+        gender: formData.get("gender") as string,
+        age_group: formData.get("age_group") as string
       })
       .eq('id', designId)
       .select()
