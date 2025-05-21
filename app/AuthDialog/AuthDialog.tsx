@@ -3,6 +3,7 @@
 import { useState, useEffect, useId } from 'react'
 import { Loader2 } from 'lucide-react'
 import { IoClose } from 'react-icons/io5'
+import { FiEye, FiEyeOff } from 'react-icons/fi'
 import styles from './AuthDialog.module.css'
 import { supabase } from '../lib/supabaseClient'
 
@@ -21,6 +22,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   const [generalError, setGeneralError] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Generate unique IDs for inputs to avoid duplicates
   const uniqueId = useId()
@@ -220,17 +222,27 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
 
             <div className={styles.formGroup}>
               <label htmlFor={passwordInputId} className={styles.label}>Password</label>
-              <input
-                id={passwordInputId}
-                type="password"
-                className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                aria-invalid={!!errors.password}
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-                placeholder={isSignUp ? 'Choose a password' : 'Enter your password'}
-              />
+              <div className={styles.passwordWrapper}>
+                <input
+                  id={passwordInputId}
+                  type={showPassword ? "text" : "password"}
+                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  aria-invalid={!!errors.password}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                  placeholder={isSignUp ? 'Choose a password' : 'Enter your password'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={styles.passwordToggle}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
               {errors.password && <span className={styles.error}>{errors.password}</span>}
             </div>
 

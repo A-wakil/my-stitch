@@ -360,3 +360,42 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   animation: slideDown 0.3s ease-out;
 }
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+.passwordWrapper .input {
+  flex-grow: 1;
+  padding-right: 2.5rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  z-index: 2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.passwordToggle:hover {
+  color: #000;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.passwordToggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}

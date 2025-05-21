@@ -161,7 +161,7 @@ export default function OrdersPage() {
   return (
     <div className={styles.container}>
       <div className={styles.pageHeader}>
-        <button onClick={() => router.back()} className={styles.backButton} aria-label="Go back">
+        <button onClick={() => router.push('/')} className={styles.backButton} aria-label="Go back">
           <IoArrowBack size={24} />
           <span>Back</span>
         </button>
