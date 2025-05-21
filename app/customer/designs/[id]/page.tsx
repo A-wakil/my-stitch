@@ -102,6 +102,18 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [formattedTotalPrice, setFormattedTotalPrice] = useState<string>('')
   const [formattedYardTotal, setFormattedYardTotal] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("")
+
+  // Add effect to get the current user's email
+  useEffect(() => {
+    async function fetchCurrentUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setCurrentUserEmail(user.email);
+      }
+    }
+    fetchCurrentUser();
+  }, []);
 
   // Add effect to detect viewport size
   useEffect(() => {
@@ -1138,7 +1150,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           total: totalPrice,
           measurement: selectedMeasurement,
           tailorNotes: tailorNotes,
-          userEmail: tailorDetails?.email
+          userEmail: currentUserEmail
         }}
         savedAddresses={savedAddresses}
         savedMeasurements={savedMeasurements}

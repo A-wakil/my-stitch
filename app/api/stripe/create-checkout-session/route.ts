@@ -81,13 +81,23 @@ export async function POST(request: Request) {
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/order/canceled`,
       metadata: {
-        shippingAddress: orderDetails.shippingAddress || '',
+        shippingAddress: JSON.stringify({
+          street_address: orderDetails.shippingAddress?.split(',')[0]?.trim() || '',
+          city: orderDetails.shippingAddress?.split(',')[1]?.trim() || '',
+          state: orderDetails.shippingAddress?.split(',')[2]?.split(' ')?.[1] || '',
+          zip_code: orderDetails.shippingAddress?.split(',')[2]?.split(' ')?.[2] || '',
+          country: orderDetails.shippingAddress?.split(',')[3]?.trim() || 'United States'
+        }),
         measurementId: orderDetails.measurement?.id || '',
         tailorNotes: orderDetails.tailorNotes || '',
-        selectedFabric: orderDetails.selectedFabric?.toString() || '',
-        selectedColor: orderDetails.selectedColor?.toString() || '',
+        selectedFabric: orderDetails.design.fabrics[orderDetails.selectedFabric]?.name || '',
+        selectedColor: orderDetails.selectedColor !== null ? 
+          orderDetails.design.fabrics[orderDetails.selectedFabric]?.colors[orderDetails.selectedColor]?.name || '' : '',
         designId: orderDetails.design.id || '',
         tailorId: orderDetails.design.tailor_id || '',
+        userEmail: orderDetails.email || '',
+        styleType: orderDetails.styleType || 'kaftan',
+        fabricYards: (orderDetails.fabricYards || 4.5).toString()
       },
       shipping_options: [
         {

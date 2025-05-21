@@ -231,7 +231,7 @@ export default function OrderConfirmationModal({
 
     try {
       // Set loading state
-      onConfirm();
+      // onConfirm(); <-- Remove this line, don't create order yet
 
       // Log the request payload for debugging
       const payload = {
