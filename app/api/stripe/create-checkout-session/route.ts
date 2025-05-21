@@ -96,8 +96,8 @@ export async function POST(request: Request) {
         designId: orderDetails.design.id || '',
         tailorId: orderDetails.design.tailor_id || '',
         userEmail: orderDetails.email || '',
-        styleType: orderDetails.styleType || 'kaftan',
-        fabricYards: (orderDetails.fabricYards || 4.5).toString()
+        styleType: orderDetails.style_type || 'kaftan',
+        fabricYards: (orderDetails.fabric_yards || 4.5).toString()
       },
       shipping_options: [
         {

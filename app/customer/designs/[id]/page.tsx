@@ -1150,7 +1150,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           total: totalPrice,
           measurement: selectedMeasurement,
           tailorNotes: tailorNotes,
-          userEmail: currentUserEmail
+          userEmail: currentUserEmail,
+          fabric_yards: customYards !== null ? customYards : getRecommendedYards(selectedStyle),
+          style_type: selectedStyle
         }}
         savedAddresses={savedAddresses}
         savedMeasurements={savedMeasurements}

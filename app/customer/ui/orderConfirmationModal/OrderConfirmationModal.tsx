@@ -32,6 +32,8 @@ interface OrderConfirmationModalProps {
     measurement?: Measurement
     tailorNotes?: string
     userEmail?: string;
+    fabric_yards?: number;
+    style_type?: string;
   }
   savedAddresses: string[]
   onAddressChange: (address: string) => void
@@ -249,6 +251,8 @@ export default function OrderConfirmationModal({
           tailorNotes: orderDetails.tailorNotes,
           total: orderDetails.total,
           email: orderDetails.userEmail,
+          fabric_yards: orderDetails.fabric_yards,
+          style_type: orderDetails.style_type
         }
       };
 

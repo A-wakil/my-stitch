@@ -136,7 +136,7 @@ export async function POST(request: Request) {
               fabric_name: selectedFabric,
               color_name: selectedColor,
               style_type: styleType || 'kaftan',
-              fabric_yards: parseFloat(fabricYards as string) || 4.5,
+              fabric_yards: fabricYards ? parseFloat(fabricYards) : 4.5,
               estimated_completion_date: estimatedCompletionDate.toISOString()
             },
           ])
