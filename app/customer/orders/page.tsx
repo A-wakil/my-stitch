@@ -12,6 +12,66 @@ import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled' | 'rejected'
 
+// Function to calculate delivery date range based on completion time
+const calculateDeliveryDates = (completionTime: number | null | undefined) => {
+  if (!completionTime) return null;
+  
+  const today = new Date();
+  // Create new date objects to avoid mutation
+  const minWeeks = completionTime + 2; // completion time + 2 weeks min shipping
+  const maxWeeks = completionTime + 3; // completion time + 3 weeks max shipping
+  
+  // Important: Create a new Date object for each calculation
+  const earliestDate = new Date(today);
+  earliestDate.setDate(today.getDate() + (minWeeks * 7));
+  
+  const latestDate = new Date(today);
+  latestDate.setDate(today.getDate() + (maxWeeks * 7));
+  
+  return {
+    earliest: earliestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }),
+    latest: latestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    })
+  };
+};
+
+// Function to calculate delivery range from estimated completion date
+const calculateDeliveryRangeFromEstimatedDate = (estimatedCompletionDate: string | null) => {
+  if (!estimatedCompletionDate) return null;
+  
+  try {
+    // Parse the estimated completion date (earliest date)
+    const earliestDate = new Date(estimatedCompletionDate);
+    
+    // Latest date is 1 week after earliest date
+    const latestDate = new Date(estimatedCompletionDate);
+    latestDate.setDate(latestDate.getDate() + 7);
+    
+    return {
+      earliest: earliestDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      }),
+      latest: latestDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })
+    };
+  } catch (error) {
+    console.error('Error parsing estimated completion date:', error);
+    return null;
+  }
+};
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -306,6 +366,29 @@ export default function OrdersPage() {
                 <div className={styles.rejectionReason}>
                   <p className={styles.rejectionTitle}>Rejection Reason:</p>
                   <p className={styles.rejectionMessage}>{order.rejection_reason}</p>
+                </div>
+              )}
+              {/* Add estimated delivery date range for orders in appropriate statuses */}
+              {['pending', 'accepted', 'in_progress', 'ready_to_ship'].includes(order.status) && (
+                <div className={styles.estimatedDelivery}>
+                  {(() => {
+                    // First try to use the stored estimated_completion_date
+                    if (order.estimated_completion_date) {
+                      const deliveryDates = calculateDeliveryRangeFromEstimatedDate(order.estimated_completion_date);
+                      return deliveryDates ? (
+                        <p>Arriving between {deliveryDates.earliest} - {deliveryDates.latest}</p>
+                      ) : null;
+                    } 
+                    // Fall back to calculating from design completion_time
+                    else if (order.design?.completion_time) {
+                      const deliveryDates = calculateDeliveryDates(order.design.completion_time);
+                      return deliveryDates ? (
+                        <p>Arriving between {deliveryDates.earliest} - {deliveryDates.latest}</p>
+                      ) : null;
+                    }
+                    
+                    return null;
+                  })()}
                 </div>
               )}
             </div>

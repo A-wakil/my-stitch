@@ -711,8 +711,21 @@ export default function TailorOrdersPage() {
                 // Skip these technical fields
                 const skipFields = ['id', 'user_id', 'created_at', 'updated_at'];
                 
-                return Object.entries(measurements)
-                  .filter(([key]) => !skipFields.includes(key))
+                // First render name field if it exists
+                const nameField = measurements.name ? (
+                  <div key="name" className={styles.measurementRow}>
+                    <span className={styles.measurementLabel}>
+                      Name:
+                    </span>
+                    <span className={styles.measurementValue}>
+                      {measurements.name}
+                    </span>
+                  </div>
+                ) : null;
+                
+                // Then render all other fields except name and technical fields
+                const otherFields = Object.entries(measurements)
+                  .filter(([key]) => !skipFields.includes(key) && key !== 'name')
                   .map(([key, value]) => (
                     <div key={key} className={styles.measurementRow}>
                       <span className={styles.measurementLabel}>
@@ -723,6 +736,13 @@ export default function TailorOrdersPage() {
                       </span>
                     </div>
                   ));
+                
+                return (
+                  <>
+                    {nameField}
+                    {otherFields}
+                  </>
+                );
               })()}
             </div>
           </div>

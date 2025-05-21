@@ -700,3 +700,17 @@
     margin: 0 0.5rem;
   }
 }
+
+.estimatedDelivery {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #4a4a4a;
+  background-color: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.estimatedDelivery p {
+  margin: 0;
+}

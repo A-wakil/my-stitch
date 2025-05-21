@@ -171,7 +171,6 @@ export default function MeasurementsPage() {
             agbada_length: data.agbada_length?.toString() || '',
             agbada_width: data.agbada_width?.toString() || ''
           }
-          
           setMeasurements(formattedData)
         }
       } catch (error) {
@@ -260,7 +259,8 @@ export default function MeasurementsPage() {
 
       const measurementData = Object.entries(measurements).reduce((acc, [key, value]) => ({
         ...acc,
-        [key]: value === '' ? null : parseFloat(value)
+        // Convert to number but preserve exact decimal value without rounding
+        [key]: value === '' ? null : Number(value)
       }), {})
 
       let error;
@@ -332,7 +332,6 @@ export default function MeasurementsPage() {
 
   // Update the input change handler
   const handleInputChange = (field: keyof MeasurementsType, value: string) => {
-    // Don't convert to number until submission
     setMeasurements(prev => ({
       ...prev,
       [field]: value
@@ -484,10 +483,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Shoulders"
                       value={measurements.shoulders}
                       onChange={e => handleInputChange('shoulders', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -501,10 +501,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Sleeves"
                       value={measurements.sleeves}
                       onChange={e => handleInputChange('sleeves', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -518,10 +519,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Round Sleeves"
                       value={measurements.round_sleeves}
                       onChange={e => handleInputChange('round_sleeves', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -535,10 +537,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Wrist"
                       value={measurements.wrist}
                       onChange={e => handleInputChange('wrist', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -552,10 +555,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Chest"
                       value={measurements.chest}
                       onChange={e => handleInputChange('chest', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -569,10 +573,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Waist (Shirt)"
                       value={measurements.waist_shirt}
                       onChange={e => handleInputChange('waist_shirt', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -586,10 +591,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Shirt Length"
                       value={measurements.shirt_length}
                       onChange={e => handleInputChange('shirt_length', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -606,10 +612,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Waist"
                       value={measurements.waist}
                       onChange={e => handleInputChange('waist', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -622,10 +629,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Hips"
                       value={measurements.hips}
                       onChange={e => handleInputChange('hips', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -638,10 +646,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Thigh"
                       value={measurements.thigh}
                       onChange={e => handleInputChange('thigh', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -654,10 +663,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Knee"
                       value={measurements.knee}
                       onChange={e => handleInputChange('knee', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -670,10 +680,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Calves"
                       value={measurements.calves}
                       onChange={e => handleInputChange('calves', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -686,10 +697,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Trouser Length"
                       value={measurements.trouser_length}
                       onChange={e => handleInputChange('trouser_length', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -702,10 +714,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Ankle Width"
                       value={measurements.ankle_width}
                       onChange={e => handleInputChange('ankle_width', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -722,10 +735,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Agbada Length"
                       value={measurements.agbada_length}
                       onChange={e => handleInputChange('agbada_length', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}
@@ -738,10 +752,11 @@ export default function MeasurementsPage() {
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step="any"
                       placeholder="Agbada Width"
                       value={measurements.agbada_width}
                       onChange={e => handleInputChange('agbada_width', e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
                       disabled={!isFormEditable()}
                     />
                     {!isFormEditable() && <span className="measurement-unit">inches</span>}

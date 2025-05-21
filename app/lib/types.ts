@@ -95,6 +95,9 @@ export interface Measurement {
     fabrics: string[]
     is_deleted?: boolean
     is_soft_deleted?: boolean
+    completion_time?: number  // Time in weeks for the tailor to complete the design
+    brand_name?: string
+    tailor_id?: string
   }
   
   export interface Order {

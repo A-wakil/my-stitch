@@ -42,9 +42,7 @@ export async function PUT(
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = formData.get("available_styles") 
-      ? JSON.parse(formData.get("available_styles") as string) 
-      : []
+    const availableStyles = []
 
     // Process fabrics and their images
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)

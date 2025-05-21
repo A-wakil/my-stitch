@@ -243,6 +243,7 @@ export default function OrderConfirmationModal({
             fabrics: orderDetails.design.fabrics,
             id: orderDetails.design.id,
             tailor_id: orderDetails.design.tailor_id,
+            completion_time: orderDetails.design.completion_time,
           },
           selectedFabric: orderDetails.selectedFabric,
           selectedColor: orderDetails.selectedColor,

@@ -85,9 +85,30 @@ export async function POST(request: Request) {
         }
       }
 
-      // Calculate estimated completion date - 30 days from now
+      // Get design data to retrieve completion time
+      let completionTimeWeeks = 4; // Default to 4 weeks if design not found
+      try {
+        const { data: designData, error: designError } = await supabase
+          .from('designs')
+          .select('completion_time')
+          .eq('id', designId)
+          .single();
+        
+        if (!designError && designData && designData.completion_time) {
+          completionTimeWeeks = designData.completion_time;
+          console.log('Found design with completion time:', completionTimeWeeks, 'weeks');
+        } else {
+          console.error('Error fetching design data:', designError);
+        }
+      } catch (designError) {
+        console.error('Exception in design lookup:', designError);
+      }
+
+      // Calculate estimated completion date with tailor's completion time + shipping time
       const estimatedCompletionDate = new Date();
-      estimatedCompletionDate.setDate(estimatedCompletionDate.getDate() + 30);
+      const totalWeeks = completionTimeWeeks + 2; // Design completion + min shipping time
+      estimatedCompletionDate.setDate(estimatedCompletionDate.getDate() + (totalWeeks * 7));
+      console.log('Calculated estimated completion date:', estimatedCompletionDate.toISOString());
 
       // Find user by email - if not found, fail the webhook
       let userId;

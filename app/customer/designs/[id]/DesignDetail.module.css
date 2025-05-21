@@ -129,6 +129,17 @@
   width: 100%;
 }
 
+.desktopOrderButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.desktopOrderButtonContainer .addToCartButton {
+  width: 100%;
+}
+
 .addToCartButton:hover {
   background: #333;
   transform: translateY(-2px);
@@ -288,59 +299,106 @@
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+    margin: 1rem auto;
+  }
+  
   .productGrid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
   
-  /* Improved touch targets for mobile */
-  .styleOption {
-    min-height: 60px;
-    padding: 1rem;
+  .imageSection {
+    position: relative;
+    top: 0;
   }
   
-  .colorPill {
-    width: 40px;
-    height: 40px;
+  .mainImage {
+    max-height: 350px;
   }
   
-  .fabricOption {
-    min-width: 90px;
+  .thumbnails {
+    justify-content: center;
   }
   
-  /* Better spacing for the measurement selector */
-  .measurementSelect {
-    height: 50px;
-    margin-bottom: 1.5rem;
+  .title {
+    font-size: 1.5rem;
+    text-align: center;
   }
   
-  /* Improve modal accessibility on mobile */
-  .modalOverlay {
-    padding: 0.5rem;
+  .tailorPreviewContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   
-  .tailorProfileModal {
-    width: 100%;
-    max-height: 85vh;
+  .tailorInfo {
+    text-align: center;
   }
   
-  .closeModalButton {
-    width: 44px;
-    height: 44px;
+  .yardageToggle {
+    flex-direction: column;
+    gap: 0.5rem;
   }
   
-  /* Adjust spacing of order confirmation modal on mobile */
-  .profileLogo {
-    width: 80px;
-    height: 80px;
-  }
-  
-  .showDetailsToggle {
+  .yardageInfo {
+    position: static;
+    transform: none;
+    display: flex;
+    justify-content: center;
     margin-top: 0.5rem;
   }
   
-  /* Ensure fixed position button doesn't overlap with content */
-  .container {
-    padding-bottom: 70px;
+  .yardageTooltip {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+  }
+  
+  .colorOptions {
+    justify-content: center;
+  }
+  
+  .fabricOptions {
+    justify-content: center;
+  }
+  
+  .priceBreakdown {
+    text-align: center;
+  }
+  
+  .addToCartButton {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 0;
+    z-index: 100;
+    padding: 1rem;
+  }
+  
+  /* Add some bottom padding to avoid content being hidden behind the fixed button */
+  .container::after {
+    content: '';
+    display: block;
+    height: 4rem;
+  }
+  
+  .tailorProfileModal {
+    width: 95%;
+    max-height: 80vh;
+  }
+  
+  .profileHeader {
+    flex-direction: column;
+    text-align: center;
+    margin-top: -20px;
+  }
+  
+  .backButton {
+    margin-bottom: 1rem;
   }
 }
 
@@ -358,14 +416,6 @@
     font-size: 0.9rem;
   }
   
-  .styleOption {
-    padding: 1rem 0.75rem;
-  }
-  
-  .agbadaToggle label {
-    font-size: 0.85rem;
-  }
-  
   .customYardInput input {
     max-width: 100%;
   }
@@ -379,7 +429,7 @@
   }
   
   .mainImage {
-    max-height: 250px;
+    max-height: 300px;
   }
   
   .colorPill {
@@ -414,30 +464,6 @@
   .specializationTag {
     font-size: 0.8rem;
     padding: 0.15rem 0.5rem;
-  }
-  
-  /* Improve fabric/color selection layout */
-  .fabricOptions, .colorOptions {
-    gap: 0.5rem;
-  }
-  
-  /* Make sure tooltips don't overflow */
-  .yardageTooltip {
-    width: 250px;
-  }
-  
-  /* Better tap targets for checkboxes */
-  .agbadaToggle input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-  }
-  
-  /* Handle long text in buttons */
-  .addToCartButton {
-    font-size: 0.95rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 
@@ -489,71 +515,6 @@
   color: #6c757d;
   font-style: italic;
   margin: 1rem 0;
-}
-
-
-.styleOptions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.styleOption {
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  padding: 1.5rem 1rem;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.styleOption:hover {
-  border-color: #adb5bd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.styleOption.selectedStyle {
-  background: #e9ecef;
-  border-color: #000;
-  font-weight: 500;
-}
-
-.styleOption span {
-  font-size: 1rem;
-  color: #212529;
-}
-
-.styleDescription {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  margin-bottom: 0;
-  font-weight: normal;
-  line-height: 1.3;
-}
-
-.styleValue {
-  font-weight: 500;
-  color: #212529;
-  margin-left: 4px;
-  padding: 2px 8px;
-  background-color: rgba(33, 37, 41, 0.05);
-  border-radius: 4px;
-}
-
-@media (max-width: 1024px) {
-  .styleOptions {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .styleOptions {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Yardage selection styles */
@@ -926,40 +887,6 @@
   }
 }
 
-.agbadaAddition {
-  margin: 1rem 0;
-  padding: 1rem;
-  background-color: #f0f7ff;
-  border-radius: 8px;
-  border: 1px solid #90cdf4;
-  grid-column: 1 / -1;
-}
-
-.agbadaToggle {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.agbadaToggle input[type="checkbox"] {
-  width: 1.25rem;
-  height: 1.25rem;
-  cursor: pointer;
-  accent-color: #2563eb;
-}
-
-.agbadaToggle label {
-  font-size: 0.95rem;
-  color: #1e40af;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.agbadaToggle label:hover {
-  color: #3b82f6;
-}
-
 /* Update existing media queries and add new ones */
 @media (max-width: 1024px) {
   .container {
@@ -1099,14 +1026,6 @@
   
   .description {
     font-size: 0.9rem;
-  }
-  
-  .styleOption {
-    padding: 1rem 0.75rem;
-  }
-  
-  .agbadaToggle label {
-    font-size: 0.85rem;
   }
   
   .customYardInput input {

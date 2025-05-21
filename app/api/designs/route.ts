@@ -112,9 +112,7 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = formData.get("available_styles") 
-      ? JSON.parse(formData.get("available_styles") as string) 
-      : []
+    const availableStyles = []
     
     console.log('Processing design submission...')
     console.log('Created by:', created_by)
@@ -163,9 +161,7 @@ export async function PUT(request: Request) {
     const designId = formData.get("id")
     const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
-    const availableStyles = formData.get("available_styles") 
-      ? JSON.parse(formData.get("available_styles") as string) 
-      : []
+    const availableStyles = []
     
     const imageUrls = await processImages(formData, 'design-images')
     const processedFabrics = await processFabricsWithImages(fabricsData, formData)

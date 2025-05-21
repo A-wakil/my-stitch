@@ -61,6 +61,57 @@ export async function POST(request: Request) {
     // Parse zip and country
     const [zip] = zipCountry.split(' ');
 
+    // Calculate shipping estimate based on design completion time
+    // Design completion time is in weeks, convert to business days (5 days per week)
+    console.log('Design object:', orderDetails.design);
+    console.log('Design completion time (weeks):', orderDetails.design.completion_time);
+    
+    // Make sure to access completion_time from the design object
+    const completionTimeWeeks = parseInt(orderDetails.design.completion_time || 0);
+    console.log('Parsed completion time (weeks):', completionTimeWeeks);
+    
+    const completionTimeDays = completionTimeWeeks * 5; // 5 business days per week
+    
+    // Add completion time to standard shipping time (14-21 business days)
+    const minShippingDays = 14 + completionTimeDays;
+    const maxShippingDays = 21 + completionTimeDays;
+    
+    console.log('Completion time (weeks):', completionTimeWeeks);
+    console.log('Completion time (business days):', completionTimeDays);
+    console.log('Min shipping days:', minShippingDays, '(14 + ' + completionTimeDays + ')');
+    console.log('Max shipping days:', maxShippingDays, '(21 + ' + completionTimeDays + ')');
+
+    // Calculate exact dates for shipping display - USING SAME LOGIC AS OrderConfirmationModal
+    const today = new Date();
+    const minWeeks = completionTimeWeeks + 2; // completion time + 2 weeks min shipping
+    const maxWeeks = completionTimeWeeks + 3; // completion time + 3 weeks max shipping
+    
+    console.log('Min weeks for date calculation:', minWeeks, '(', completionTimeWeeks, '+ 2)');
+    console.log('Max weeks for date calculation:', maxWeeks, '(', completionTimeWeeks, '+ 3)');
+
+    // Important: Create a new Date object for earliestDate to avoid modifying the same object
+    const earliestDate = new Date(today);
+    earliestDate.setDate(today.getDate() + (minWeeks * 7));
+    
+    // Important: Create a new Date object for latestDate with the correct calculation
+    const latestDate = new Date(today);
+    latestDate.setDate(today.getDate() + (maxWeeks * 7));
+    
+    const formattedEarliestDate = earliestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+    
+    const formattedLatestDate = latestDate.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+
+    // Create shipping display name with specific dates
+    const shippingDisplayName = `Arriving ${formattedEarliestDate} - ${formattedLatestDate}`;
+
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -107,15 +158,15 @@ export async function POST(request: Request) {
               amount: 0,
               currency: 'usd',
             },
-            display_name: 'Standard Shipping',
+            display_name: shippingDisplayName,
             delivery_estimate: {
               minimum: {
                 unit: 'business_day',
-                value: 14,
+                value: minShippingDays,
               },
               maximum: {
                 unit: 'business_day',
-                value: 21,
+                value: maxShippingDays,
               },
             },
           },

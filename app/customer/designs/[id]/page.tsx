@@ -568,36 +568,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     );
   }, [design?.fabrics]);
 
-  // New function to check if Agbada can be added to the selected style
-  const canAddAgbada = (styleType: string): boolean => {
-    // Can't add Agbada to Agbada standalone style
-    if (styleType === 'agbada') return false;
-    
-    // Remove _agbada suffix to get the base style name
-    const baseStyleName = styleType.replace('_agbada', '');
-    
-    // Check if design has Agbada addition in available styles
-    if (design?.available_styles) {
-      return design.available_styles.some((style: {name: string}) => 
-        style.name === 'agbada_addition' || style.name === 'agbada'
-      );
-    }
-    
-    // Default to true for backward compatibility
-    return true;
-  };
-
-  // New function to handle toggling Agbada addition
-  const handleAgbadaToggle = () => {
-    if (selectedStyle.includes('_agbada')) {
-      // Remove Agbada from combo style
-      setSelectedStyle(selectedStyle.replace('_agbada', ''));
-    } else {
-      // Add Agbada to current style
-      setSelectedStyle(`${selectedStyle}_agbada`);
-    }
-  };
-
   const calculateAverageRating = (tailor: any) => {
     if (tailor?.rating_count && tailor.rating_count > 0 && tailor.rating_sum) {
       return parseFloat((tailor.rating_sum / tailor.rating_count).toFixed(1));
@@ -675,17 +645,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               </div>
               <button className={styles.viewProfileButton}>View Full Profile</button>
             </div>
-          )}
-          
-          {/* Button displayed at the bottom of the screen on mobile, but here on desktop */}
-          {!isMobile && (
-            <button 
-              className={styles.addToCartButton}
-              onClick={handleAddToCart}
-              disabled={loading || !selectedMeasurement || isProcessingOrder}
-            >
-              {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
-            </button>
           )}
         </div>
 
@@ -817,106 +776,6 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             )}
           </div>
 
-          <div className={styles.styleSelection}>
-            <h3>Style Options</h3>
-            {design.available_styles && design.available_styles.length > 0 ? (
-              // Display tailor-defined styles
-              <div className={styles.styleOptions}>
-                {/* Filter out Agbada addition from main style options */}
-                {design.available_styles
-                  .filter(style => !style.is_addition && style.name !== 'agbada_addition')
-                  .map((style, index) => (
-                    <div
-                      key={index}
-                      className={`${styles.styleOption} ${selectedStyle === style.name || selectedStyle === `${style.name}_agbada` ? styles.selectedStyle : ''}`}
-                      onClick={() => {
-                        // If we're switching styles and currently have Agbada, preserve that choice
-                        const hasAgbada = selectedStyle.includes('_agbada');
-                        setSelectedStyle(hasAgbada && style.name !== 'agbada' ? `${style.name}_agbada` : style.name);
-                      }}
-                    >
-                      <span>{style.display_name}</span>
-                      {style.description && (
-                        <p className={styles.styleDescription}>{style.description}</p>
-                      )}
-                    </div>
-                  ))}
-                
-                {/* Show Agbada toggle for applicable styles */}
-                {selectedStyle && canAddAgbada(selectedStyle) && (
-                  <div className={styles.agbadaAddition}>
-                    <div className={styles.agbadaToggle}>
-                      <input
-                        type="checkbox"
-                        id="agbada-toggle"
-                        checked={selectedStyle.includes('_agbada')}
-                        onChange={handleAgbadaToggle}
-                      />
-                      <label htmlFor="agbada-toggle">
-                        {selectedStyle.includes('_agbada') 
-                          ? 'Remove Agbada from this style (-3.5 yards)' 
-                          : 'Add Agbada to this style (+3.5 yards)'}
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Fallback to default styles
-              <div className={styles.styleOptions}>
-                <div
-                  className={`${styles.styleOption} ${selectedStyle === 'kaftan' || selectedStyle === 'kaftan_agbada' ? styles.selectedStyle : ''}`}
-                  onClick={() => setSelectedStyle('kaftan')}
-                >
-                  <span>Kaftan</span>
-                </div>
-                <div
-                  className={`${styles.styleOption} ${selectedStyle === 'senator' || selectedStyle === 'senator_agbada' ? styles.selectedStyle : ''}`}
-                  onClick={() => setSelectedStyle('senator')}
-                >
-                  <span>Senator Style</span>
-                </div>
-                <div
-                  className={`${styles.styleOption} ${selectedStyle === 'dashiki' || selectedStyle === 'dashiki_agbada' ? styles.selectedStyle : ''}`}
-                  onClick={() => setSelectedStyle('dashiki')}
-                >
-                  <span>Dashiki</span>
-                </div>
-                <div
-                  className={`${styles.styleOption} ${selectedStyle === 'ankara' || selectedStyle === 'ankara_agbada' ? styles.selectedStyle : ''}`}
-                  onClick={() => setSelectedStyle('ankara')}
-                >
-                  <span>Ankara Design</span>
-                </div>
-                <div
-                  className={`${styles.styleOption} ${selectedStyle === 'agbada' ? styles.selectedStyle : ''}`}
-                  onClick={() => setSelectedStyle('agbada')}
-                >
-                  <span>Agbada</span>
-                </div>
-                
-                {/* Show Agbada toggle for applicable styles */}
-                {selectedStyle && canAddAgbada(selectedStyle) && (
-                  <div className={styles.agbadaAddition}>
-                    <div className={styles.agbadaToggle}>
-                      <input
-                        type="checkbox"
-                        id="agbada-toggle"
-                        checked={selectedStyle.includes('_agbada')}
-                        onChange={handleAgbadaToggle}
-                      />
-                      <label htmlFor="agbada-toggle">
-                        {selectedStyle.includes('_agbada') 
-                          ? 'Remove Agbada from this style (-3.5 yards)' 
-                          : 'Add Agbada to this style (+3.5 yards)'}
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
           {/* Only show Fabrics section if there are real fabrics */}
           {hasRealFabrics && (
             <div className={styles.fabricSelection}>
@@ -1039,6 +898,19 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               </div>
             )}
           </div>
+          
+          {/* Add button at the bottom of the details section */}
+          {!isMobile && (
+            <div className={styles.desktopOrderButtonContainer}>
+              <button 
+                className={styles.addToCartButton}
+                onClick={handleAddToCart}
+                disabled={loading || !selectedMeasurement || isProcessingOrder}
+              >
+                {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
