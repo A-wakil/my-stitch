@@ -99,6 +99,22 @@ export interface Measurement {
     brand_name?: string
     tailor_id?: string
   }
+
+  export interface OrderItem {
+    id: string
+    order_id: string
+    design_id: string
+    fabric_idx: number
+    color_idx: number | null
+    style_type: string | null
+    fabric_yards: number | null
+    yard_price: number | null
+    stitch_price: number | null
+    tailor_notes: string | null
+    measurement_id: string | null
+    design?: Design | null
+    measurements?: Measurement | null
+  }
   
   export interface Order {
     id: string
@@ -121,6 +137,7 @@ export interface Measurement {
     style_type?: 'kaftan' | 'kaftan_agbada' | 'agbada' | null
     rejection_reason?: string | null
     tailor_notes?: string | null
+    orderItems?: OrderItem[]  // For multi-item orders from bag checkout
   }
 
   export interface Profile {

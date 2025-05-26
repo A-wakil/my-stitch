@@ -8,6 +8,7 @@ import { ProfileProvider } from "./context/ProfileContext"
 import { AuthDialogWrapper } from "./components/AuthDialogWrapper"
 import { PostHogProvider } from "./providers/PostHogProvider"
 import { CurrencyProvider } from "./context/CurrencyContext"
+import { BagProvider } from "./context/BagContext"
 
 interface RootLayoutProps {
   children: ReactNode
@@ -25,9 +26,11 @@ export default function RootLayout({
           <AuthProvider>
             <ProfileProvider>
               <CurrencyProvider>
-                {children}
-                <Toaster />
-                <AuthDialogWrapper />
+                <BagProvider>
+                  {children}
+                  <Toaster />
+                  <AuthDialogWrapper />
+                </BagProvider>
               </CurrencyProvider>
             </ProfileProvider>
           </AuthProvider>

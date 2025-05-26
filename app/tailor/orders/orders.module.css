@@ -268,6 +268,12 @@
   color: #666;
 }
 
+.itemActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 .colorPill {
   display: inline-flex;
   align-items: center;

@@ -1,14 +1,8 @@
 // lib/supabaseClient.ts
-import { createClient } from '@supabase/supabase-js'
+// Use the Next.js auth-helpers browser client so that sessions are
+// automatically stored both in localStorage and in HTTP-only cookies.
+// The cookies are what our API route handlers rely on to identify the user.
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-})
+export const supabase = createBrowserSupabaseClient()

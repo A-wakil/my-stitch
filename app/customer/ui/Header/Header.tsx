@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { redirect, useRouter } from 'next/navigation'
 import './Header.css'
-import { IoMenu, IoPerson, IoReceiptOutline } from "react-icons/io5";
+import { IoMenu, IoPerson, IoReceiptOutline, IoBagHandle } from "react-icons/io5";
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../../AuthDialog/AuthDialog'
 import { supabase } from '../../../lib/supabaseClient'
@@ -13,6 +13,7 @@ import { LogOut } from "lucide-react"
 import { Button } from "../../../tailor/components/ui/button"
 import { Card } from "../../../tailor/components/ui/card"
 import { CurrencyToggle } from "../../../components/ui/CurrencyToggle"
+import { useBag } from "../../../context/BagContext"
 
 
 interface SidebarProps {
@@ -28,6 +29,9 @@ export function Header() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+
+  // Bag context
+  const { items } = useBag()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -179,6 +183,19 @@ export function Header() {
           <div className='header-content'>
             <div className='right-icons'>
               <CurrencyToggle />
+              {/* Bag icon */}
+              <div
+                className="bag-icon-wrapper"
+                onClick={() => router.push('/customer/bag')}
+                style={{ cursor: 'pointer', position: 'relative' }}
+              >
+                <IoBagHandle size={20} />
+                {items.length > 0 && (
+                  <span className="bag-count-badge">
+                    {items.length}
+                  </span>
+                )}
+              </div>
               <div
                 className=''
                 onClick={user ? undefined : toggleAuthDialog}

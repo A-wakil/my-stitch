@@ -131,29 +131,66 @@ export default function OrdersPage() {
         return
       }
 
-      // Then fetch design details for each order that has a design_id
+      // Then fetch design details and order items for each order
       const ordersWithDesigns = await Promise.all(
         (ordersData || []).map(async (order) => {
-          if (!order.design_id) return { ...order, design: null }
-
-          const { data: designData, error: designError } = await supabase
-            .from('designs')
+          // First check if this order has order_items (new multi-item system)
+          const { data: orderItems, error: orderItemsError } = await supabase
+            .from('order_items')
             .select('*')
-            .eq('id', order.design_id)
-            .single()
+            .eq('order_id', order.id)
 
-          if (designError) {
-            console.error(`Error fetching design ${order.design_id}:`, designError)
-            return { ...order, design: null }
+          if (orderItemsError) {
+            console.error(`Error fetching order items for order ${order.id}:`, orderItemsError)
           }
 
-          // Handle soft-deleted designs - still show them for existing orders
-          if (designData && designData.is_deleted) {
-            console.log(`Design ${order.design_id} has been soft-deleted`)
-            return { ...order, design: { ...designData, is_soft_deleted: true } }
-          }
+          if (orderItems && orderItems.length > 0) {
+            // New multi-item order - fetch designs for each item
+            const itemsWithDesigns = await Promise.all(
+              orderItems.map(async (item) => {
+                const { data: designData, error: designError } = await supabase
+                  .from('designs')
+                  .select('*')
+                  .eq('id', item.design_id)
+                  .single()
 
-          return { ...order, design: designData }
+                if (designError) {
+                  console.error(`Error fetching design ${item.design_id}:`, designError)
+                  return { ...item, design: null }
+                }
+
+                // Handle soft-deleted designs
+                if (designData && designData.is_deleted) {
+                  return { ...item, design: { ...designData, is_soft_deleted: true } }
+                }
+
+                return { ...item, design: designData }
+              })
+            )
+
+            return { ...order, orderItems: itemsWithDesigns, design: null }
+          } else {
+            // Legacy single-item order - fetch design directly
+            if (!order.design_id) return { ...order, design: null, orderItems: [] }
+
+            const { data: designData, error: designError } = await supabase
+              .from('designs')
+              .select('*')
+              .eq('id', order.design_id)
+              .single()
+
+            if (designError) {
+              console.error(`Error fetching design ${order.design_id}:`, designError)
+              return { ...order, design: null, orderItems: [] }
+            }
+
+            // Handle soft-deleted designs
+            if (designData && designData.is_deleted) {
+              return { ...order, design: { ...designData, is_soft_deleted: true }, orderItems: [] }
+            }
+
+            return { ...order, design: designData, orderItems: [] }
+          }
         })
       )
 
@@ -329,17 +366,33 @@ export default function OrdersPage() {
                     <div className={styles.shipTo}>
                       {(() => {
                         try {
-                          const address = typeof order.shipping_address === 'string'
-                            ? JSON.parse(order.shipping_address)
-                            : order.shipping_address;
+                          // Handle both string and object formats
+                          let address;
+                          if (typeof order.shipping_address === 'string') {
+                            try {
+                              // Try to parse as JSON first
+                              address = JSON.parse(order.shipping_address);
+                            } catch {
+                              // If parsing fails, treat as a plain string
+                              return order.shipping_address;
+                            }
+                          } else {
+                            address = order.shipping_address;
+                          }
 
-                          return [
-                            address?.street_address,
-                            address?.city
-                          ]
-                            .filter(Boolean)
-                            .join(', ');
+                          // Handle structured address object
+                          if (address && typeof address === 'object') {
+                            const parts = [];
+                            if (address.street_address) parts.push(address.street_address);
+                            if (address.city) parts.push(address.city);
+                            if (address.state) parts.push(address.state);
+                            
+                            return parts.length > 0 ? parts.join(', ') : 'Address not available';
+                          }
+
+                          return 'Address not available';
                         } catch (e) {
+                          console.error('Error parsing shipping address:', e);
                           return 'Address not available';
                         }
                       })()}
@@ -394,75 +447,184 @@ export default function OrdersPage() {
             </div>
 
             <div className={styles.orderItems}>
-              <div className={styles.orderItem}>
-                <div className={styles.itemImageContainer}>
-                  <div className={styles.mainImage}>
-                    {order.design?.images?.[selectedImages[order.id] || 0] && (
-                      <img
-                        src={order.design.images[selectedImages[order.id] || 0]}
-                        alt={order.design.title}
-                        className={styles.designImage}
-                      />
-                    )}
-                  </div>
-                  <div className={styles.thumbnails}>
-                    {order.design?.images?.map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`${order.design?.title} view ${index + 1}`}
-                        className={`${styles.thumbnail} ${selectedImages[order.id] === index ? styles.activeThumbnail : ''}`}
-                        onClick={() => setSelectedImages(prev => ({
-                          ...prev,
-                          [order.id]: index
-                        }))}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.itemDetails}>
-                  <h3 className={styles.itemTitle}>
-                    {order.design?.title || `Design #${order.design_id}`}
-                    {order.design?.is_soft_deleted && (
-                      <span className={styles.designArchivedBadge}>
-                        (Archived Design)
-                      </span>
-                    )}
-                  </h3>
-                  {order.design?.description && (
-                    <p className={styles.designDescription}>{order.design.description}</p>
-                  )}
-                  <div className={styles.itemMeta}>
-                    {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
-                    {order.color_name && (
-                      <div className={styles.colorPill}>
-                        <span
-                          className={styles.colorDot}
-                          style={{ backgroundColor: order.color_name.toLowerCase() }}
-                        />
-                        <span>Color: {order.color_name}</span>
+              {order.orderItems && order.orderItems.length > 0 ? (
+                // Multi-item order (new bag checkout)
+                order.orderItems.map((item, itemIndex) => {
+                  const itemKey = `${order.id}-${itemIndex}`;
+                  return (
+                    <div key={itemIndex} className={styles.orderItem}>
+                      <div className={styles.itemImageContainer}>
+                        <div className={styles.mainImage}>
+                          {item.design?.images?.[selectedImages[itemKey] || 0] && (
+                            <img
+                              src={item.design.images[selectedImages[itemKey] || 0]}
+                              alt={item.design.title}
+                              className={styles.designImage}
+                            />
+                          )}
+                        </div>
+                        <div className={styles.thumbnails}>
+                          {item.design?.images?.map((image, index) => (
+                            <img
+                              key={index}
+                              src={image}
+                              alt={`${item.design?.title} view ${index + 1}`}
+                              className={`${styles.thumbnail} ${selectedImages[itemKey] === index ? styles.activeThumbnail : ''}`}
+                              onClick={() => setSelectedImages(prev => ({
+                                ...prev,
+                                [itemKey]: index
+                              }))}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    )}
+                      <div className={styles.itemDetails}>
+                        <h3 className={styles.itemTitle}>
+                          {item.design?.title || `Design #${item.design_id}`}
+                          {item.design?.is_soft_deleted && (
+                            <span className={styles.designArchivedBadge}>
+                              (Archived Design)
+                            </span>
+                          )}
+                        </h3>
+                        {item.design?.description && (
+                          <p className={styles.designDescription}>{item.design.description}</p>
+                        )}
+                        <div className={styles.itemMeta}>
+                          {item.design?.fabrics && (
+                            <p>Fabric: {
+                              typeof item.design.fabrics[item.fabric_idx] === 'string' 
+                                ? item.design.fabrics[item.fabric_idx]
+                                : (item.design.fabrics[item.fabric_idx] as any)?.name || 'Selected fabric'
+                            }</p>
+                          )}
+                          {item.design?.fabrics && item.color_idx !== null && (
+                            <div className={styles.colorPill}>
+                              <span
+                                className={styles.colorDot}
+                                style={{ 
+                                  backgroundColor: typeof item.design.fabrics[item.fabric_idx] === 'object' 
+                                    ? (item.design.fabrics[item.fabric_idx] as any)?.colors?.[item.color_idx]?.name?.toLowerCase() || 'gray'
+                                    : 'gray'
+                                }}
+                              />
+                              <span>Color: {
+                                typeof item.design.fabrics[item.fabric_idx] === 'object' 
+                                  ? (item.design.fabrics[item.fabric_idx] as any)?.colors?.[item.color_idx]?.name || 'Selected color'
+                                  : 'Selected color'
+                              }</span>
+                            </div>
+                          )}
+                          {item.style_type && <p>Style: {item.style_type}</p>}
+                          {item.fabric_yards && <p>Fabric Yards: {item.fabric_yards}</p>}
+                          {item.tailor_notes && (
+                            <div className={styles.tailorNotes}>
+                              <h4>Notes:</h4>
+                              <p>{item.tailor_notes}</p>
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.itemActions}>
+                          <button
+                            className={styles.buyAgainButton}
+                            onClick={() => handleBuyAgain({ ...order, design_id: item.design_id })}
+                            disabled={!item.design_id}
+                          >
+                            Buy it again
+                          </button>
+                          {(order.status === 'shipped' || order.status === 'delivered') && (
+                            <button
+                              className={styles.rateButton}
+                              onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
+                            >
+                              Rate this order
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // Legacy single-item order
+                <div className={styles.orderItem}>
+                  <div className={styles.itemImageContainer}>
+                    <div className={styles.mainImage}>
+                      {order.design?.images?.[selectedImages[order.id] || 0] && (
+                        <img
+                          src={order.design.images[selectedImages[order.id] || 0]}
+                          alt={order.design.title}
+                          className={styles.designImage}
+                        />
+                      )}
+                    </div>
+                    <div className={styles.thumbnails}>
+                      {order.design?.images?.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`${order.design?.title} view ${index + 1}`}
+                          className={`${styles.thumbnail} ${selectedImages[order.id] === index ? styles.activeThumbnail : ''}`}
+                          onClick={() => setSelectedImages(prev => ({
+                            ...prev,
+                            [order.id]: index
+                          }))}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className={styles.itemActions}>
-                    <button
-                      className={styles.buyAgainButton}
-                      onClick={() => handleBuyAgain(order)}
-                      disabled={!order.design_id}
-                    >
-                      Buy it again
-                    </button>
-                    {(order.status === 'shipped' || order.status === 'delivered') && (
-                      <button
-                        className={styles.rateButton}
-                        onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
-                      >
-                        Rate this order
-                      </button>
+                  <div className={styles.itemDetails}>
+                    <h3 className={styles.itemTitle}>
+                      {order.design?.title || `Design #${order.design_id}`}
+                      {order.design?.is_soft_deleted && (
+                        <span className={styles.designArchivedBadge}>
+                          (Archived Design)
+                        </span>
+                      )}
+                    </h3>
+                    {order.design?.description && (
+                      <p className={styles.designDescription}>{order.design.description}</p>
                     )}
+                    <div className={styles.itemMeta}>
+                      {order.fabric_name && <p>Fabric: {order.fabric_name}</p>}
+                      {order.color_name && (
+                        <div className={styles.colorPill}>
+                          <span
+                            className={styles.colorDot}
+                            style={{ backgroundColor: order.color_name.toLowerCase() }}
+                          />
+                          <span>Color: {order.color_name}</span>
+                        </div>
+                      )}
+                      {order.style_type && <p>Style: {order.style_type}</p>}
+                      {order.fabric_yards && <p>Fabric Yards: {order.fabric_yards}</p>}
+                      {order.tailor_notes && (
+                        <div className={styles.tailorNotes}>
+                          <h4>Notes:</h4>
+                          <p>{order.tailor_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.itemActions}>
+                      <button
+                        className={styles.buyAgainButton}
+                        onClick={() => handleBuyAgain(order)}
+                        disabled={!order.design_id}
+                      >
+                        Buy it again
+                      </button>
+                      {(order.status === 'shipped' || order.status === 'delivered') && (
+                        <button
+                          className={styles.rateButton}
+                          onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
+                        >
+                          Rate this order
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         ))

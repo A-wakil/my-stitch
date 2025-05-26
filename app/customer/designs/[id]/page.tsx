@@ -14,6 +14,7 @@ import { sendOrderNotification, notifyOrderParties } from '../../../lib/notifica
 import { IoPersonCircleOutline } from "react-icons/io5"
 import { StarRating } from "../../../components/ui/StarRating"
 import { useCurrency } from '../../../context/CurrencyContext'
+import { useBag } from '../../../context/BagContext'
 
 interface DesignDetail {
   id: string
@@ -103,6 +104,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [formattedYardTotal, setFormattedYardTotal] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
   const [currentUserEmail, setCurrentUserEmail] = useState<string>("")
+
+  // Bag context
+  const { addItem } = useBag()
 
   // Add effect to get the current user's email
   useEffect(() => {
@@ -410,26 +414,41 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   };
 
   const handleAddToCart = async () => {
-    // Validate measurements first
+    // Validate fields
     if (!selectedMeasurement) {
       toast.error('Please select your measurements')
       return
     }
-    
-    // Validate style selection
+
     if (!selectedStyle) {
       toast.error('Please select a style option')
       return
     }
 
-    // Validate color selection
     if (selectedColor === null) {
       toast.error('Please select a color')
       return
     }
 
-    // Show confirmation modal instead of proceeding directly
-    setIsModalOpen(true)
+    if (!design) return
+
+    const yardPrice = design.fabrics[selectedFabric].yardPrice ?? 0
+    const stitchPrice = design.fabrics[selectedFabric].stitchPrice ?? design.fabrics[selectedFabric].price ?? 0
+
+    await addItem({
+      tailor_id: design.created_by,
+      design_id: design.id,
+      fabric_idx: selectedFabric,
+      color_idx: selectedColor,
+      style_type: selectedStyle,
+      fabric_yards: customYards !== null ? customYards : getRecommendedYards(selectedStyle),
+      yard_price: yardPrice,
+      stitch_price: stitchPrice,
+      tailor_notes: tailorNotes,
+      measurement_id: selectedMeasurement?.id.toString()
+    })
+
+    router.push('/customer/bag')
   }
 
   const handleConfirmOrder = async () => {
@@ -898,6 +917,21 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               </div>
             )}
           </div>
+
+          {/* Add tailor notes section */}
+          <div className={styles.tailorNotesSection}>
+            <h3>Special Instructions for Tailor</h3>
+            <textarea
+              value={tailorNotes}
+              onChange={(e) => setTailorNotes(e.target.value)}
+              placeholder="Add any special instructions or requests for your tailor... (e.g., 'Please make sleeves a bit tighter', 'Add extra length', etc.)"
+              className={styles.tailorNotesTextarea}
+              maxLength={500}
+            />
+            <div className={styles.characterCount}>
+              {tailorNotes.length}/500 characters
+            </div>
+          </div>
           
           {/* Add button at the bottom of the details section */}
           {!isMobile && (
@@ -907,7 +941,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 onClick={handleAddToCart}
                 disabled={loading || !selectedMeasurement || isProcessingOrder}
               >
-                {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
+                {loading ? 'Adding...' : 'Add to Bag'}
               </button>
             </div>
           )}
@@ -919,9 +953,9 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         <button 
           className={styles.addToCartButton}
           onClick={handleAddToCart}
-          disabled={loading || !selectedMeasurement || isProcessingOrder}
+          disabled={loading}
         >
-          {isProcessingOrder ? 'Processing order...' : (loading ? 'Adding...' : (selectedMeasurement ? 'Place Order' : 'Select Measurements to Order'))}
+          {loading ? 'Adding...' : 'Add to Bag'}
         </button>
       )}
 
