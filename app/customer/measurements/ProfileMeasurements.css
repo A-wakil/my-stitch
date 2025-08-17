@@ -22,7 +22,9 @@
 .header-section {
   display: flex;
   align-items: center;
+  justify-content: center;
   margin-bottom: 2rem;
+  gap: 5rem;
 }
 
 .header-section h2 {
@@ -236,7 +238,7 @@ button[type="submit"]:hover {
 }
 
 .measurement-name-input {
-  padding: 0.5rem;
+  padding: .8rem 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
@@ -595,4 +597,135 @@ button[type="submit"]:hover {
 
 .sidebar-toggle svg {
   margin-left: 0.5rem;
+}
+
+
+.measurement-name-section {
+  min-width: 300px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+}
+
+.measurement-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.measurement-name-input {
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+}
+
+/* Gender Selection - Improved styling */
+.gender-selection-inline {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.gender-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.gender-options {
+  display: flex;
+  /* gap: 1.5rem; */
+  align-items: center;
+}
+
+.gender-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.gender-options label:hover {
+  background: rgba(108, 117, 125, 0.1);
+}
+
+/* Custom radio button styling */
+.gender-options input[type="radio"] {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #6c757d;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.gender-options input[type="radio"]:checked {
+  border-color: #666;
+
+  background: #666;
+}
+
+.gender-options input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+
+.gender-options input[type="radio"]:hover {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+}
+
+.gender-options input[type="radio"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gender-options input[type="radio"]:disabled:hover {
+  border-color: #6c757d;
+  box-shadow: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  
+  .gender-selection-inline {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .gender-options {
+    gap: 1rem;
+  }
 } 
