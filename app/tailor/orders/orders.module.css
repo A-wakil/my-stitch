@@ -460,6 +460,74 @@
   color: #333;
 }
 
+/* Measurements Header */
+.measurementHeader {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 1.5rem;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.measurementHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.measurementName h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.measurementGender {
+  flex-shrink: 0;
+}
+
+.genderBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 2px solid transparent;
+}
+
+.genderBadge.male {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border-color: #2980b9;
+}
+
+.genderBadge.female {
+  background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+  color: white;
+  border-color: #c2185b;
+}
+
+.measurementsList {
+  /* Container for the actual measurements */
+}
+
+.noMeasurements {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.noMeasurements p {
+  margin: 0;
+}
+
 /* Rejection modal styles */
 .rejectionModalOverlay {
   position: fixed;
@@ -807,5 +875,20 @@
   .acceptButton, .rejectButton, .progressButton, .readyButton, .shipButton {
     padding: 0.6rem;
     font-size: 0.9rem;
+  }
+
+  .measurementHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .measurementName h3 {
+    font-size: 1.125rem;
+  }
+  
+  .measurementHeader {
+    padding: 1rem;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
   }
 }

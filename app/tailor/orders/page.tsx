@@ -880,23 +880,59 @@ export default function TailorOrdersPage() {
                   : selectedMeasurements;
 
                 // Skip these technical fields
-                const skipFields = ['id', 'user_id', 'created_at', 'updated_at'];
+                const skipFields = ['id', 'user_id', 'created_at', 'updated_at', 'name', 'gender'];
                 
-                // First render name field if it exists
-                const nameField = measurements.name ? (
-                  <div key="name" className={styles.measurementRow}>
-                    <span className={styles.measurementLabel}>
-                      Name:
-                    </span>
-                    <span className={styles.measurementValue}>
-                      {measurements.name}
-                    </span>
+                // Define gender-specific measurements
+                const maleSpecificFields = [
+                  'round_sleeves', 'wrist', 'waist_shirt', 'shirt_length', 'calves', 'agbada_length', 'agbada_width'
+                ];
+                
+                const femaleSpecificFields = [
+                  'neck', 'off_shoulder_top', 'underbust', 'top_length', 'bust_length', 'underbust_length', 
+                  'nipple_to_nipple', 'upper_waist', 'lower_waist', 'bust', 'ankle_trouser_end'
+                ];
+                
+                // Header section with name and gender
+                const headerSection = (
+                  <div className={styles.measurementHeader}>
+                    <div className={styles.measurementHeaderRow}>
+                      <div className={styles.measurementName}>
+                        <h3>{measurements.name || 'Customer Measurements'}</h3>
+                      </div>
+                      <div className={styles.measurementGender}>
+                        <span className={`${styles.genderBadge} ${styles[measurements.gender || 'male']}`}>
+                          {measurements.gender === 'female' ? '👩 Female' : '👨 Male'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ) : null;
+                );
                 
-                // Then render all other fields except name and technical fields
-                const otherFields = Object.entries(measurements)
-                  .filter(([key]) => !skipFields.includes(key) && key !== 'name')
+                // Filter measurements based on gender
+                const filteredMeasurements = Object.entries(measurements)
+                  .filter(([key, value]) => {
+                    // Skip technical fields and null/undefined values
+                    if (skipFields.includes(key) || value === null || value === undefined || value === '') {
+                      return false;
+                    }
+                    
+                    // If no gender specified, show all measurements (legacy data)
+                    if (!measurements.gender) {
+                      return true;
+                    }
+                    
+                    // For male measurements, exclude female-specific fields
+                    if (measurements.gender === 'male' && femaleSpecificFields.includes(key)) {
+                      return false;
+                    }
+                    
+                    // For female measurements, exclude male-specific fields  
+                    if (measurements.gender === 'female' && maleSpecificFields.includes(key)) {
+                      return false;
+                    }
+                    
+                    return true;
+                  })
                   .map(([key, value]) => (
                     <div key={key} className={styles.measurementRow}>
                       <span className={styles.measurementLabel}>
@@ -910,8 +946,14 @@ export default function TailorOrdersPage() {
                 
                 return (
                   <>
-                    {nameField}
-                    {otherFields}
+                    {headerSection}
+                    <div className={styles.measurementsList}>
+                      {filteredMeasurements.length > 0 ? filteredMeasurements : (
+                        <div className={styles.noMeasurements}>
+                          <p>No measurements available for this {measurements.gender || 'customer'}.</p>
+                        </div>
+                      )}
+                    </div>
                   </>
                 );
               })()}
