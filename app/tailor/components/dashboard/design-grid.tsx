@@ -132,44 +132,24 @@ export function DesignGrid() {
     
     setIsDeleting(true)
     try {
-      // First check if there are any orders associated with this design
-      const ordersResponse = await fetch(`/api/orders?design_id=${designToDelete}`, {
-        method: "GET",
+      // Always use soft delete - mark as deleted but keep in database
+      const response = await fetch(`/api/designs/${designToDelete}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_deleted: true }),
       })
       
-      if (!ordersResponse.ok) {
-        console.error("Failed to check for associated orders")
-        setIsDeleting(false)
-        closeDeleteModal()
-        return
-      }
-      
-      const ordersData = await ordersResponse.json()
-      const hasAssociatedOrders = ordersData.length > 0
-      
-      let response
-      if (hasAssociatedOrders) {
-        // Soft delete - mark as deleted but keep in database
-        response = await fetch(`/api/designs/${designToDelete}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ is_deleted: true }),
-        })
-      } else {
-        // Hard delete - remove from database
-        response = await fetch(`/api/designs/${designToDelete}`, {
-          method: "DELETE",
-        })
-      }
-      
       if (response.ok) {
+        // Remove the deleted design from the UI
         if (designs) {
           setDesigns(designs.filter((design) => design.id !== designToDelete))
         }
+        console.log("Design successfully marked as deleted")
       } else {
-        console.error("Failed to delete design")
+        const errorData = await response.json()
+        console.error("Failed to delete design:", errorData)
       }
     } catch (error) {
       console.error("Error deleting design:", error)

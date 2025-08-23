@@ -12,8 +12,8 @@ import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
-type Design = {
-  id?: string
+interface Design {
+  id: string
   title: string
   description: string
   images: string[]
@@ -24,7 +24,6 @@ type Design = {
     colors: Array<{ name: string; image: string | File | null }>
   }>
   gender?: string | null
-  age_group?: string | null
 }
 
 export default function Home() {
@@ -33,9 +32,8 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
-  const [filters, setFilters] = useState<{ gender: string | null; ageGroup: string | null }>({
-    gender: null,
-    ageGroup: null
+  const [filters, setFilters] = useState<{ gender: string | null }>({
+    gender: null
   })
   const router = useRouter()
 
@@ -54,10 +52,6 @@ export default function Home() {
       
       if (filters.gender) {
         apiUrl += `gender=${filters.gender}&`;
-      }
-      
-      if (filters.ageGroup) {
-        apiUrl += `age_group=${filters.ageGroup}&`;
       }
       
       // Remove trailing & if present
@@ -84,12 +78,12 @@ export default function Home() {
   // No need for client-side filtering since we're filtering in the database query
   const filteredDesigns = designs;
   
-  const handleFilterChange = (newFilters: { gender: string | null; ageGroup: string | null }) => {
+  const handleFilterChange = (newFilters: { gender: string | null }) => {
     setFilters(newFilters);
   };
 
   const clearAllFilters = () => {
-    setFilters({ gender: null, ageGroup: null });
+    setFilters({ gender: null });
   };
 
   const handleDesignClick = (design: Design) => {

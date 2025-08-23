@@ -23,7 +23,6 @@ interface DesignFormProps {
     images: string[]
     fabrics: Array<Fabric>
     gender?: 'male' | 'female' | null
-    age_group?: 'adult' | 'kids' | null
   }
 }
 
@@ -57,9 +56,6 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [simpleStitchingPrice, setSimpleStitchingPrice] = useState<string>('')
   const [gender, setGender] = useState<'male' | 'female' | null>(
     initialData?.gender !== undefined ? initialData.gender : null
-  )
-  const [ageGroup, setAgeGroup] = useState<'adult' | 'kids' | null>(
-    initialData?.age_group !== undefined ? initialData.age_group : null
   )
 
   useEffect(() => {
@@ -106,15 +102,10 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       return { valid: false, message: "Please specify a completion time" }
     }
 
-    // Add validation for gender and age group
+    // Add validation for gender
     if (!gender) {
       console.log('[Validation] Missing gender');
       return { valid: false, message: "Please select a gender category" }
-    }
-
-    if (!ageGroup) {
-      console.log('[Validation] Missing age group');
-      return { valid: false, message: "Please select an age group" }
     }
 
     // Check if there are either new images or existing images
@@ -175,7 +166,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice, gender, ageGroup]);
+  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice, gender]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -219,9 +210,6 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
     if (gender !== null) {
       formData.append("gender", gender)
-    }
-    if (ageGroup !== null) {
-      formData.append("age_group", ageGroup)
     }
     
     // Append new images
@@ -388,40 +376,6 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
                 onChange={() => setGender('female')}
               />
               <span>Female</span>
-            </label>
-          </div>
-        </div>
-
-        <div className={styles.formGroup}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Age Group</h2>
-            <div className={styles.infoTooltip}>
-              <Info className={styles.infoIcon} />
-              <div className={styles.tooltipContent}>
-                <p>Select which age group this design is intended for.</p>
-              </div>
-            </div>
-          </div>
-          <div className={styles.radioGroup}>
-            <label className={`${styles.radioLabel} ${ageGroup === 'adult' ? styles.selected : ''}`}>
-              <input
-                type="radio"
-                name="ageGroup"
-                value="adult"
-                checked={ageGroup === 'adult'}
-                onChange={() => setAgeGroup('adult')}
-              />
-              <span>Adult</span>
-            </label>
-            <label className={`${styles.radioLabel} ${ageGroup === 'kids' ? styles.selected : ''}`}>
-              <input
-                type="radio"
-                name="ageGroup"
-                value="kids"
-                checked={ageGroup === 'kids'}
-                onChange={() => setAgeGroup('kids')}
-              />
-              <span>Kids</span>
             </label>
           </div>
         </div>

@@ -3,6 +3,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .header {
@@ -23,17 +24,21 @@
     flex-direction: row;
     align-items: center;
     padding: 1rem 0;
+    flex: 1; /* Each section takes equal space */
+  }
+
+  .header-content.left {
+    justify-content: flex-start; /* Left align content */
+  }
+
+  .header-content.center {
+    justify-content: center; /* Center align content */
+  }
+
+  .header-content.right {
+    justify-content: flex-end; /* Right align content */
   }
   
-  .header-title-wrapper {
-    position: relative;
-    right: 5.5rem;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-  }
   
   .header-line {
     flex: 1;
@@ -46,7 +51,6 @@
     font-weight: 300;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 0 1rem;
   }
   
   .header-nav {
@@ -172,28 +176,6 @@
 
 /* Optional: Add transitions or animations */
 
-.header-content.center {
-  justify-content: center;
-  flex: 1;
-  margin: 0;
-  padding: 0;
-}
-
-.header-title-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin: 0;
-  padding: 1rem 0;
-}
-
-.header-title {
-  text-align: center;
-  margin: 0 15px;
-  white-space: nowrap;
-}
-
 /* Add styles for the left section */
 .header-content:first-child {
   position: relative;
@@ -274,18 +256,23 @@
     align-items: center;
   }
 
-  /* Hide Orders button */
-  .header-content:first-child .left-sub:nth-of-type(2) {
-    display: none;
+  /* Maintain equal spacing on mobile */
+  .header-content {
+    flex: 1;
   }
 
+  /* Hide Orders button */
+  .header-content.left .left-sub:nth-of-type(2) {
+    display: none;
+  }
+   
   /* Hide Menu text, keep icon */
   .left-sub .menu-text {
     display: none;
   }
 
   /* Reduce gap for menu icon */
-  .header-content:first-child .left-sub {
+  .header-content.left .left-sub {
     margin: 0 0.5rem;
     gap: 4px;
   }
@@ -294,14 +281,8 @@
   .header-content.center .header-title {
     font-size: 1rem;
     padding: 0;
-  }
-
-  /* Reset title wrapper offset for true centering */
-  .header-title-wrapper {
-    position: static !important;
-    right: auto !important;
-    justify-content: center !important;
-    padding: 0 !important;
+    margin: 0;
+    white-space: nowrap;
   }
 }
 

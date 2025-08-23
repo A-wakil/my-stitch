@@ -8,7 +8,6 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const createdBy = url.searchParams.get('created_by')
     const gender = url.searchParams.get('gender')
-    const ageGroup = url.searchParams.get('age_group')
     
     // Start building the query
     let query = supabase
@@ -23,10 +22,6 @@ export async function GET(request: Request) {
     
     if (gender) {
       query = query.eq('gender', gender)
-    }
-    
-    if (ageGroup) {
-      query = query.eq('age_group', ageGroup)
     }
     
     // Execute the query with ordering
@@ -141,8 +136,7 @@ export async function POST(request: Request) {
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        gender: formData.get("gender") as string,
-        age_group: formData.get("age_group") as string
+        gender: formData.get("gender") as string
       })
       .select()
       .single()
@@ -184,8 +178,7 @@ export async function PUT(request: Request) {
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        gender: formData.get("gender") as string,
-        age_group: formData.get("age_group") as string
+        gender: formData.get("gender") as string
       })
       .eq('id', designId)
       .select()

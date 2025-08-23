@@ -54,8 +54,7 @@ export async function PUT(
         fabrics: processedFabrics,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
-        gender: formData.get("gender") as string,
-        age_group: formData.get("age_group") as string
+        gender: formData.get("gender") as string
       })
       .eq('id', id)
       .select()

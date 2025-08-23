@@ -296,10 +296,10 @@
   gap: 1.5rem;
 }
 
-/* Styles for Gender and Age Group sections */
+/* Styles for Gender section */
 .categorySection {
   display: flex;
-  gap: 2rem; /* Spacing between Gender and Age Group */
+  gap: 2rem; /* Spacing for Gender section */
   background-color: white;
   padding: 1.5rem;
   border-radius: 0.5rem;

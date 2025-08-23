@@ -160,7 +160,7 @@ export function Header() {
     <>
       <header className={`header ${visible ? '' : 'header-hidden'}`}>
         <div className="header-container">
-          <div className='header-content'>
+          <div className='header-content left'>
             <div className='left-sub' onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
               <IoMenu />
               <span className='menu-text'>Menu</span>
@@ -171,16 +171,9 @@ export function Header() {
             </div>
           </div>
           <div className="header-content center">
-            <div className="header-title-wrapper">
-              <div className="header-line"></div>
               <h1 className="header-title">My Tailor Mint</h1>
-              <div className="header-line"></div>
-            </div>
-            <nav className="header-nav">
-
-            </nav>
           </div>
-          <div className='header-content'>
+          <div className='header-content right'>
             <div className='right-icons'>
               <CurrencyToggle />
               {/* Bag icon */}
@@ -227,14 +220,14 @@ export function Header() {
             <h3>Logout Confirmation</h3>
             <p>Are you sure you want to log out?</p>
             <div className="logout-buttons">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 className="cancel-lgt-button"
                 onClick={() => setShowLogoutConfirm(false)}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 variant="destructive"
                 className="lgt-button"
                 onClick={handleSignOut}
