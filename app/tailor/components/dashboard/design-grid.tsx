@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Pencil, Trash2 } from "lucide-react"
 import styles from "./styles/DesignGrid.module.css"
@@ -31,11 +31,46 @@ export function DesignGrid() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [designToDelete, setDesignToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    fetchDesigns()
+  const fetchDesigns = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        console.error("No authenticated user found")
+        setIsLoading(false)
+        return
+      }
+
+      // Fetch only designs created by the current tailor
+      const response = await fetch(`/api/designs?created_by=${user.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setDesigns(data)
+        setDataLoaded(true)
+      } else {
+        console.error("Failed to fetch designs")
+      }
+    } catch (error) {
+      console.error("Error fetching designs:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    // Prevent re-running if data is already loaded
+    if (dataLoaded) {
+      return;
+    }
+    
+    fetchDesigns()
+  }, [fetchDesigns, dataLoaded])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && designs) {
@@ -84,34 +119,6 @@ export function DesignGrid() {
     
     updatePrices()
   }, [designs, convertToPreferred, formatAmount])
-
-  const fetchDesigns = async () => {
-    try {
-      setIsLoading(true)
-      
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        console.error("No authenticated user found")
-        setIsLoading(false)
-        return
-      }
-
-      // Fetch only designs created by the current tailor
-      const response = await fetch(`/api/designs?created_by=${user.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setDesigns(data)
-      } else {
-        console.error("Failed to fetch designs")
-      }
-    } catch (error) {
-      console.error("Error fetching designs:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleEdit = (id: string) => {
     router.push(`/tailor/designs/${id}/edit`)

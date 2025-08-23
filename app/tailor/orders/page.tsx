@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import styles from './orders.module.css'
 import { Order, Profile } from '../../lib/types'
@@ -29,6 +29,7 @@ export default function TailorOrdersPage() {
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isTabsExpanded, setIsTabsExpanded] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false) // Track if data has been loaded
   const tabsRef = useRef<HTMLDivElement>(null)
 
   // Add effect to detect viewport size
@@ -49,7 +50,7 @@ export default function TailorOrdersPage() {
     };
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!user) return;
     setIsLoading(true);
     setOrders([]);
@@ -190,7 +191,7 @@ export default function TailorOrdersPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [user]);
 
   useEffect(() => {
     const loadUserAndProfile = async () => {
@@ -214,10 +215,17 @@ export default function TailorOrdersPage() {
   }, [])
 
   useEffect(() => {
-    if(user) {
-      fetchOrders()
+    // Prevent re-running if data is already loaded and user hasn't changed
+    if (dataLoaded && user?.id) {
+      return;
     }
-  }, [user])
+
+    if(user) {
+      fetchOrders().then(() => {
+        setDataLoaded(true);
+      });
+    }
+  }, [user?.id, fetchOrders])
 
   // Add new effect to handle hash-based scrolling
   useEffect(() => {

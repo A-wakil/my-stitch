@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { supabase } from '../../lib/supabaseClient'
 import { TailorProfileForm } from "../components/dashboard/tailor-profile-form"
 import { TailorProfileDisplay } from "../components/dashboard/tailor-profile-display"
@@ -11,46 +11,53 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [dataLoaded, setDataLoaded] = useState(false)
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('tailor_details')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) throw error
+      if (data) {
+        const transformedData = {
+          brandName: data.brand_name,
+          tailorName: data.tailor_name,
+          logo: data.logo_url,
+          bannerImage: data.banner_image_url,
+          address: data.address,
+          phone: data.phone,
+          email: data.email,
+          bio: data.bio,
+          rating: data.rating,
+          website: data.website,
+          experience: data.experience,
+          specializations: data.specializations || [],
+        }
+        setProfileData(transformedData)
+        setDataLoaded(true)
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { data, error } = await supabase
-          .from('tailor_details')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-
-        if (error) throw error
-        if (data) {
-          const transformedData = {
-            brandName: data.brand_name,
-            tailorName: data.tailor_name,
-            logo: data.logo_url,
-            bannerImage: data.banner_image_url,
-            address: data.address,
-            phone: data.phone,
-            email: data.email,
-            bio: data.bio,
-            rating: data.rating,
-            website: data.website,
-            experience: data.experience,
-            specializations: data.specializations || [],
-          }
-          setProfileData(transformedData)
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error)
-      } finally {
-        setLoading(false)
-      }
+    // Prevent re-running if data is already loaded
+    if (dataLoaded) {
+      return;
     }
 
     fetchProfile()
-  }, [])
+  }, [fetchProfile, dataLoaded])
 
   const handleProfileUpdate = (updatedProfile: typeof profileData) => {
     setProfileData(updatedProfile)
