@@ -104,6 +104,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [formattedYardTotal, setFormattedYardTotal] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
   const [currentUserEmail, setCurrentUserEmail] = useState<string>("")
+  const [isImageZoomed, setIsImageZoomed] = useState(false)
 
   // Bag context
   const { addItem } = useBag()
@@ -624,6 +625,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               src={design.images[selectedImage]} 
               alt={design.title}
               className={styles.primaryImage}
+              onClick={() => setIsImageZoomed(true)}
+              style={{ cursor: 'zoom-in' }}
             />
           </div>
           <div className={styles.thumbnails}>
@@ -1081,6 +1084,28 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         isLoadingMeasurements={isLoadingMeasurements}
         isProcessingOrder={isProcessingOrder}
       />
+
+      {/* Image Zoom Modal */}
+      {isImageZoomed && (
+        <div className={styles.zoomModalOverlay} onClick={() => setIsImageZoomed(false)}>
+          <div className={styles.zoomModalContent} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.zoomCloseButton}
+              onClick={() => setIsImageZoomed(false)}
+            >
+              ×
+            </button>
+            <img 
+              src={design.images[selectedImage]} 
+              alt={design.title}
+              className={styles.zoomedImage}
+            />
+            <div className={styles.zoomImageInfo}>
+              <p>{design.title} - View {selectedImage + 1} of {design.images.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
