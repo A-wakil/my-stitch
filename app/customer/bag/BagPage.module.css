@@ -147,10 +147,10 @@
 }
 
 .continueShoppingBtn {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: #3b3c3c;
+  color: #f6f6f6;
   border: 1px solid #d1d5db;
-  padding: 0.5rem 1rem;
+  padding: .75rem 1rem;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
@@ -159,8 +159,9 @@
 }
 
 .continueShoppingBtn:hover {
-  background-color: #e5e7eb;
+  background-color: #000000;
   border-color: #9ca3af;
+  transform: translateY(-1px);
 }
 
 .content {
