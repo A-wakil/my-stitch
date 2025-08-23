@@ -16,18 +16,18 @@ interface DesignData {
 interface BagItemWithDesign {
   id: string
   design_id: string
-  style_type: string
+  style_type: string | null
   fabric_idx: number
-  color_idx: number
-  fabric_yards: number
-  yard_price: number
-  stitch_price: number
-  tailor_notes?: string
+  color_idx: number | null
+  fabric_yards: number | null
+  yard_price: number | null
+  stitch_price: number | null
+  tailor_notes?: string | null
   design: DesignData | null
 }
 
 export default function BagPage() {
-  const { bag, items, loading, removeItem, refresh } = useBag()
+  const { bag, items, loading, removeItem, emptyBag, refresh } = useBag()
   const router = useRouter()
   const [shippingAddress, setShippingAddress] = useState({
     street_address: '',
@@ -40,6 +40,8 @@ export default function BagPage() {
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false)
   const [itemsWithDesigns, setItemsWithDesigns] = useState<BagItemWithDesign[]>([])
   const [loadingDesigns, setLoadingDesigns] = useState(false)
+  const [isEmptyBagModalOpen, setIsEmptyBagModalOpen] = useState(false)
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null)
 
   useEffect(() => {
     refresh()
@@ -102,7 +104,21 @@ export default function BagPage() {
   }, 0)
 
   const handleRemove = async (id: string) => {
-    await removeItem(id)
+    setRemovingItemId(id)
+    try {
+      await removeItem(id)
+    } finally {
+      setRemovingItemId(null)
+    }
+  }
+
+  const handleEmptyBag = async () => {
+    setIsEmptyBagModalOpen(true)
+  }
+
+  const confirmEmptyBag = async () => {
+    setIsEmptyBagModalOpen(false)
+    await emptyBag()
   }
 
   const isShippingComplete = () => {
@@ -172,12 +188,21 @@ export default function BagPage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h2>Your Bag ({items.length} {items.length === 1 ? 'item' : 'items'})</h2>
-        <button 
-          className={styles.continueShoppingBtn}
-          onClick={() => router.push('/')}
-        >
-          Continue Shopping
-        </button>
+        <div className={styles.headerButtons}>
+          <button 
+            className={styles.emptyBagBtn}
+            onClick={handleEmptyBag}
+            title="Empty entire bag"
+          >
+            Empty Bag
+          </button>
+          <button 
+            className={styles.continueShoppingBtn}
+            onClick={() => router.push('/')}
+          >
+            Continue Shopping
+          </button>
+        </div>
       </div>
 
       <div className={styles.content}>
@@ -192,7 +217,7 @@ export default function BagPage() {
                     <>
                       <img 
                         src={item.design.images[0]} 
-                        alt={item.design.title}
+                        alt={item.design?.title || 'Design'}
                         className={styles.itemImage}
                       />
                       {item.design.images.length > 1 && (
@@ -201,7 +226,7 @@ export default function BagPage() {
                             <img 
                               key={idx}
                               src={img} 
-                              alt={`${item.design.title} view ${idx + 2}`}
+                              alt={`${item.design?.title || 'Design'} view ${idx + 2}`}
                               className={styles.thumbnailImage}
                             />
                           ))}
@@ -224,8 +249,8 @@ export default function BagPage() {
                   </h3>
                   
                   <div className={styles.itemSpecs}>
-                    <p><strong>Style:</strong> {item.style_type}</p>
-                    <p><strong>Fabric Yards:</strong> {item.fabric_yards}</p>
+                    <p><strong>Style:</strong> {item.style_type || 'N/A'}</p>
+                    <p><strong>Fabric Yards:</strong> {item.fabric_yards || '0'}</p>
                     <p><strong>Yard Price:</strong> ${item.yard_price?.toFixed(2) || '0.00'} each</p>
                     <p><strong>Stitch Price:</strong> ${item.stitch_price?.toFixed(2) || '0.00'}</p>
                     {item.tailor_notes && (
@@ -238,8 +263,12 @@ export default function BagPage() {
                   ${((item.stitch_price ?? 0) + ((item.yard_price ?? 0) * (item.fabric_yards ?? 0))).toFixed(2)}
                 </div>
                 
-                <button onClick={() => handleRemove(item.id)} className={styles.removeBtn}>
-                  Remove
+                <button 
+                  onClick={() => handleRemove(item.id)} 
+                  className={styles.removeBtn}
+                  disabled={removingItemId === item.id}
+                >
+                  {removingItemId === item.id ? 'Removing...' : 'Remove'}
                 </button>
               </div>
             ))
@@ -338,6 +367,28 @@ export default function BagPage() {
           </div>
         </div>
       </div>
+
+      {/* Empty Bag Confirmation Modal */}
+      {isEmptyBagModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Empty Bag?</h2>
+            </div>
+            <div className={styles.modalBody}>
+              <p>Are you sure you want to empty your entire bag? This will remove all {items.length} item{items.length !== 1 ? 's' : ''} and cannot be undone.</p>
+            </div>
+            <div className={styles.modalButtons}>
+              <button onClick={() => setIsEmptyBagModalOpen(false)} className={styles.cancelBtn}>
+                Cancel
+              </button>
+              <button onClick={confirmEmptyBag} className={styles.confirmBtn}>
+                Empty Bag
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

@@ -21,7 +21,7 @@ export default function DebugNotifyPage() {
       
       // Send a test email directly using Resend SDK
       const { data, error } = await resend.emails.send({
-        from: 'My Tailor Mint <notifications@mytailormint.com>',
+        from: 'Tailor Mint <notifications@mytailormint.com>',
         to: email,
         subject: 'Direct Test Email',
         html: '<p>This is a direct test from the Resend SDK</p>',

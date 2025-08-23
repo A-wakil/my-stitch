@@ -9,8 +9,134 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.emptyBagBtn {
+  padding: 0.75rem 1.5rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emptyBagBtn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.emptyBagBtn:active {
+  transform: translateY(0);
+}
+
+/* Custom Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+.modalHeader {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.modalBody {
+  padding: 1rem 1.5rem;
+}
+
+.modalBody p {
+  margin: 0;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 0.75rem 1.5rem;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelBtn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.confirmBtn {
+  padding: 0.75rem 1.5rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirmBtn:hover {
+  background: #c82333;
+}
+
+/* Remove button loading state */
+.removeBtn:disabled {
+  background: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}
+
+/* Modal animation */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .header h2 {
@@ -273,7 +399,7 @@
 }
 
 .shopButton {
-  background-color: #3b82f6;
+  background-color: #474646;
   color: white;
   border: none;
   padding: 0.875rem 1.5rem;
@@ -285,7 +411,7 @@
 }
 
 .shopButton:hover {
-  background-color: #2563eb;
+  background-color: #000000;
 }
 
 .loading {

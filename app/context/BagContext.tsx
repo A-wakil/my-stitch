@@ -43,6 +43,7 @@ interface BagContextType {
   loading: boolean
   addItem: (payload: AddItemPayload) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
+  emptyBag: () => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -129,8 +130,25 @@ export function BagProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const emptyBag = async () => {
+    try {
+      const res = await fetch('/api/bag', { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to empty bag')
+        return
+      }
+      toast.success('Bag emptied successfully')
+      setBag(null)
+      setItems([])
+    } catch (e) {
+      console.error('Empty bag error', e)
+      toast.error('Failed to empty bag')
+    }
+  }
+
   return (
-    <BagContext.Provider value={{ bag, items, loading, addItem, removeItem, refresh }}>
+    <BagContext.Provider value={{ bag, items, loading, addItem, removeItem, emptyBag, refresh }}>
       {children}
     </BagContext.Provider>
   )
