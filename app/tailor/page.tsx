@@ -6,7 +6,7 @@ import { Button } from "../tailor/components/ui/button"
 import styles from './page.module.css'
 import { supabase } from "../lib/supabaseClient"
 import { User } from '@supabase/supabase-js'
-import { AuthDialog } from "../AuthDialog/AuthDialog"
+import { AuthDialog } from "../components/AuthDialog/AuthDialog"
 import { IoArrowBack } from "react-icons/io5";
 import { TailorProfileForm } from "./components/dashboard/tailor-profile-form"
 import { useProfile } from "../context/ProfileContext"

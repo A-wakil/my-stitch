@@ -7,7 +7,7 @@ import { Header } from "./customer/ui/Header/Header"
 import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
 import { DesignFilters } from "./customer/ui/DesignFilters"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
-import { AuthDialog } from "./AuthDialog/AuthDialog";
+import { AuthDialog } from "./components/AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'

@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react'
 import { IoClose } from 'react-icons/io5'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
 import styles from './AuthDialog.module.css'
-import { supabase } from '../lib/supabaseClient'
+import { supabase } from '../../lib/supabaseClient'
 
 interface AuthDialogProps {
   isOpen: boolean
@@ -18,6 +18,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [infoMessage, setInfoMessage] = useState('')
   const [generalError, setGeneralError] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string }>({})
@@ -26,7 +27,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
 
   // Generate unique IDs for inputs to avoid duplicates
   const uniqueId = useId()
-  const emailInputId = isSignUp ? `signup-email-${uniqueId}` : `signin-email-${uniqueId}`
+  const emailInputId = isForgotPassword ? `forgot-email-${uniqueId}` : isSignUp ? `signup-email-${uniqueId}` : `signin-email-${uniqueId}`
   const passwordInputId = isSignUp ? `signup-password-${uniqueId}` : `signin-password-${uniqueId}`
   const firstNameInputId = `signup-firstName-${uniqueId}`
   const lastNameInputId = `signup-lastName-${uniqueId}`
@@ -43,8 +44,9 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
     } else {
       console.log("Dialog closed, resetting loading state.")
       setIsLoading(false)
+      setIsForgotPassword(false) // Reset forgot password state when closing
     }
-  }, [isOpen, isSignUp])
+  }, [isOpen, isSignUp, isForgotPassword])
 
   useEffect(() => {
     if (isOpen) {
@@ -74,16 +76,20 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   }, [errors, isSignUp, isOpen])
 
   const validateForm = () => {
-    const newErrors: typeof errors = {}
+    const newErrors: { email?: string; password?: string; firstName?: string; lastName?: string } = {}
+
     if (!email) newErrors.email = 'Email is required'
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Please enter a valid email'
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email format'
 
-    if (!password) newErrors.password = 'Password is required'
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters'
+    // Only validate password and other fields if not in forgot password mode
+    if (!isForgotPassword) {
+      if (!password) newErrors.password = 'Password is required'
+      else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters'
 
-    if (isSignUp) {
-      if (!firstName) newErrors.firstName = 'First name is required'
-      if (!lastName) newErrors.lastName = 'Last name is required'
+      if (isSignUp) {
+        if (!firstName) newErrors.firstName = 'First name is required'
+        if (!lastName) newErrors.lastName = 'Last name is required'
+      }
     }
 
     setErrors(newErrors)
@@ -100,6 +106,21 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
 
     try {
       setIsLoading(true)
+
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/reset-password`,
+        })
+
+        if (error) throw error
+
+        setInfoMessage('📧 Password reset email sent! Please check your inbox and follow the instructions.')
+        setTimeout(() => {
+          setIsForgotPassword(false)
+          setInfoMessage('👈 You can now sign in with your new password.')
+        }, 3000)
+        return
+      }
 
       if (isSignUp) {
         const { error: signUpError } = await supabase.auth.signUp({
@@ -197,9 +218,16 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
           </button>
 
           <div className={styles.header}>
-            <h1 className={styles.title}>{!isSignUp ? 'Welcome back' : 'Create account'}</h1>
+            <h1 className={styles.title}>
+              {isForgotPassword ? 'Reset Password' : !isSignUp ? 'Welcome back' : 'Create account'}
+            </h1>
             <p className={styles.subtitle}>
-              {!isSignUp ? 'Enter your details to continue' : 'Enter your details to create an account'}
+              {isForgotPassword 
+                ? 'Enter your email to receive a password reset link' 
+                : !isSignUp 
+                  ? 'Enter your details to continue' 
+                  : 'Enter your details to create an account'
+              }
             </p>
           </div>
 
@@ -220,33 +248,48 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
               {errors.email && <span className={styles.error}>{errors.email}</span>}
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor={passwordInputId} className={styles.label}>Password</label>
-              <div className={styles.passwordWrapper}>
-                <input
-                  id={passwordInputId}
-                  type={showPassword ? "text" : "password"}
-                  className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  aria-invalid={!!errors.password}
-                  autoComplete={isSignUp ? "new-password" : "current-password"}
-                  placeholder={isSignUp ? 'Choose a password' : 'Enter your password'}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={styles.passwordToggle}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
+            {!isForgotPassword && (
+              <div className={styles.formGroup}>
+                <label htmlFor={passwordInputId} className={styles.label}>Password</label>
+                <div className={styles.passwordWrapper}>
+                  <input
+                    id={passwordInputId}
+                    type={showPassword ? "text" : "password"}
+                    className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    aria-invalid={!!errors.password}
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
+                    placeholder={isSignUp ? 'Choose a password' : 'Enter your password'}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={styles.passwordToggle}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+                {errors.password && <span className={styles.error}>{errors.password}</span>}
+                
+                {!isSignUp && (
+                  <div className={styles.forgotPasswordWrapper}>
+                    <button
+                      onClick={() => !isLoading && setIsForgotPassword(true)}
+                      className={styles.forgotPasswordButton}
+                      disabled={isLoading}
+                      type="button"
+                    >
+                      Forgot your password?
+                    </button>
+                  </div>
+                )}
               </div>
-              {errors.password && <span className={styles.error}>{errors.password}</span>}
-            </div>
+            )}
 
-            {isSignUp && (
+            {isSignUp && !isForgotPassword && (
               <>
                 <div className={styles.formGroup}>
                   <label htmlFor={firstNameInputId} className={styles.label}>First Name</label>
@@ -281,20 +324,39 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
             )}
 
             <button type="submit" className={styles.submitButton} disabled={isLoading}>
-              {isLoading ? <Loader2 className={styles.loadingSpinner} size={16} /> : (!isSignUp ? 'Sign in' : 'Create account')}
+              {isLoading ? (
+                <Loader2 className={styles.loadingSpinner} size={16} />
+              ) : isForgotPassword ? (
+                'Send Reset Email'
+              ) : !isSignUp ? (
+                'Sign in'
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
 
 
           <div className={styles.footer}>
-            <button
-              onClick={() => !isLoading && setIsSignUp(!isSignUp)}
-              className={styles.switchButton}
-              disabled={isLoading}
-              type="button"
-            >
-              {!isSignUp ? <>Don&apos;t have an account? <span>Sign up</span></> : <>Already have an account? <span>Sign in</span></>}
-            </button>
+            {!isForgotPassword ? (
+              <button
+                onClick={() => !isLoading && setIsSignUp(!isSignUp)}
+                className={styles.switchButton}
+                disabled={isLoading}
+                type="button"
+              >
+                {!isSignUp ? <>Don&apos;t have an account? <span>Sign up</span></> : <>Already have an account? <span>Sign in</span></>}
+              </button>
+            ) : (
+              <button
+                onClick={() => !isLoading && setIsForgotPassword(false)}
+                className={styles.switchButton}
+                disabled={isLoading}
+                type="button"
+              >
+                ← Back to sign in
+              </button>
+            )}
           </div>
         </div>
       </div>

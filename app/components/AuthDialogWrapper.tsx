@@ -1,6 +1,6 @@
 'use client'
 
-import { AuthDialog } from '../AuthDialog/AuthDialog'
+import { AuthDialog } from './AuthDialog/AuthDialog'
 import { useAuth } from '../lib/AuthContext'
 
 export function AuthDialogWrapper() {

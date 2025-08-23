@@ -6,7 +6,7 @@ import './Header.css'
 import { IoMenu, IoPerson, IoBagHandle } from "react-icons/io5";
 import { LuScissors } from 'react-icons/lu'
 import { Sidebar } from '../sidebar/Sidebar'
-import { AuthDialog } from '../../../AuthDialog/AuthDialog'
+import { AuthDialog } from '../../../components/AuthDialog/AuthDialog'
 import { supabase } from '../../../lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import { LogOut } from "lucide-react"

@@ -330,14 +330,37 @@
 }
 
 .switchButton span {
-  color: #000;
+  text-decoration: underline;
   font-weight: 500;
-  margin-left: 0.25rem;
 }
 
-.switchButton:hover:not(:disabled) span {
+.forgotPasswordWrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.forgotPasswordButton {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0.25rem 0;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgotPasswordButton:hover {
+  color: #4f46e5;
   text-decoration: underline;
-} 
+}
+
+.forgotPasswordButton:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
 
 .infoBanner {
   background-color: #fef3c7;
