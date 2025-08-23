@@ -171,7 +171,7 @@ export function Header() {
             </div>
           </div>
           <div className="header-content center">
-              <h1 className="header-title">My Tailor Mint</h1>
+              <h1 className="header-title">Tailor Mint</h1>
           </div>
           <div className='header-content right'>
             <div className='right-icons'>

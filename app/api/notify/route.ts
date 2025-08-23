@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     try {
       // Send email using Resend with verified domain
       const { data, error } = await resend.emails.send({
-        from: 'My Tailor Mint <notifications@mytailormint.com>', // Updated brand name
+        from: 'Tailor Mint <notifications@mytailormint.com>', // Updated brand name
         to: recipientEmail,
         subject,
         html: content,
@@ -120,8 +120,8 @@ function generateEmailContent(
               <p style="margin: 0;"><strong>Note:</strong> Quick responses to new orders improve customer satisfaction and increase repeat business.</p>
             </div>
             
-            <p>Thank you for your partnership with My Tailor Mint.</p>
-            <p>Regards,<br>The My Tailor Mint Team</p>
+            <p>Thank you for your partnership with Tailor Mint.</p>
+            <p>Regards,<br>The Tailor Mint Team</p>
           </div>
         `;
       } else {
@@ -152,7 +152,7 @@ function generateEmailContent(
             <p>You can track your order status at any time by visiting <a href="${orderUrl}" style="color: #0066cc; text-decoration: underline;">your order page</a>.</p>
             
             <p>If you have any questions, please don't hesitate to contact us.</p>
-            <p>Regards,<br>The My Tailor Mint Team</p>
+            <p>Regards,<br>The Tailor Mint Team</p>
           </div>
         `;
       }
@@ -170,7 +170,7 @@ function generateEmailContent(
             `<p><strong>Estimated Completion Date:</strong> ${new Date(additionalData.estimatedCompletionDate).toLocaleDateString()}</p>` : 
             ''}
           <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -186,7 +186,7 @@ function generateEmailContent(
           ${additionalData?.reason ? `<p><strong>Reason:</strong> ${additionalData.reason}</p>` : ''}
           <p>Please visit <a href="${orderUrl}">your order page</a> to review and make necessary adjustments.</p>
           <p>Our customer service team is available to assist you if needed.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -203,7 +203,7 @@ function generateEmailContent(
             `<p><strong>Estimated Completion Date:</strong> ${new Date(additionalData.estimatedCompletionDate).toLocaleDateString()}</p>` : 
             ''}
           <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -218,7 +218,7 @@ function generateEmailContent(
           <p><strong>Order ID:</strong> ${orderId}</p>
           <p>You'll receive another notification once your order has been shipped with tracking information.</p>
           <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -241,7 +241,7 @@ function generateEmailContent(
             `<p><strong>Estimated Delivery Date:</strong> ${new Date(additionalData.estimatedDeliveryDate).toLocaleDateString()}</p>` : 
             ''}
           <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -255,8 +255,8 @@ function generateEmailContent(
           <p>Your order has been marked as delivered. We hope you love your custom garment!</p>
           <p><strong>Order ID:</strong> ${orderId}</p>
           <p>We'd love to hear your feedback. Please take a moment to review your experience on <a href="${orderUrl}">your order page</a>.</p>
-          <p>Thank you for choosing My Tailor Mint for your custom clothing needs.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Thank you for choosing Tailor Mint for your custom clothing needs.</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -273,7 +273,7 @@ function generateEmailContent(
             `<p>A refund of $${additionalData.refundAmount} has been processed and should appear in your account within 5-7 business days.</p>` : 
             ''}
           <p>If you have any questions about this cancellation, please contact our customer service team.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -289,7 +289,7 @@ function generateEmailContent(
           ${additionalData?.totalAmount ? `<p><strong>Total Amount:</strong> $${additionalData.totalAmount}</p>` : ''}
           <p>You can track your order status at any time by visiting <a href="${orderUrl}">your order page</a>.</p>
           <p>If you have any questions, please don't hesitate to contact us.</p>
-          <p>Regards,<br>The My Tailor Mint Team</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
         </div>
       `;
       break;
@@ -303,19 +303,19 @@ function generateEmailContent(
             <p>Hello ${recipientName},</p>
             <p>There's an update regarding order #${orderId} that requires your attention.</p>
             <p>Please visit <a href="${tailorOrderUrl}">your dashboard</a> for more details.</p>
-            <p>Regards,<br>The My Tailor Mint Team</p>
+            <p>Regards,<br>The Tailor Mint Team</p>
           </div>
         `;
       } else {
-        subject = `${rolePrefix}Update on Your My Tailor Mint Order #${orderId}`;
+        subject = `${rolePrefix}Update on Your Tailor Mint Order #${orderId}`;
         content = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Order Update</h2>
             <p>Hello ${recipientName},</p>
-            <p>There's an update regarding your order with My Tailor Mint.</p>
+            <p>There's an update regarding your order with Tailor Mint.</p>
             <p><strong>Order ID:</strong> ${orderId}</p>
             <p>Please visit <a href="${orderUrl}">your order page</a> for more details.</p>
-            <p>Regards,<br>The My Tailor Mint Team</p>
+            <p>Regards,<br>The Tailor Mint Team</p>
           </div>
         `;
       }

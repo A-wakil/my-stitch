@@ -8,7 +8,7 @@ The system uses the Resend Email API with the following configuration:
 
 - API Key: `re_JQB2Wgji_DcqdyqTKrLVVWTzfcxz8TxdK`
 - From Email: `notifications@mytailormint.com`
-- From Name: `My Tailor Mint`
+- From Name: `Tailor Mint`
 
 ## Notification Types
 

@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Test email sent to ${email} using My Tailor Mint notifications`,
+      message: `Test email sent to ${email} using Tailor Mint notifications`,
       details: data
     });
   } catch (error) {
