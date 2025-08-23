@@ -13,6 +13,8 @@
     border-bottom: 1px solid #e5e7eb;
     transition: transform 0.3s;
     z-index: 50;
+    padding-left: 3rem;
+    padding-right: 3rem;
   }
   
   .header-hidden {
@@ -75,8 +77,8 @@
   .left-sub {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 0 20px;
+    gap: clamp(2px, 1vw, 4px); /* Responsive gap between icon and text */
+    margin: 0 clamp(2px, 1vw, 4px); /* Responsive margin between items */
     text-decoration: none;
     color: inherit;
     white-space: nowrap;
@@ -182,6 +184,10 @@
   z-index: 2;
 }
 
+.header-content.left {
+  gap: 2rem;
+}
+
 /* Logout Dialog Styles */
 .logout-overlay {
   position: fixed;
@@ -260,21 +266,15 @@
   .header-content {
     flex: 1;
   }
-
-  /* Hide Orders button */
-  .header-content.left .left-sub:nth-of-type(2) {
-    display: none;
-  }
    
   /* Hide Menu text, keep icon */
   .left-sub .menu-text {
     display: none;
   }
 
-  /* Reduce gap for menu icon */
-  .header-content.left .left-sub {
-    margin: 0 0.5rem;
-    gap: 4px;
+  /* Hide Tailor Dashboard text on mobile, keep icon */
+  .left-sub .tailor-text {
+    display: none;
   }
 
   /* Shrink title font */

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { redirect, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import './Header.css'
-import { IoMenu, IoPerson, IoReceiptOutline, IoBagHandle } from "react-icons/io5";
+import { IoMenu, IoPerson, IoBagHandle } from "react-icons/io5";
+import { LuScissors } from 'react-icons/lu'
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../../AuthDialog/AuthDialog'
 import { supabase } from '../../../lib/supabaseClient'
@@ -15,11 +15,6 @@ import { Card } from "../../../tailor/components/ui/card"
 import { CurrencyToggle } from "../../../components/ui/CurrencyToggle"
 import { useBag } from "../../../context/BagContext"
 
-
-interface SidebarProps {
-  isOpen: boolean
-  onClose: () => void
-}
 
 export function Header() {
   const router = useRouter()
@@ -165,9 +160,9 @@ export function Header() {
               <IoMenu />
               <span className='menu-text'>Menu</span>
             </div>
-            <div className='left-sub' onClick={!user ? toggleAuthDialog : () => router.push('/customer/orders')} style={{ cursor: 'pointer' }}>
-              Orders
-              <IoReceiptOutline />
+            <div className='left-sub' onClick={!user ? toggleAuthDialog : () => router.push('/tailor')} style={{ cursor: 'pointer' }}>
+              <LuScissors />
+              <span className='tailor-text'>Tailor Dashboard</span>
             </div>
           </div>
           <div className="header-content center">
@@ -176,7 +171,6 @@ export function Header() {
           <div className='header-content right'>
             <div className='right-icons'>
               <CurrencyToggle />
-              {/* Bag icon */}
               <div
                 className="bag-icon-wrapper"
                 onClick={() => router.push('/customer/bag')}
