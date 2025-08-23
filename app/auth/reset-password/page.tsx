@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabaseClient'
 import { toast } from 'react-hot-toast'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { Loader2 } from 'lucide-react'
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -16,7 +16,6 @@ export default function ResetPasswordPage() {
   const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({})
   
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     // Handle the auth callback from the email link
@@ -221,5 +220,22 @@ export default function ResetPasswordPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 } 
