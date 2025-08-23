@@ -27,6 +27,8 @@ interface Order {
   created_at: string;
   total_amount: number;
   status: string;
+  design_title?: string; // Add design title for display
+  design_image?: string; // Add design image for display
 }
 
 interface DashboardStats {
@@ -162,11 +164,55 @@ export default function Dashboard() {
         'Recent orders fetch timed out'
       );
       
-      const recentOrders = recentOrdersResponse.data || [];
+      const recentOrdersData = recentOrdersResponse.data || [];
       if (recentOrdersResponse.error) {
         console.error('[fetchDashboardStats] Error fetching recent orders:', recentOrdersResponse.error.message);
       } else {
+        console.log('[fetchDashboardStats] Recent orders fetched.');
       }
+
+      // Fetch design titles for recent orders through order_items
+      const recentOrders = await Promise.all(
+        recentOrdersData.map(async (order: any) => {
+          let designTitle = `Order #${order.id.slice(0, 8)}`; // Fallback
+          let designImage = "/placeholder.svg"; // Fallback
+          
+          try {
+            // Get order items for this order
+            const { data: orderItems, error: orderItemsError } = await supabase
+              .from('order_items')
+              .select('design_id')
+              .eq('order_id', order.id);
+            
+            if (!orderItemsError && orderItems && orderItems.length > 0) {
+              // Get the design title and image from the first item
+              const { data: designData, error: designError } = await supabase
+                .from('designs')
+                .select('title, images')
+                .eq('id', orderItems[0].design_id)
+                .single();
+              
+              if (!designError && designData) {
+                // If there are multiple items, indicate that
+                if (orderItems.length > 1) {
+                  designTitle = `${designData.title} + ${orderItems.length - 1} more`;
+                } else {
+                  designTitle = designData.title;
+                }
+                designImage = designData.images?.[0] || "/placeholder.svg"; // Use the first image from the design
+              }
+            }
+          } catch (error) {
+            console.error(`[fetchDashboardStats] Error fetching design title/image for order ${order.id}:`, error);
+          }
+          
+          return {
+            ...order,
+            design_title: designTitle,
+            design_image: designImage
+          };
+        })
+      );
 
       let averageRating = 0;
       try {
@@ -488,8 +534,13 @@ export default function Dashboard() {
                     }}
                   >
                     <div className={styles.recentItemContent}>
+                      <img 
+                        src={order.design_image || "/placeholder.svg"} 
+                        alt={order.design_title || `Order #${order.id.slice(0, 8)}`}
+                        className={styles.recentItemImage}
+                      />
                       <div className={styles.recentItemDetails}>
-                        <div className={styles.recentItemTitle}>Order #{order.id.slice(0, 8)}</div>
+                        <div className={styles.recentItemTitle}>{order.design_title || `Order #${order.id.slice(0, 8)}`}</div>
                         <div className={styles.recentItemMeta}>
                           Placed {new Date(order.created_at).toLocaleDateString()}
                         </div>
