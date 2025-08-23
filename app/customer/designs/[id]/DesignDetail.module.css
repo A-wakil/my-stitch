@@ -116,7 +116,7 @@
 }
 
 .addToCartButton {
-  background: #000;
+  background: #3b3c3c;
   color: white;
   padding: 1.25rem;
   border: none;
@@ -141,7 +141,7 @@
 }
 
 .addToCartButton:hover {
-  background: #333;
+  background: #000000;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

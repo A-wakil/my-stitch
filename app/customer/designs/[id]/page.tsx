@@ -432,23 +432,32 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
     if (!design) return
 
-    const yardPrice = design.fabrics[selectedFabric].yardPrice ?? 0
-    const stitchPrice = design.fabrics[selectedFabric].stitchPrice ?? design.fabrics[selectedFabric].price ?? 0
+    try {
+      setLoading(true)
 
-    await addItem({
-      tailor_id: design.created_by,
-      design_id: design.id,
-      fabric_idx: selectedFabric,
-      color_idx: selectedColor,
-      style_type: selectedStyle,
-      fabric_yards: customYards !== null ? customYards : getRecommendedYards(selectedStyle),
-      yard_price: yardPrice,
-      stitch_price: stitchPrice,
-      tailor_notes: tailorNotes,
-      measurement_id: selectedMeasurement?.id.toString()
-    })
+      const yardPrice = design.fabrics[selectedFabric].yardPrice ?? 0
+      const stitchPrice = design.fabrics[selectedFabric].stitchPrice ?? design.fabrics[selectedFabric].price ?? 0
 
-    router.push('/customer/bag')
+      await addItem({
+        tailor_id: design.created_by,
+        design_id: design.id,
+        fabric_idx: selectedFabric,
+        color_idx: selectedColor,
+        style_type: selectedStyle,
+        fabric_yards: customYards !== null ? customYards : getRecommendedYards(selectedStyle),
+        yard_price: yardPrice,
+        stitch_price: stitchPrice,
+        tailor_notes: tailorNotes,
+        measurement_id: selectedMeasurement?.id.toString()
+      })
+
+      router.push('/customer/bag')
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      // Don't show error toast here since addItem already handles it
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleConfirmOrder = async () => {
