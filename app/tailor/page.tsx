@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from "../tailor/components/ui/card"
 import { Button } from "../tailor/components/ui/button"
@@ -75,6 +75,7 @@ export default function Dashboard() {
     recentOrders: []
   })
   const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [dataLoaded, setDataLoaded] = useState(false) // Track if data has been loaded
 
   // Combined page loading state
   const isPageLoading = isLoading || (user != null && isLoadingStats);
@@ -223,10 +224,14 @@ export default function Dashboard() {
     } finally {
       setIsLoadingStats(false);
     }
-  }, [supabase]); // Added supabase as a dependency, assuming it's stable.
-                 // If supabase client instance can change, this might need adjustment.
+  }, []); // Remove supabase dependency as it's stable
 
   useEffect(() => {
+    // Prevent re-running if data is already loaded and user hasn't changed
+    if (dataLoaded && user?.id) {
+      return;
+    }
+
     setIsLoading(true);
 
     const checkAndFetchData = async () => {
@@ -281,6 +286,9 @@ export default function Dashboard() {
             recentOrders: []
           });
         }
+
+        // Mark data as loaded
+        setDataLoaded(true);
       } catch (e) {
         console.error('[checkAndFetchData] Top-level error:', e);
       } finally {
@@ -294,8 +302,24 @@ export default function Dashboard() {
     // Start data fetching
     checkAndFetchData();
     
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, fetchDashboardStats, refreshProfile]); // Include user as a dependency
+  // Only depend on user.id, not the entire user object or other functions
+  }, [user?.id, fetchDashboardStats]);
+
+  // Handle page visibility changes to prevent unnecessary reloads
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Don't refetch data when coming back to tab if data is already loaded
+      if (document.visibilityState === 'visible' && dataLoaded) {
+        console.log('[visibilityChange] Page visible but data already loaded, skipping refetch');
+        return;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [dataLoaded]);
 
   const handleBackToHome = () => {
     router.push('/')
@@ -315,6 +339,16 @@ export default function Dashboard() {
   const handleViewAllOrders = () => {
     router.push('/tailor/orders')
   }
+
+  // Memoize expensive computations
+  const memoizedStats = useMemo(() => ({
+    ...stats,
+    formattedRevenue: stats.totalRevenue.toLocaleString(),
+    formattedRating: (stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0) 
+      ? stats.averageRating.toFixed(1) 
+      : '-',
+    hasRating: (stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0)
+  }), [stats]);
 
   // Use combined loading state for the spinner
   if (isPageLoading) {
@@ -370,25 +404,21 @@ export default function Dashboard() {
           <div className={styles.cardsGrid}>
             <Card className={styles.card}>
               <h3>Total Designs</h3>
-              <p className={styles.statNumber}>{stats.totalDesigns}</p>
+              <p className={styles.statNumber}>{memoizedStats.totalDesigns}</p>
             </Card>
             <Card className={styles.card}>
               <h3>Total Orders</h3>
-              <p className={styles.statNumber}>{stats.totalOrders}</p>
+              <p className={styles.statNumber}>{memoizedStats.totalOrders}</p>
             </Card>
             <Card className={styles.card}>
               <h3>Revenue</h3>
-              <p className={styles.statNumber}>${stats.totalRevenue.toLocaleString()}</p>
+              <p className={styles.statNumber}>${memoizedStats.formattedRevenue}</p>
               <p className={styles.statSubtext}>From completed orders</p>
             </Card>
             <Card className={styles.card}>
               <h3>Rating</h3>
-              <p className={styles.statNumber}>
-                {(stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0) 
-                  ? stats.averageRating.toFixed(1) 
-                  : '-'}
-              </p>
-              {(stats.averageRating !== null && stats.averageRating !== undefined && stats.averageRating > 0) ? (
+              <p className={styles.statNumber}>{memoizedStats.formattedRating}</p>
+              {memoizedStats.hasRating ? (
                 <p className={styles.statSubtext}>{`Based on ratings from customers`}</p>
               ) : (
                 <p className={styles.statSubtext}>No ratings yet</p>
@@ -398,7 +428,7 @@ export default function Dashboard() {
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Designs</h3>
               <div className={styles.recentItemsContainer}>
-                {stats.recentDesigns.map((design) => (
+                {memoizedStats.recentDesigns.map((design) => (
                   <div 
                     key={design.id} 
                     className={styles.recentItem}
@@ -441,7 +471,7 @@ export default function Dashboard() {
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Orders</h3>
               <div className={styles.recentItemsContainer}>
-                {stats.recentOrders.map((order) => (
+                {memoizedStats.recentOrders.map((order) => (
                   <div 
                     key={order.id} 
                     className={styles.recentItem}
