@@ -397,37 +397,39 @@ export default function Dashboard() {
 
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Designs</h3>
-              {stats.recentDesigns.map((design) => (
-                <div 
-                  key={design.id} 
-                  className={styles.recentItem}
-                  onClick={() => {
-                    router.push(`/tailor/designs#${design.id}`);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  style={{ cursor: 'pointer' }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+              <div className={styles.recentItemsContainer}>
+                {stats.recentDesigns.map((design) => (
+                  <div 
+                    key={design.id} 
+                    className={styles.recentItem}
+                    onClick={() => {
                       router.push(`/tailor/designs#${design.id}`);
-                    }
-                  }}
-                >
-                  <div className={styles.recentItemContent}>
-                    <img 
-                      src={design.images?.[0] || "/placeholder.svg"} 
-                      alt={design.title}
-                      className={styles.recentItemImage}
-                    />
-                    <div className={styles.recentItemDetails}>
-                      <div className={styles.recentItemTitle}>{design.title}</div>
-                      <div className={styles.recentItemMeta}>
-                        Created {new Date(design.created_at).toLocaleDateString()}
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    style={{ cursor: 'pointer' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        router.push(`/tailor/designs#${design.id}`);
+                      }
+                    }}
+                  >
+                    <div className={styles.recentItemContent}>
+                      <img 
+                        src={design.images?.[0] || "/placeholder.svg"} 
+                        alt={design.title}
+                        className={styles.recentItemImage}
+                      />
+                      <div className={styles.recentItemDetails}>
+                        <div className={styles.recentItemTitle}>{design.title}</div>
+                        <div className={styles.recentItemMeta}>
+                          Created {new Date(design.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
               <Button 
                 className={styles.viewAllButton}
                 onClick={handleViewAllDesigns}
@@ -438,38 +440,40 @@ export default function Dashboard() {
 
             <Card className={`${styles.card} ${styles.wideCard}`}>
               <h3>Recent Orders</h3>
-              {stats.recentOrders.map((order) => (
-                <div 
-                  key={order.id} 
-                  className={styles.recentItem}
-                  onClick={() => {
-                    router.push(`/tailor/orders#${order.id}`);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  style={{ cursor: 'pointer' }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+              <div className={styles.recentItemsContainer}>
+                {stats.recentOrders.map((order) => (
+                  <div 
+                    key={order.id} 
+                    className={styles.recentItem}
+                    onClick={() => {
                       router.push(`/tailor/orders#${order.id}`);
-                    }
-                  }}
-                >
-                  <div className={styles.recentItemContent}>
-                    <div className={styles.recentItemDetails}>
-                      <div className={styles.recentItemTitle}>Order #{order.id.slice(0, 8)}</div>
-                      <div className={styles.recentItemMeta}>
-                        Placed {new Date(order.created_at).toLocaleDateString()}
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    style={{ cursor: 'pointer' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        router.push(`/tailor/orders#${order.id}`);
+                      }
+                    }}
+                  >
+                    <div className={styles.recentItemContent}>
+                      <div className={styles.recentItemDetails}>
+                        <div className={styles.recentItemTitle}>Order #{order.id.slice(0, 8)}</div>
+                        <div className={styles.recentItemMeta}>
+                          Placed {new Date(order.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
+                    <div className={styles.recentItemStatus} data-status={order.status}>
+                      {order.status.replace(/_/g, ' ')}
+                    </div>
+                    <div className={styles.recentItemPrice}>
+                      ${order.total_amount}
+                    </div>
                   </div>
-                  <div className={styles.recentItemStatus} data-status={order.status}>
-                    {order.status.replace(/_/g, ' ')}
-                  </div>
-                  <div className={styles.recentItemPrice}>
-                    ${order.total_amount}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
               <Button 
                 className={styles.viewAllButton}
                 onClick={handleViewAllOrders}

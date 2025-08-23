@@ -98,6 +98,14 @@
   justify-content: space-between;
 }
 
+.recentItemsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-grow: 1;
+  justify-content: flex-start;
+}
+
 .viewAllButton {
   background: #18181b;
   color: white;
