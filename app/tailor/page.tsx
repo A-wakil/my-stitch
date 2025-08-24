@@ -102,7 +102,8 @@ export default function Dashboard() {
         supabase
           .from('designs')
           .select('*', { count: 'exact', head: true })
-          .eq('created_by', userId) as unknown as Promise<any>,
+          .eq('created_by', userId)
+          .eq('is_deleted', false) as unknown as Promise<any>, // Exclude soft-deleted designs
         8000,
         'Designs count fetch timed out'
       );
@@ -140,6 +141,7 @@ export default function Dashboard() {
           .from('designs')
           .select('id, title, created_at, images')
           .eq('created_by', userId)
+          .eq('is_deleted', false) // Exclude soft-deleted designs
           .order('created_at', { ascending: false })
           .limit(5) as unknown as Promise<any>,
         8000,
