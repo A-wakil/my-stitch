@@ -158,7 +158,49 @@ export default function Home() {
       <main className="main-content container">
         <DesignFilters filters={filters} onFilterChange={handleFilterChange} />
         
-        {filteredDesigns.length === 0 ? (
+        {/* Show Coming Soon for Female designs */}
+        {filters.gender === 'female' ? (
+          <div className="coming-soon-container">
+            <div className="coming-soon-content">
+              <div className="coming-soon-icon">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"/>
+                  <path d="M19 15L20.5 19L24 20L20.5 21L19 25L17.5 21L14 20L17.5 19L19 15Z" fill="currentColor"/>
+                  <path d="M5 15L6.5 19L10 20L6.5 21L5 25L3.5 21L0 20L3.5 19L5 15Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <h2 className="coming-soon-title">Women's Collection</h2>
+              <p className="coming-soon-subtitle">Coming Soon</p>
+              <p className="coming-soon-description">
+                We're crafting an exquisite collection of traditional women's wear. 
+                Beautiful designs with perfect fits are on their way!
+              </p>
+              <div className="coming-soon-features">
+                <div className="feature-item">
+                  <span className="feature-icon">👗</span>
+                  <span>Elegant Dresses</span>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">✨</span>
+                  <span>Premium Fabrics</span>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">📏</span>
+                  <span>Perfect Measurements</span>
+                </div>
+              </div>
+              <button 
+                className="notify-me-btn"
+                onClick={() => {
+                  // You can add email subscription logic here later
+                  alert('Thank you for your interest! We\'ll notify you when our women\'s collection launches.');
+                }}
+              >
+                Notify Me When Available
+              </button>
+            </div>
+          </div>
+        ) : filteredDesigns.length === 0 ? (
           <div className="no-results">
             <p>No designs match your selected filters.</p>
             <button 
