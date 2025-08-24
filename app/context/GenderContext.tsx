@@ -10,7 +10,7 @@ interface GenderContextType {
 const GenderContext = createContext<GenderContextType | undefined>(undefined)
 
 export function GenderProvider({ children }: { children: ReactNode }) {
-  const [gender, setGender] = useState<string | null>(null)
+  const [gender, setGender] = useState<string | null>('male') // Default to male
 
   return (
     <GenderContext.Provider value={{ gender, setGender }}>
