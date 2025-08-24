@@ -8,6 +8,7 @@ import { ProfileProvider } from "./context/ProfileContext"
 import { AuthDialogWrapper } from "./components/AuthDialogWrapper"
 import { PostHogProvider } from "./providers/PostHogProvider"
 import { CurrencyProvider } from "./context/CurrencyContext"
+import { GenderProvider } from "./context/GenderContext"
 import { BagProvider } from "./context/BagContext"
 
 interface RootLayoutProps {
@@ -26,11 +27,13 @@ export default function RootLayout({
           <AuthProvider>
             <ProfileProvider>
               <CurrencyProvider>
-                <BagProvider>
-                  {children}
-                  <Toaster />
-                  <AuthDialogWrapper />
-                </BagProvider>
+                <GenderProvider>
+                  <BagProvider>
+                    {children}
+                    <Toaster />
+                    <AuthDialogWrapper />
+                  </BagProvider>
+                </GenderProvider>
               </CurrencyProvider>
             </ProfileProvider>
           </AuthProvider>

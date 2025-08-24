@@ -5,8 +5,8 @@ import "./page.css"
 import { useState, useCallback, useEffect } from 'react'
 import { Header } from "./customer/ui/Header/Header"
 import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
-import { DesignFilters } from "./customer/ui/DesignFilters"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
+import { useGender } from "./context/GenderContext"
 import { AuthDialog } from "./components/AuthDialog/AuthDialog";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
@@ -32,10 +32,10 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
-  const [filters, setFilters] = useState<{ gender: string | null }>({
-    gender: null
-  })
   const router = useRouter()
+
+  // Use gender context instead of local state
+  const { gender, setGender } = useGender()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -50,8 +50,8 @@ export default function Home() {
       // Build the URL with query parameters for filters
       let apiUrl = '/api/designs?';
       
-      if (filters.gender) {
-        apiUrl += `gender=${filters.gender}&`;
+      if (gender) {
+        apiUrl += `gender=${gender}&`;
       }
       
       // Remove trailing & if present
@@ -73,19 +73,11 @@ export default function Home() {
 
   useEffect(() => {
     fetchDesigns()
-  }, [filters]) // Re-fetch when filters change
+  }, [gender]) // Re-fetch when filters change
 
   // No need for client-side filtering since we're filtering in the database query
   const filteredDesigns = designs;
   
-  const handleFilterChange = (newFilters: { gender: string | null }) => {
-    setFilters(newFilters);
-  };
-
-  const clearAllFilters = () => {
-    setFilters({ gender: null });
-  };
-
   const handleDesignClick = (design: Design) => {
     if (!user) {
       setIsAuthDialogOpen(true)
@@ -156,10 +148,9 @@ export default function Home() {
     <div className="min-h-screen">
       <Header />
       <main className="main-content container">
-        <DesignFilters filters={filters} onFilterChange={handleFilterChange} />
         
         {/* Show Coming Soon for Female designs */}
-        {filters.gender === 'female' ? (
+        {gender === 'female' ? (
           <div className="coming-soon-container">
             <div className="coming-soon-content">
               <div className="coming-soon-icon">
@@ -203,12 +194,6 @@ export default function Home() {
         ) : filteredDesigns.length === 0 ? (
           <div className="no-results">
             <p>No designs match your selected filters.</p>
-            <button 
-              className="clear-filters-btn"
-              onClick={clearAllFilters}
-            >
-              Clear Filters
-            </button>
           </div>
         ) : (
           <div className="gallery-grid">

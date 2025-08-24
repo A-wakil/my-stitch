@@ -8,17 +8,15 @@
 
 .header {
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     background-color: white;
     border-bottom: 1px solid #e5e7eb;
-    transition: transform 0.3s;
     z-index: 50;
     padding-left: 3rem;
     padding-right: 3rem;
-  }
-  
-  .header-hidden {
-    transform: translateY(-100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
   
   .header-content {

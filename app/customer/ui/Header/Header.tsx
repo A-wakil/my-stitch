@@ -13,13 +13,13 @@ import { LogOut } from "lucide-react"
 import { Button } from "../../../tailor/components/ui/button"
 import { Card } from "../../../tailor/components/ui/card"
 import { CurrencyToggle } from "../../../components/ui/CurrencyToggle"
+import { GenderToggle } from "../../../components/ui/GenderToggle"
+import { useGender } from "../../../context/GenderContext"
 import { useBag } from "../../../context/BagContext"
 
 
 export function Header() {
   const router = useRouter()
-  const [visible, setVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -27,6 +27,9 @@ export function Header() {
 
   // Bag context
   const { items } = useBag()
+  
+  // Gender context
+  const { gender, setGender } = useGender()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -35,17 +38,6 @@ export function Header() {
 
     return () => subscription.unsubscribe()
   }, [])
-
-  const controlNavbar = () => {
-    if (typeof window !== 'undefined') {
-      if (window.scrollY > lastScrollY) {
-        setVisible(false)
-      } else {
-        setVisible(true)
-      }
-      setLastScrollY(window.scrollY)
-    }
-  }
 
   const closeSidebar = () => {
     setIsSidebarOpen(false)
@@ -142,18 +134,9 @@ export function Header() {
     setShowLogoutConfirm(false)
   }
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', controlNavbar)
-      return () => {
-        window.removeEventListener('scroll', controlNavbar)
-      }
-    }
-  }, [lastScrollY])
-
   return (
     <>
-      <header className={`header ${visible ? '' : 'header-hidden'}`}>
+      <header className="header">
         <div className="header-container">
           <div className='header-content left'>
             <div className='left-sub' onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
@@ -170,6 +153,7 @@ export function Header() {
           </div>
           <div className='header-content right'>
             <div className='right-icons'>
+              <GenderToggle currentGender={gender} onGenderChange={setGender} />
               <CurrencyToggle />
               <div
                 className="bag-icon-wrapper"
