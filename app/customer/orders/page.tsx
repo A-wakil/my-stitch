@@ -137,12 +137,14 @@ export default function OrdersPage() {
           // First check if this order has order_items (new multi-item system)
           const { data: orderItems, error: orderItemsError } = await supabase
             .from('order_items')
-            .select('*')
+            .select('id, design_id, price, tailor_notes, measurement_id, created_at')
             .eq('order_id', order.id)
 
           if (orderItemsError) {
             console.error(`Error fetching order items for order ${order.id}:`, orderItemsError)
           }
+
+          console.log(`Order ${order.id} has ${orderItems?.length || 0} items:`, orderItems)
 
           if (orderItems && orderItems.length > 0) {
             // New multi-item order - fetch designs for each item
@@ -480,7 +482,7 @@ export default function OrdersPage() {
                       </div>
                       <div className={styles.itemDetails}>
                         <h3 className={styles.itemTitle}>
-                          {item.design?.title || `Design #${item.design_id}`}
+                          {item.design?.title || (item.design_id ? `Design #${item.design_id}` : 'Design Unavailable')}
                           {item.design?.is_soft_deleted && (
                             <span className={styles.designArchivedBadge}>
                               (Archived Design)
@@ -491,32 +493,9 @@ export default function OrdersPage() {
                           <p className={styles.designDescription}>{item.design.description}</p>
                         )}
                         <div className={styles.itemMeta}>
-                          {item.design?.fabrics && (
-                            <p>Fabric: {
-                              typeof item.design.fabrics[item.fabric_idx] === 'string' 
-                                ? item.design.fabrics[item.fabric_idx]
-                                : (item.design.fabrics[item.fabric_idx] as any)?.name || 'Selected fabric'
-                            }</p>
-                          )}
-                          {item.design?.fabrics && item.color_idx !== null && (
-                            <div className={styles.colorPill}>
-                              <span
-                                className={styles.colorDot}
-                                style={{ 
-                                  backgroundColor: typeof item.design.fabrics[item.fabric_idx] === 'object' 
-                                    ? (item.design.fabrics[item.fabric_idx] as any)?.colors?.[item.color_idx]?.name?.toLowerCase() || 'gray'
-                                    : 'gray'
-                                }}
-                              />
-                              <span>Color: {
-                                typeof item.design.fabrics[item.fabric_idx] === 'object' 
-                                  ? (item.design.fabrics[item.fabric_idx] as any)?.colors?.[item.color_idx]?.name || 'Selected color'
-                                  : 'Selected color'
-                              }</span>
-                            </div>
-                          )}
-                          {item.style_type && <p>Style: {item.style_type}</p>}
-                          {item.fabric_yards && <p>Fabric Yards: {item.fabric_yards}</p>}
+                          <p>Price: ${(item.price ?? 0).toFixed(2)}</p>
+                          {order.style_type && <p>Style: {order.style_type}</p>}
+                          {order.fabric_yards && <p>Fabric Yards: {order.fabric_yards}</p>}
                           {item.tailor_notes && (
                             <div className={styles.tailorNotes}>
                               <h4>Notes:</h4>
@@ -532,6 +511,7 @@ export default function OrdersPage() {
                           >
                             Buy it again
                           </button>
+                          <div className={styles.itemPrice}>${(item.price ?? 0).toFixed(2)}</div>
                           {(order.status === 'shipped' || order.status === 'delivered') && (
                             <button
                               className={styles.rateButton}

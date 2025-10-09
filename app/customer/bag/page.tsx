@@ -16,12 +16,7 @@ interface DesignData {
 interface BagItemWithDesign {
   id: string
   design_id: string
-  style_type: string | null
-  fabric_idx: number
-  color_idx: number | null
-  fabric_yards: number | null
-  yard_price: number | null
-  stitch_price: number | null
+  price: number | null
   tailor_notes?: string | null
   design: DesignData | null
 }
@@ -99,8 +94,7 @@ export default function BagPage() {
   }
 
   const subtotal = items.reduce((sum, it) => {
-    const yardCost = (it.yard_price ?? 0) * (it.fabric_yards ?? 0)
-    return sum + (it.stitch_price ?? 0) + yardCost
+    return sum + (it.price ?? 0)
   }, 0)
 
   const handleRemove = async (id: string) => {
@@ -249,10 +243,6 @@ export default function BagPage() {
                   </h3>
                   
                   <div className={styles.itemSpecs}>
-                    <p><strong>Style:</strong> {item.style_type || 'N/A'}</p>
-                    <p><strong>Fabric Yards:</strong> {item.fabric_yards || '0'}</p>
-                    <p><strong>Yard Price:</strong> ${item.yard_price?.toFixed(2) || '0.00'} each</p>
-                    <p><strong>Stitch Price:</strong> ${item.stitch_price?.toFixed(2) || '0.00'}</p>
                     {item.tailor_notes && (
                       <p><strong>Notes:</strong> {item.tailor_notes}</p>
                     )}
@@ -260,7 +250,7 @@ export default function BagPage() {
                 </div>
                 
                 <div className={styles.itemPrice}>
-                  ${((item.stitch_price ?? 0) + ((item.yard_price ?? 0) * (item.fabric_yards ?? 0))).toFixed(2)}
+                  ${(item.price ?? 0).toFixed(2)}
                 </div>
                 
                 <button 

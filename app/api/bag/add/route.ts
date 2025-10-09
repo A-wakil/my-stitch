@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 
@@ -11,17 +11,15 @@ import { z } from 'zod'
  *   design_id: string,
  *   fabric_idx: number,
  *   color_idx: number | null,
- *   style_type: string,
- *   fabric_yards: number,
- *   yard_price: number,
- *   stitch_price: number,
+ *   price: number,
  *   tailor_notes?: string,
  *   measurement_id?: string
  * }
  */
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createServerComponentClient({ cookies })
     const body = await req.json()
 
     // Validate payload with Zod
@@ -29,12 +27,7 @@ export async function POST(req: NextRequest) {
       user_id: z.string().min(1, 'user_id is required'),
       tailor_id: z.string().min(1, 'tailor_id is required'),
       design_id: z.string().min(1, 'design_id is required'),
-      fabric_idx: z.number().int().min(0, 'fabric_idx must be >= 0'),
-      color_idx: z.number().int().min(0).nullable().optional(),
-      style_type: z.string().min(1),
-      fabric_yards: z.number().positive('fabric_yards must be > 0'),
-      yard_price: z.number().nonnegative(),
-      stitch_price: z.number().nonnegative(),
+      price: z.number().nonnegative(),
       tailor_notes: z.string().optional(),
       measurement_id: z.string().optional()
     })
@@ -84,12 +77,7 @@ export async function POST(req: NextRequest) {
     const itemPayload = {
       bag_id: bag.id,
       design_id: body.design_id,
-      fabric_idx: body.fabric_idx,
-      color_idx: body.color_idx ?? null,
-      style_type: body.style_type ?? null,
-      fabric_yards: body.fabric_yards ?? null,
-      yard_price: body.yard_price ?? null,
-      stitch_price: body.stitch_price ?? null,
+      price: body.price ?? null,
       tailor_notes: body.tailor_notes ?? null,
       measurement_id: body.measurement_id ?? null
     }

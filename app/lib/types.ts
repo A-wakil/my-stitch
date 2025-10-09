@@ -106,10 +106,7 @@ export interface Measurement {
     design_id: string
     fabric_idx: number
     color_idx: number | null
-    style_type: string | null
-    fabric_yards: number | null
-    yard_price: number | null
-    stitch_price: number | null
+    price: number | null
     tailor_notes: string | null
     measurement_id: string | null
     design?: Design | null

@@ -6,8 +6,7 @@ export interface Color {
 export interface Fabric {
   name: string
   image: string | File | null
-  yardPrice: number
-  stitchPrice: number
+  totalPrice: number
   colors: Array<{
     name: string
     image: string | File | null

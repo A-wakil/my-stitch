@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import Stripe from 'stripe'
 
@@ -9,7 +9,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createServerComponentClient({ cookies })
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -62,19 +63,24 @@ export async function POST(req: NextRequest) {
 
     // 2. Compute total and create line items for Stripe
     const line_items = items.map((item) => {
-      const stitchPrice = item.stitch_price ?? 0
-      const yardPrice = item.yard_price ?? 0
-      const yards = item.fabric_yards ?? 0
-      const totalPrice = stitchPrice + (yardPrice * yards)
+      const totalPrice = item.price ?? 0
+      const description = item.tailor_notes && String(item.tailor_notes).trim().length > 0
+        ? `Notes: ${item.tailor_notes}`
+        : undefined
+
+      const productData: any = {
+        name: `${item.designs?.title || 'Custom Design'}`,
+        images: item.designs?.images ? [item.designs.images[0]] : [],
+      }
+
+      if (description) {
+        productData.description = description
+      }
 
       return {
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: `${item.designs?.title || 'Custom Design'} - ${item.style_type}`,
-            description: `${yards} yards of fabric, Fabric index: ${item.fabric_idx}${item.tailor_notes ? `, Notes: ${item.tailor_notes}` : ''}`,
-            images: item.designs?.images ? [item.designs.images[0]] : [],
-          },
+          product_data: productData,
           unit_amount: Math.round(totalPrice * 100), // Convert to cents
         },
         quantity: 1,
@@ -86,7 +92,7 @@ export async function POST(req: NextRequest) {
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/orders?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/customer/bag`,
       metadata: {
         bag_id: bag.id,

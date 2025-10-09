@@ -1,12 +1,30 @@
 import { NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
+async function getSupabaseClient() {
+  const cookieStore = await cookies()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
+  const authCookie = cookieStore.get('sb-ewfttdrfsdhgslldfgmz-auth-token')
+  
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    global: {
+      headers: authCookie ? {
+        Authorization: `Bearer ${authCookie.value}`
+      } : {}
+    }
+  })
+  
+  return supabase
+}
+
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await getSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -48,7 +66,7 @@ export async function GET() {
 
 export async function DELETE() {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await getSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

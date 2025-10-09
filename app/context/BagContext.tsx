@@ -14,12 +14,7 @@ export interface BagItem {
   id: string
   bag_id: string
   design_id: string
-  fabric_idx: number
-  color_idx: number | null
-  style_type: string | null
-  fabric_yards: number | null
-  yard_price: number | null
-  stitch_price: number | null
+  price: number | null
   tailor_notes: string | null
   measurement_id: string | null
 }
@@ -27,12 +22,7 @@ export interface BagItem {
 interface AddItemPayload {
   tailor_id: string
   design_id: string
-  fabric_idx: number
-  color_idx: number | null
-  style_type: string
-  fabric_yards: number
-  yard_price: number
-  stitch_price: number
+  price: number
   tailor_notes?: string
   measurement_id?: string
 }

@@ -5,10 +5,8 @@ import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
-import { FabricPicker } from "../../components/dashboard/fabric-picker"
 import { ImageUpload } from "../../components/dashboard/image-upload"
 import styles from "./styles/DesignForm.module.css"
-import { Fabric } from "../../types/design"
 import { supabase } from "../../../lib/supabaseClient"
 import { toast } from "react-hot-toast"
 import { Info } from "lucide-react"
@@ -21,8 +19,14 @@ interface DesignFormProps {
     title: string
     description: string
     images: string[]
-    fabrics: Array<Fabric>
+    fabrics: Array<{
+      name: string
+      image: string | null
+      totalPrice: number
+      colors: Array<{ name: string; image: string | null }>
+    }>
     gender?: 'male' | 'female' | null
+    completion_time?: number | null
   }
 }
 
@@ -39,164 +43,81 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [description, setDescription] = useState(initialData?.description || "")
   const [images, setImages] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
-  const [fabrics, setFabrics] = useState<Fabric[]>(
-    initialData?.fabrics.map((f) => ({
-      name: f.name,
-      image: f.image,
-      yardPrice: f.yardPrice || 0,
-      stitchPrice: f.stitchPrice || 0,
-      colors: f.colors.map(c => ({ name: c.name, image: c.image }))
-    })) || []
-  )
   const [duration, setDuration] = useState<Duration>(null);
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showFabricPicker, setShowFabricPicker] = useState<boolean>(true)
-  const [simplePricePerYard, setSimplePricePerYard] = useState<string>('')
-  const [simpleStitchingPrice, setSimpleStitchingPrice] = useState<string>('')
+  const [totalPrice, setTotalPrice] = useState<string>('')
   const [gender, setGender] = useState<'male' | 'female' | null>(
     initialData?.gender !== undefined ? initialData.gender : null
   )
 
   useEffect(() => {
     if (initialData) {
-      console.log('Initial fabrics data:', initialData.fabrics)
       setTitle(initialData.title)
       setDescription(initialData.description)
       setExistingImages(initialData.images || [])
-      setFabrics(initialData.fabrics.map((f) => {
-        console.log('Processing fabric:', f.name, 'Image:', f.image)
-        return {
-          name: f.name,
-          image: f.image,
-          yardPrice: f.yardPrice || 0,
-          stitchPrice: f.stitchPrice || 0,
-          colors: f.colors.map(c => ({ name: c.name, image: c.image }))
-        }
-      }))
+      setDuration(
+        typeof initialData.completion_time === 'number'
+          ? initialData.completion_time
+          : initialData.completion_time === null
+            ? null
+            : null
+      )
+      
+      // Extract price from existing fabrics (should be simple mode with one "Custom" fabric)
+      if (initialData.fabrics.length > 0) {
+        setTotalPrice(initialData.fabrics[0].totalPrice.toString())
+      }
     }
   }, [initialData])
 
-  console.log('Current fabrics state:', fabrics)
-
-  // Move isFormValid to a memoized value
+  // Form validation
   const formValidation = useMemo(() => {
     const newErrors: FormErrors = {}
-    const isUpdate = !!initialData?.id;
-    
-    console.log('[Validation] Checking form validity, isUpdate:', isUpdate);
 
     // Check basic fields
     if (!title.trim()) {
-      console.log('[Validation] Missing title');
       return { valid: false, message: "Please enter a design title" }
     }
     if (!description.trim()) {
-      console.log('[Validation] Missing description');
       return { valid: false, message: "Please enter a description" }
     }
     
     // Check if completion time is set
     if (duration === null) {
-      console.log('[Validation] Missing completion time');
       return { valid: false, message: "Please specify a completion time" }
     }
 
     // Add validation for gender
     if (!gender) {
-      console.log('[Validation] Missing gender');
       return { valid: false, message: "Please select a gender category" }
     }
 
     // Check if there are either new images or existing images
     if (images.length === 0 && existingImages.length === 0) {
-      console.log('[Validation] Missing images');
       return { valid: false, message: "Please upload at least one image" }
     }
 
-    // For updates, don't require fabrics if none were changed
-    if (!showFabricPicker) {
-      // Simple pricing mode validation
-      if (!simplePricePerYard.trim() || isNaN(parseFloat(simplePricePerYard))) {
-        console.log('[Validation] Missing or invalid simple price per yard');
-        return { valid: false, message: "Please enter a valid price per yard" }
-      }
-      if (!simpleStitchingPrice.trim() || isNaN(parseFloat(simpleStitchingPrice))) {
-        console.log('[Validation] Missing or invalid simple stitching price');
-        return { valid: false, message: "Please enter a valid stitching price" }
-      }
-    } else if (fabrics.length === 0 && !isUpdate) {
-      console.log('[Validation] Missing fabrics on new design');
-      return { valid: false, message: "Please add at least one fabric" }
-    } else if (showFabricPicker) {
-      // When updating an existing design, check if fabrics have changed
-      if (isUpdate) {
-        console.log('[Validation] Processing update - fabrics:', fabrics.length, 
-                    'initialFabrics:', initialData?.fabrics.length);
-        
-        // Special case - always allow updates when only changing basic fields
-        return { valid: true, message: "" };
-      } else {
-        // For new designs with fabric picker on, validate all fabrics
-        for (const fabric of fabrics) {
-          if (!fabric.name || !fabric.image || !fabric.yardPrice || !fabric.stitchPrice) {
-            const missingFields = [];
-            if (!fabric.name) missingFields.push("name");
-            if (!fabric.image) missingFields.push("image");
-            if (!fabric.yardPrice) missingFields.push("yard price");
-            if (!fabric.stitchPrice) missingFields.push("stitching price");
-            
-            const errorMsg = `Please complete all fields for fabric: ${missingFields.join(", ")}`;
-            console.log('[Validation] Error:', errorMsg);
-            return { 
-              valid: false, 
-              message: errorMsg
-            }
-          }
-          
-          if (fabric.colors.length === 0) {
-            const errorMsg = `Please add at least one color for ${fabric.name}`;
-            console.log('[Validation] Error:', errorMsg);
-            return { valid: false, message: errorMsg }
-          }
-        }
-      }
+    // Validate total price
+    const trimmedPrice = totalPrice.trim()
+    const numericPrice = parseFloat(trimmedPrice)
+    
+    if (!trimmedPrice || isNaN(numericPrice) || numericPrice < 0) {
+      return { valid: false, message: "Please enter a valid total price" }
     }
 
-    console.log('[Validation] All checks passed');
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, duration, images, existingImages, fabrics, initialData?.id, showFabricPicker, simplePricePerYard, simpleStitchingPrice, gender]);
+  }, [title, description, duration, images, existingImages, totalPrice, gender]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formValidation.valid) {
-      // Check specifically for color-related validation errors
-      console.log('[ handleSubmit ] Validation failed. Message:', formValidation.message, 'Valid:', formValidation.valid);
-      if (formValidation.message && formValidation.message.includes('color for')) {
-        const fabricName = formValidation.message.split('color for ')[1];
-        toast.error(
-          <div>
-            <strong>Missing colors!</strong>
-            <p>Please add at least one color for fabric: {fabricName}</p>
-          </div>,
-          {
-            duration: 4000,
-            position: 'top-center',
-            style: { 
-              borderLeft: '4px solid red',
-              padding: '16px'
-            }
-          }
-        );
-      } else {
-        console.log('[ handleSubmit ] About to show generic toast for:', formValidation.message);
-        toast.error(formValidation.message, {
-          duration: 2000,
-          position: 'top-center',
-        });
-      }
+      toast.error(formValidation.message, {
+        duration: 2000,
+        position: 'top-center',
+      });
       return
     }
 
@@ -217,65 +138,20 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       formData.append("images", image)
     })
     
-    // Handle fabrics data based on mode
-    if (showFabricPicker) {
-      // Convert fabrics array to JSON string and handle fabric images
-      const fabricsData = await Promise.all(fabrics.map(async (fabric, index) => {
-        let fabricImageUrl = fabric.image
-
-        // Upload fabric image to Supabase if it's a File
-        if (fabric.image instanceof File) {
-          const fabricImageKey = `fabrics/${Date.now()}_${fabric.image.name}`
-          formData.append('fabricImages', fabric.image)
-          formData.append('fabricImageKeys', fabricImageKey)
-          fabricImageUrl = fabricImageKey // The API will handle the actual upload
-        }
-
-        // Handle color images
-        const colors = await Promise.all(fabric.colors.map(async (color, colorIndex) => {
-          let colorImageUrl = color.image
-
-          if (color.image instanceof File) {
-            const colorImageKey = `colors/${Date.now()}_${color.image.name}`
-            formData.append('colorImages', color.image)
-            formData.append('colorImageKeys', colorImageKey)
-            colorImageUrl = colorImageKey // The API will handle the actual upload
-          }
-
-          return {
-            name: color.name,
-            image: colorImageUrl
-          }
-        }))
-
-        return {
-          name: fabric.name,
-          image: fabricImageUrl,
-          yardPrice: fabric.yardPrice,
-          stitchPrice: fabric.stitchPrice,
-          colors
-        }
-      }))
-      
-      formData.append('fabrics', JSON.stringify(fabricsData))
-    } else {
-      // Use simple pricing mode - create a generic fabric entry with just prices
-      const simpleFabricData = [{
-        name: "Custom",
-        image: null,
-        yardPrice: parseFloat(simplePricePerYard),
-        stitchPrice: parseFloat(simpleStitchingPrice),
-        colors: [{ name: "Custom", image: null }]
-      }]
-      
-      formData.append('fabrics', JSON.stringify(simpleFabricData))
-      formData.append('useSimplePricing', 'true')
-    }
+    // Create simple fabric data with total price
+    const simpleFabricData = [{
+      name: "Custom",
+      image: null,
+      totalPrice: parseFloat(totalPrice),
+      colors: [{ name: "Custom", image: null }]
+    }]
+    
+    formData.append('fabrics', JSON.stringify(simpleFabricData))
+    formData.append('useSimplePricing', 'true')
 
     // Add the user ID to the form data
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
-    console.log('User ID:', user.id)
     formData.append('created_by', user.id)
 
     try {
@@ -399,6 +275,17 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
             const value = e.target.value === '' ? null : parseInt(e.target.value);
             setDuration(value === null ? null : Math.max(1, value || 1));
           }}
+          onWheel={(e) => {
+            // Prevent scroll from changing the number input
+            (e.currentTarget as HTMLInputElement).blur()
+            setTimeout(() => (e.currentTarget as HTMLInputElement).focus(), 0)
+          }}
+          onKeyDown={(e) => {
+            // Prevent arrow keys from incrementing/decrementing
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+              e.preventDefault()
+            }
+          }}
           placeholder="Enter number of weeks"
           required
           className={styles.input}
@@ -427,79 +314,43 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
           initialImages={existingImages} 
         />
       </div>
-      <div className={styles.fabricSection}>
-        <div className={styles.fabricToggleContainer}>
-          <div className={styles.fabricToggleHeader}>
-            <div className={styles.sectionHeader} style={{ marginBottom: 0 }}>
-              <h2 className={styles.sectionTitle}>Fabric Options</h2>
-              <div className={styles.infoTooltip}>
-                <Info className={styles.infoIcon} />
-                <div className={styles.tooltipContent}>
-                  <p>Choose how to specify fabric options for your design:</p>
-                  <ul>
-                    <li><strong>Detailed mode (toggle ON):</strong> Add specific fabrics with images, colors, and individual pricing</li>
-                    <li><strong>Simple mode (toggle OFF):</strong> Just set basic pricing without fabric details</li>
-                  </ul>
-                  <p>Use simple mode when you don't need to specify different fabric types or colors.</p>
-                </div>
-              </div>
-            </div>
-            <div className={styles.fabricModeToggle}>
-              <label className={styles.toggleLabel}>
-                <span>Detailed fabric options</span>
-                <div className={styles.toggleSwitch}>
-                  <input
-                    type="checkbox"
-                    checked={showFabricPicker}
-                    onChange={() => setShowFabricPicker(!showFabricPicker)}
-                    className={styles.toggleInput}
-                  />
-                  <span className={styles.toggleSlider}></span>
-                </div>
-              </label>
+      <div className={styles.pricingSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Pricing</h2>
+          <div className={styles.infoTooltip}>
+            <Info className={styles.infoIcon} />
+            <div className={styles.tooltipContent}>
+              <p>Set the total price for your design.</p>
+              <p>This should include all materials, labor, and any additional costs.</p>
             </div>
           </div>
-          
-          {!showFabricPicker ? (
-            <div className={styles.simplePricingContainer}>
-              <div className={styles.simplePricingExplanation}>
-                <p>Enter basic pricing information without specifying fabric options</p>
-              </div>
-              <div className={styles.simplePricingForm}>
-                <div className={styles.formGroup}>
-                  <Label htmlFor="price-per-yard">Price Per Yard ($)</Label>
-                  <Input
-                    id="price-per-yard"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g., 15.99"
-                    value={simplePricePerYard}
-                    onChange={(e) => setSimplePricePerYard(e.target.value)}
-                    required={!showFabricPicker}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <Label htmlFor="stitching-price">Stitching Price ($)</Label>
-                  <Input
-                    id="stitching-price"
-                    type="number"
-                    min="0" 
-                    step="0.01"
-                    placeholder="e.g., 45.00"
-                    value={simpleStitchingPrice}
-                    onChange={(e) => setSimpleStitchingPrice(e.target.value)}
-                    required={!showFabricPicker}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <FabricPicker 
-              fabrics={fabrics} 
-              setFabrics={setFabrics} 
+        </div>
+        <div className={styles.pricingContainer}>
+          <div className={styles.formGroup}>
+            <Label htmlFor="total-price">Total Price ($)</Label>
+            <Input
+              id="total-price"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="e.g., 120.00"
+              value={totalPrice}
+              onChange={(e) => setTotalPrice(e.target.value)}
+              onWheel={(e) => {
+                // Prevent scroll from changing the number input
+                (e.currentTarget as HTMLInputElement).blur()
+                setTimeout(() => (e.currentTarget as HTMLInputElement).focus(), 0)
+              }}
+              onKeyDown={(e) => {
+                // Prevent arrow keys from incrementing/decrementing
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault()
+                }
+              }}
+              required
+              className={styles.input}
             />
-          )}
+          </div>
         </div>
       </div>
       
@@ -516,4 +367,3 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     </form>
   )
 }
-

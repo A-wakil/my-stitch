@@ -17,11 +17,10 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
   const { formatAmount, convertToPreferred } = useCurrency()
   const [fabricName, setFabricName] = useState("")
   const [fabricImage, setFabricImage] = useState<File | null>(null)
-  const [fabricPrice, setFabricPrice] = useState("")
-  const [stitchingPrice, setStitchingPrice] = useState("")
+  const [fabricTotalPrice, setFabricTotalPrice] = useState("")
   const [editingFabricIndex, setEditingFabricIndex] = useState<number | null>(null)
   const [showEditDetails, setShowEditDetails] = useState<{[key: number]: boolean}>({})
-  const [formattedPrices, setFormattedPrices] = useState<Record<number, { yardPrice: string, stitchPrice: string }>>({})
+  const [formattedPrices, setFormattedPrices] = useState<Record<number, { totalPrice: string }>>({})
 
   // Initialize all fabric color sections to be expanded by default
   useEffect(() => {
@@ -46,18 +45,15 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
 
   useEffect(() => {
     async function updatePrices() {
-      const newPrices: Record<number, { yardPrice: string, stitchPrice: string }> = {}
+      const newPrices: Record<number, { totalPrice: string }> = {}
       
       for (const [index, fabric] of fabrics.entries()) {
-        const yardPrice = fabric.yardPrice || 0
-        const stitchPrice = fabric.stitchPrice || 0
+        const totalPrice = fabric.totalPrice || 0
         
-        const convertedYardPrice = await convertToPreferred(yardPrice, 'USD')
-        const convertedStitchPrice = await convertToPreferred(stitchPrice, 'USD')
+        const convertedTotalPrice = await convertToPreferred(totalPrice, 'USD')
         
         newPrices[index] = {
-          yardPrice: formatAmount(convertedYardPrice),
-          stitchPrice: formatAmount(convertedStitchPrice)
+          totalPrice: formatAmount(convertedTotalPrice)
         }
       }
       
@@ -69,11 +65,10 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
 
   const formValidation = useMemo(() => {
     if (!fabricName.trim()) return { valid: false, message: "Please enter a fabric name" }
-    if (!fabricPrice) return { valid: false, message: "Please enter a price per yard" }
-    if (!stitchingPrice) return { valid: false, message: "Please enter a stitching price" }
+    if (!fabricTotalPrice) return { valid: false, message: "Please enter a total price" }
     if (!fabricImage) return { valid: false, message: "Please upload a fabric image" }
     return { valid: true, message: "" }
-  }, [fabricName, fabricPrice, stitchingPrice, fabricImage])
+  }, [fabricName, fabricTotalPrice, fabricImage])
 
   const addFabric = () => {
     if (!formValidation.valid) {
@@ -88,8 +83,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
       const newFabrics = [...prevFabrics, { 
         name: fabricName, 
         image: fabricImage,
-        yardPrice: parseFloat(fabricPrice) || 0,
-        stitchPrice: parseFloat(stitchingPrice) || 0,
+        totalPrice: parseFloat(fabricTotalPrice) || 0,
         colors: [] 
       }];
       setShowEditDetails(prev => ({
@@ -100,8 +94,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
     })
     setFabricName("")
     setFabricImage(null)
-    setFabricPrice("")
-    setStitchingPrice("")
+    setFabricTotalPrice("")
   }
 
   const handleColorAdd = (fabricIndex: number, colorValue: string) => {
@@ -192,8 +185,7 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
             <p>For each fabric, specify:</p>
             <ul>
               <li>Fabric name (e.g., "Cotton", "Linen")</li>
-              <li>Price per yard (how much each yard costs)</li>
-              <li>Stitching price (base cost for tailoring)</li>
+              <li>Total price (complete price for the garment)</li>
               <li>Available colors for this fabric</li>
             </ul>
           </div>
@@ -261,22 +253,11 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                     {editingFabricIndex === fabricIndex ? (
                       <>
                         <div className={styles.editFieldGroup}>
-                          <Label className={styles.editLabel}>Yard Price ($)</Label>
+                          <Label className={styles.editLabel}>Total Price ($)</Label>
                           <Input 
                             type="number"
-                            value={fabric.yardPrice}
-                            onChange={(e) => updateFabricField(fabricIndex, 'yardPrice', e.target.value)}
-                            className={styles.editInput}
-                            step="0.01"
-                            min="0"
-                          />
-                        </div>
-                        <div className={styles.editFieldGroup}>
-                          <Label className={styles.editLabel}>Stitching Price ($)</Label>
-                          <Input 
-                            type="number"
-                            value={fabric.stitchPrice}
-                            onChange={(e) => updateFabricField(fabricIndex, 'stitchPrice', e.target.value)}
+                            value={fabric.totalPrice}
+                            onChange={(e) => updateFabricField(fabricIndex, 'totalPrice', e.target.value)}
                             className={styles.editInput}
                             step="0.01"
                             min="0"
@@ -286,12 +267,8 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
                     ) : (
                       <>
                         <div className={styles.priceTag}>
-                          <span className={styles.priceLabel}>Yard Price:</span>
-                          <span className={styles.priceValue}>{formattedPrices[fabricIndex]?.yardPrice}</span>
-                        </div>
-                        <div className={styles.priceTag}>
-                          <span className={styles.priceLabel}>Stitching:</span>
-                          <span className={styles.priceValue}>{formattedPrices[fabricIndex]?.stitchPrice}</span>
+                          <span className={styles.priceLabel}>Total Price:</span>
+                          <span className={styles.priceValue}>{formattedPrices[fabricIndex]?.totalPrice}</span>
                         </div>
                       </>
                     )}
@@ -421,33 +398,18 @@ export function FabricPicker({ fabrics, setFabrics }: FabricPickerProps) {
           </div>
           
           <div className={styles.formGroup}>
-            <Label htmlFor="yard-price" className={styles.formLabel}>Price Per Yard ($)</Label>
+            <Label htmlFor="total-price" className={styles.formLabel}>Total Price ($)</Label>
             <Input 
-              id="yard-price"
+              id="total-price"
               type="number" 
-              placeholder="e.g., 30.00" 
-              value={fabricPrice} 
-              onChange={(e) => setFabricPrice(e.target.value)}
+              placeholder="e.g., 120.00" 
+              value={fabricTotalPrice} 
+              onChange={(e) => setFabricTotalPrice(e.target.value)}
               step="0.01"
               min="0"
               className={styles.formInput}
             />
-            <p className={styles.helpText}>How much each yard of this fabric costs</p>
-          </div>
-          
-          <div className={styles.formGroup}>
-            <Label htmlFor="stitching-price" className={styles.formLabel}>Stitching Price ($)</Label>
-            <Input 
-              id="stitching-price"
-              type="number" 
-              placeholder="e.g., 60.00" 
-              value={stitchingPrice} 
-              onChange={(e) => setStitchingPrice(e.target.value)}
-              step="0.01"
-              min="0"
-              className={styles.formInput}
-            />
-            <p className={styles.helpText}>Base cost for tailoring with this fabric</p>
+            <p className={styles.helpText}>Complete price for the garment with this fabric</p>
           </div>
           
           <div className={styles.formGroup}>

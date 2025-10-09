@@ -16,17 +16,10 @@ interface OrderConfirmationModalProps {
     design: {
       id: string;
       title: string
-      fabrics: Array<{
-        name: string
-        price: number
-        colors: Array<{ name: string }>
-      }>
       brand_name: string
       completion_time: number
       tailor_id: string;
     }
-    selectedFabric: number
-    selectedColor: number | null
     shippingAddress: string
     total: number
     measurement?: Measurement
@@ -111,9 +104,7 @@ export default function OrderConfirmationModal({
 
   if (!isOpen) return null
 
-  const selectedColor = orderDetails.selectedColor !== null 
-    ? orderDetails.design.fabrics[orderDetails.selectedFabric].colors[orderDetails.selectedColor].name 
-    : 'No color selected'
+  const selectedColor = 'N/A'
 
   const handleAddressFormChange = (field: keyof AddressForm) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -240,13 +231,10 @@ export default function OrderConfirmationModal({
         orderDetails: {
           design: {
             title: orderDetails.design.title,
-            fabrics: orderDetails.design.fabrics,
             id: orderDetails.design.id,
             tailor_id: orderDetails.design.tailor_id,
             completion_time: orderDetails.design.completion_time,
           },
-          selectedFabric: orderDetails.selectedFabric,
-          selectedColor: orderDetails.selectedColor,
           shippingAddress: orderDetails.shippingAddress,
           measurement: orderDetails.measurement,
           tailorNotes: orderDetails.tailorNotes,
@@ -498,23 +486,6 @@ export default function OrderConfirmationModal({
             <h4>Order Summary</h4>
             <div className={styles.orderDetails}>
               <p>Design: {orderDetails.design.title}</p>
-              <p>Fabric: {orderDetails.design.fabrics[orderDetails.selectedFabric].name}</p>
-              <p className={styles.colorDetail}>
-                Color: 
-                <span 
-                  className={styles.colorPill}
-                  style={{ 
-                    backgroundColor: selectedColor,
-                    display: 'inline-block',
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    marginLeft: '8px',
-                    verticalAlign: 'middle',
-                    border: '1px solid #ddd'
-                  }}
-                />
-              </p>
             </div>
           </div>
 

@@ -505,12 +505,9 @@
 }
 
 .estimatedTotal {
-  margin-top: 1rem !important;
   font-weight: 600;
   font-size: 1.2rem;
   color: #212529 !important;
-  border-top: 1px solid #dee2e6;
-  padding-top: 1rem;
 }
 
 .partialPrice {
