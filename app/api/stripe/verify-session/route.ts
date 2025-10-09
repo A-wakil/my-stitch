@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 // Simple in-memory cache to prevent duplicate processing
@@ -74,20 +74,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get authenticated user
-    const cookieStore = await cookies();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    
-    const authCookie = cookieStore.get('sb-ewfttdrfsdhgslldfgmz-auth-token');
-    
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: {
-        headers: authCookie ? {
-          Authorization: `Bearer ${authCookie.value}`
-        } : {}
-      }
-    });
-    
+    const supabase = createRouteHandlerClient({ cookies });
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

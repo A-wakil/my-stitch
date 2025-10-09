@@ -86,6 +86,9 @@ export default function OrdersPage() {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [ratingOrderId, setRatingOrderId] = useState<string | null>(null)
   const [ratingTailorId, setRatingTailorId] = useState<string | null>(null)
+  
+  // Track which orders have been rated and their rating values
+  const [orderRatings, setOrderRatings] = useState<Record<string, number>>({})
 
   // Check if screen is mobile size
   useEffect(() => {
@@ -129,6 +132,25 @@ export default function OrdersPage() {
       if (ordersError) {
         console.error('Error fetching orders:', ordersError)
         return
+      }
+
+      // Fetch ratings for all orders
+      const orderIds = ordersData?.map(order => order.id) || []
+      const { data: ratingsData, error: ratingsError } = await supabase
+        .from('ratings')
+        .select('order_id, rating')
+        .eq('user_id', user.id)
+        .in('order_id', orderIds)
+
+      if (ratingsError) {
+        console.error('Error fetching ratings:', ratingsError)
+      } else if (ratingsData) {
+        // Create a map of order IDs to their rating values
+        const ratingsMap = ratingsData.reduce((acc, rating) => {
+          acc[rating.order_id] = rating.rating
+          return acc
+        }, {} as Record<string, number>)
+        setOrderRatings(ratingsMap)
       }
 
       // Then fetch design details and order items for each order
@@ -214,6 +236,18 @@ export default function OrdersPage() {
     setRatingOrderId(orderId);
     setRatingTailorId(tailorId);
     setIsRatingModalOpen(true);
+  };
+
+  // Get rating button class based on rating value
+  const getRatingButtonClass = (rating: number) => {
+    if (rating >= 4) return styles.ratedGreen;
+    if (rating === 3) return styles.ratedYellow;
+    return styles.ratedRed;
+  };
+
+  // Render stars for rated button
+  const renderStars = (rating: number) => {
+    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
   };
 
   const filteredOrders = orders.filter(order => 
@@ -403,11 +437,7 @@ export default function OrdersPage() {
                 </div>
                 <div className={styles.orderNumber}>
                   <div className={styles.label}>ORDER # {order.id}</div>
-                  <div className={styles.orderActions}>
-                    <a href={`/orders/${order.id}`} className={styles.link}>View order details</a>
-                    <span className={styles.separator}>|</span>
-                    <a href={`/orders/${order.id}/invoice`} className={styles.link}>View invoice</a>
-                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -511,14 +541,22 @@ export default function OrdersPage() {
                           >
                             Buy it again
                           </button>
-                          <div className={styles.itemPrice}>${(item.price ?? 0).toFixed(2)}</div>
                           {(order.status === 'shipped' || order.status === 'delivered') && (
-                            <button
-                              className={styles.rateButton}
-                              onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
-                            >
-                              Rate this order
-                            </button>
+                            orderRatings[order.id] ? (
+                              <button
+                                className={`${styles.ratedButton} ${getRatingButtonClass(orderRatings[order.id])}`}
+                                disabled
+                              >
+                                Rated {renderStars(orderRatings[order.id])}
+                              </button>
+                            ) : (
+                              <button
+                                className={styles.rateButton}
+                                onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
+                              >
+                                Rate this order
+                              </button>
+                            )
                           )}
                         </div>
                       </div>
@@ -594,12 +632,21 @@ export default function OrdersPage() {
                         Buy it again
                       </button>
                       {(order.status === 'shipped' || order.status === 'delivered') && (
-                        <button
-                          className={styles.rateButton}
-                          onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
-                        >
-                          Rate this order
-                        </button>
+                        orderRatings[order.id] ? (
+                          <button
+                            className={`${styles.ratedButton} ${getRatingButtonClass(orderRatings[order.id])}`}
+                            disabled
+                          >
+                            Rated {renderStars(orderRatings[order.id])}
+                          </button>
+                        ) : (
+                          <button
+                            className={styles.rateButton}
+                            onClick={() => handleOpenRatingModal(order.id, order.tailor_id)}
+                          >
+                            Rate this order
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
@@ -630,8 +677,13 @@ export default function OrdersPage() {
           onClose={() => setIsRatingModalOpen(false)}
           orderId={ratingOrderId}
           tailorId={ratingTailorId}
-          onSuccess={() => {
+          onSuccess={(rating: number) => {
             toast.success('Thank you for your rating!');
+            // Add the rating to the orderRatings map
+            setOrderRatings(prev => ({
+              ...prev,
+              [ratingOrderId]: rating
+            }));
             setIsRatingModalOpen(false);
           }}
         />

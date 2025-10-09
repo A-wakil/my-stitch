@@ -1,6 +1,6 @@
 import { supabase } from '../../../lib/supabaseClient'
 import { NextRequest, NextResponse } from "next/server"
-import { processFabricsWithImages } from '../route'
+import { processImages, processVideos } from '../route'
 
 // Updated type definition to match Next.js 15 requirements
 type Params = { id: string }
@@ -11,10 +11,10 @@ async function getParamsId(params: Params) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Params }
+  { params }: { params: Promise<Params> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     
     const { data: design, error } = await supabase
       .from('designs')
@@ -35,23 +35,29 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Params }
+  { params }: { params: Promise<Params> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const formData = await request.formData()
-    const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
+    const price = parseFloat(formData.get("price") as string)
 
-    // Process fabrics and their images
-    const processedFabrics = await processFabricsWithImages(fabricsData, formData)
+    // Process design images and videos (using same bucket but separate columns)
+    const imageUrls = await processImages(formData, 'design-images')
+    const videoUrls = await processVideos(formData, 'design-images') // Using design-images bucket
+    
+    console.log('[ID] Update - Image URLs:', imageUrls)
+    console.log('[ID] Update - Video URLs:', videoUrls)
 
     const { data, error } = await supabase
       .from('designs')
       .update({
         title: formData.get("title"),
         description: formData.get("description"),
-        fabrics: processedFabrics,
+        images: imageUrls, // Images in images column
+        videos: videoUrls, // Videos in videos column
+        price: price,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string
@@ -74,10 +80,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Params }
+  { params }: { params: Promise<Params> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     
     const { error } = await supabase
       .from('designs')
@@ -98,10 +104,10 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Params }
+  { params }: { params: Promise<Params> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const requestBody = await request.json();
     
     // Update only the fields provided in the request

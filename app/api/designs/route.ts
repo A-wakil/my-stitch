@@ -64,76 +64,59 @@ export async function processImages(formData: FormData, bucket: string) {
   return imageUrls
 }
 
-export async function processFabricsWithImages(fabricsData: any[], formData: FormData) {
-  const fabricImages = formData.getAll("fabricImages") as File[]
-  const fabricImageKeys = formData.getAll("fabricImageKeys") as string[]
-
-  return Promise.all(fabricsData.map(async (fabric, index) => {
-    let fabricImageUrl = fabric.image
-    
-    // Check if there's a corresponding fabric image to upload
-    const fabricImage = fabricImages[index]
-    const fabricImageKey = fabricImageKeys[index]
-    
-    if (fabricImage && fabricImageKey) {
-      try {
-        console.log('Uploading fabric image:', fabricImageKey)
-        const { data, error } = await supabase.storage
-          .from('fabric-images')
-          .upload(fabricImageKey, fabricImage)
-        
-        if (error) {
-          console.error('Supabase upload error:', error)
-          throw error
-        }
-        if (data) {
-          const urlData = supabase.storage
-            .from('fabric-images')
-            .getPublicUrl(data.path)
-          fabricImageUrl = urlData.data.publicUrl
-          console.log('Generated URL:', fabricImageUrl)
-        }
-      } catch (error) {
-        console.error('Fabric image upload error:', error)
-      }
-    } else if (typeof fabricImageUrl === 'string' && fabricImageUrl.startsWith('fabrics/')) {
-      // Convert existing paths to full URLs if they're not already
+export async function processVideos(formData: FormData, bucket: string) {
+  const videos = formData.getAll("videos") as File[]
+  const videoUrls: string[] = JSON.parse(formData.get("existingVideos") as string || "[]")
+  
+  for (const video of videos) {
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(`${Date.now()}-${video.name}`, video, {
+          cacheControl: '3600',
+          upsert: false
+        })
+      
+      if (error) throw error
+      
       const urlData = supabase.storage
-        .from('fabric-images')
-        .getPublicUrl(fabricImageUrl)
-      fabricImageUrl = urlData.data.publicUrl
+        .from(bucket)
+        .getPublicUrl(data.path)
+      
+      videoUrls.push(urlData.data.publicUrl)
+    } catch (error) {
+      console.error(`${bucket} video upload error:`, error)
     }
-
-    return {
-      ...fabric,
-      image: fabricImageUrl,
-      colors: fabric.colors
-    }
-  }))
+  }
+  
+  return videoUrls
 }
+
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
-    const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
+    const price = parseFloat(formData.get("price") as string)
     
     console.log('Processing design submission...')
     console.log('Created by:', created_by)
     
-    // Process design images
+    // Process design images and videos (using same bucket but separate columns)
     const imageUrls = await processImages(formData, 'design-images')
+    const videoUrls = await processVideos(formData, 'design-images') // Using design-images bucket
     
-    // Process fabrics and their images
-    const processedFabrics = await processFabricsWithImages(fabricsData, formData)
+    console.log('Image URLs:', imageUrls)
+    console.log('Video URLs:', videoUrls)
 
     const { data, error } = await supabase
       .from('designs')
       .insert({
         title: formData.get("title"),
         description: formData.get("description"),
-        images: imageUrls,
-        fabrics: processedFabrics,
+        images: imageUrls, // Images in images column
+        videos: videoUrls, // Videos in videos column
+        price: price,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string
@@ -163,19 +146,23 @@ export async function PUT(request: Request) {
   try {
     const formData = await request.formData()
     const designId = formData.get("id")
-    const fabricsData = JSON.parse(formData.get("fabrics") as string)
     const created_by = formData.get("created_by") as string
+    const price = parseFloat(formData.get("price") as string)
     
     const imageUrls = await processImages(formData, 'design-images')
-    const processedFabrics = await processFabricsWithImages(fabricsData, formData)
+    const videoUrls = await processVideos(formData, 'design-images') // Using design-images bucket
+    
+    console.log('Update - Image URLs:', imageUrls)
+    console.log('Update - Video URLs:', videoUrls)
 
     const { data, error } = await supabase
       .from('designs')
       .update({
         title: formData.get("title"),
         description: formData.get("description"),
-        images: imageUrls,
-        fabrics: processedFabrics,
+        images: imageUrls, // Images in images column
+        videos: videoUrls, // Videos in videos column
+        price: price,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string

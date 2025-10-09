@@ -20,6 +20,7 @@ interface DesignDetail {
   title: string
   description: string
   images: string[]
+  videos?: string[]
   // Some existing designs may not have fabrics; fallback to price
   price?: number
   fabrics?: Array<{
@@ -32,6 +33,12 @@ interface DesignDetail {
   created_by: string
   brand_name: string
   completion_time: number
+}
+
+type MediaItem = {
+  type: 'image' | 'video'
+  url: string
+  index: number
 }
 
 interface PaymentMethod {
@@ -68,6 +75,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   const [design, setDesign] = useState<DesignDetail | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0)
   const [loading, setLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [brandName, setBrandName] = useState<string>('')
@@ -83,10 +91,32 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [formattedTotalPrice, setFormattedTotalPrice] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
   const [isImageZoomed, setIsImageZoomed] = useState(false)
+  const [showReviewsModal, setShowReviewsModal] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false)
 
   // Bag context
   const { addItem } = useBag()
 
+  // Combine images and videos into a single media array
+  const mediaItems = useMemo((): MediaItem[] => {
+    if (!design) return []
+    
+    const items: MediaItem[] = []
+    let currentIndex = 0
+    
+    // Add images first
+    design.images.forEach((url) => {
+      items.push({ type: 'image', url, index: currentIndex++ })
+    })
+    
+    // Add videos
+    design.videos?.forEach((url) => {
+      items.push({ type: 'video', url, index: currentIndex++ })
+    })
+    
+    return items
+  }, [design])
 
   // Add effect to detect viewport size
   useEffect(() => {
@@ -292,6 +322,35 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     return null; // Return null instead of 0 for no ratings
   };
 
+  const fetchReviews = async () => {
+    if (!tailorId) return;
+    
+    setIsLoadingReviews(true);
+    const { data, error } = await supabase
+      .from('ratings')
+      .select(`
+        *,
+        users:user_id (
+          id,
+          email
+        )
+      `)
+      .eq('tailor_id', tailorId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching reviews:', error);
+    } else {
+      setReviews(data || []);
+    }
+    setIsLoadingReviews(false);
+  };
+
+  const handleOpenReviews = () => {
+    setShowReviewsModal(true);
+    fetchReviews();
+  };
+
   if (!design) {
     return <div>Loading...</div>
   }
@@ -306,26 +365,52 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       </button>
 
       <div className={styles.productGrid}>
-        {/* Left side - Image gallery */}
+        {/* Left side - Media gallery */}
         <div className={styles.imageSection}>
           <div className={styles.mainImage}>
-            <img 
-              src={design.images[selectedImage]} 
-              alt={design.title}
-              className={styles.primaryImage}
-              onClick={() => setIsImageZoomed(true)}
-              style={{ cursor: 'zoom-in' }}
-            />
+            {mediaItems[selectedMediaIndex]?.type === 'video' ? (
+              <video 
+                src={mediaItems[selectedMediaIndex]?.url}
+                className={styles.primaryImage}
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <img 
+                src={mediaItems[selectedMediaIndex]?.url}
+                alt={design.title}
+                className={styles.primaryImage}
+                onClick={() => setIsImageZoomed(true)}
+                style={{ cursor: 'zoom-in' }}
+              />
+            )}
           </div>
           <div className={styles.thumbnails}>
-            {design.images.map((image, index) => (
-              <img
+            {mediaItems.map((item, index) => (
+              <div 
                 key={index}
-                src={image}
-                alt={`${design.title} view ${index + 1}`}
-                className={`${styles.thumbnail} ${selectedImage === index ? styles.selected : ''}`}
-                onClick={() => setSelectedImage(index)}
-              />
+                className={`${styles.thumbnailContainer} ${selectedMediaIndex === index ? styles.selected : ''}`}
+                onClick={() => setSelectedMediaIndex(index)}
+              >
+                {item.type === 'video' ? (
+                  <>
+                    <video
+                      src={item.url}
+                      className={styles.thumbnail}
+                      muted
+                    />
+                    <div className={styles.videoPlayIcon}>▶</div>
+                  </>
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={`${design.title} view ${index + 1}`}
+                    className={styles.thumbnail}
+                  />
+                )}
+              </div>
             ))}
           </div>
           
@@ -352,9 +437,15 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                           readOnly={true} 
                           onChange={() => {}} 
                         />
-                        <span className={styles.ratingCount}>
-                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
-                        </span>
+                        <button 
+                          className={styles.viewReviewsButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenReviews();
+                          }}
+                        >
+                          View Reviews ({tailorDetails.rating_count})
+                        </button>
                       </>
                     ) : (
                       <span className={styles.noRatings}>No ratings yet</span>
@@ -398,9 +489,15 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                           readOnly={true} 
                           onChange={() => {}} 
                         />
-                        <span className={styles.ratingCount}>
-                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
-                        </span>
+                        <button 
+                          className={styles.viewReviewsButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenReviews();
+                          }}
+                        >
+                          View Reviews ({tailorDetails.rating_count})
+                        </button>
                       </>
                     ) : (
                       <span className={styles.noRatings}>No ratings yet</span>
@@ -576,9 +673,16 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                           readOnly={true} 
                           onChange={() => {}} 
                         />
-                        <span className={styles.ratingCount}>
-                          {tailorDetails.rating_count || 0} {(tailorDetails.rating_count === 1) ? 'review' : 'reviews'}
-                        </span>
+                        <button 
+                          className={styles.viewReviewsButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTailorProfile(false);
+                            handleOpenReviews();
+                          }}
+                        >
+                          View Reviews ({tailorDetails.rating_count})
+                        </button>
                       </>
                     ) : (
                       <span className={styles.noRatings}>No ratings yet</span>
@@ -623,8 +727,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       )}
 
 
-      {/* Image Zoom Modal */}
-      {isImageZoomed && (
+      {/* Media Zoom Modal */}
+      {isImageZoomed && mediaItems[selectedMediaIndex]?.type === 'image' && (
         <div className={styles.zoomModalOverlay} onClick={() => setIsImageZoomed(false)}>
           <div className={styles.zoomModalContent} onClick={(e) => e.stopPropagation()}>
             <button 
@@ -634,12 +738,93 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
               ×
             </button>
             <img 
-              src={design.images[selectedImage]} 
+              src={mediaItems[selectedMediaIndex]?.url}
               alt={design.title}
               className={styles.zoomedImage}
             />
             <div className={styles.zoomImageInfo}>
-              <p>{design.title} - View {selectedImage + 1} of {design.images.length}</p>
+              <p>{design.title} - View {selectedMediaIndex + 1} of {mediaItems.length}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Modal */}
+      {showReviewsModal && (
+        <div className={styles.reviewsModalOverlay} onClick={() => setShowReviewsModal(false)}>
+          <div className={styles.reviewsModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.reviewsModalHeader}>
+              <h2>Customer Reviews</h2>
+              <button 
+                className={styles.closeReviewsButton}
+                onClick={() => setShowReviewsModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            {tailorDetails && (
+              <div className={styles.reviewsSummary}>
+                <div className={styles.overallRating}>
+                  <div className={styles.ratingNumber}>
+                    {calculateAverageRating(tailorDetails)?.toFixed(1) || 'N/A'}
+                  </div>
+                  <StarRating 
+                    initialRating={calculateAverageRating(tailorDetails) || 0}
+                    readOnly={true} 
+                    onChange={() => {}} 
+                  />
+                  <p className={styles.totalReviews}>
+                    Based on {tailorDetails.rating_count || 0} {tailorDetails.rating_count === 1 ? 'review' : 'reviews'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className={styles.reviewsList}>
+              {isLoadingReviews ? (
+                <div className={styles.loadingReviews}>Loading reviews...</div>
+              ) : reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.id} className={styles.reviewItem}>
+                    <div className={styles.reviewHeader}>
+                      <div className={styles.reviewerInfo}>
+                        <div className={styles.reviewerAvatar}>
+                          {review.users?.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <div className={styles.reviewerName}>
+                            {review.users?.email?.split('@')[0] || 'Anonymous'}
+                          </div>
+                          <div className={styles.reviewDate}>
+                            {new Date(review.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.reviewRating}>
+                        <StarRating 
+                          initialRating={review.rating}
+                          readOnly={true} 
+                          onChange={() => {}} 
+                        />
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <div className={styles.reviewComment}>
+                        {review.comment}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className={styles.noReviews}>
+                  <p>No reviews yet. Be the first to review this tailor!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

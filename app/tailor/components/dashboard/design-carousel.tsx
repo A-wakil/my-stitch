@@ -11,15 +11,7 @@ const designs = [
     id: 1,
     title: "Summer Dress",
     images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-    colors: [
-      { name: "Red", image: "/color-red.svg" },
-      { name: "Blue", image: "/color-blue.svg" },
-      { name: "Green", image: "/color-green.svg" },
-    ],
-    fabrics: [
-      { name: "Cotton", image: "/fabric-cotton.svg" },
-      { name: "Linen", image: "/fabric-linen.svg" },
-    ],
+    price: 150.00,
   },
   // Add more designs here
 ]
@@ -85,29 +77,9 @@ export function DesignCarousel() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold mb-2">Colors:</h4>
-            <div className="flex flex-wrap gap-2">
-              {design.colors.map((color, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <img src={color.image || "/placeholder.svg"} alt={color.name} className="w-6 h-6 rounded-full" />
-                  <span>{color.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-2">Fabrics:</h4>
-            <div className="flex flex-wrap gap-2">
-              {design.fabrics.map((fabric, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <img src={fabric.image || "/placeholder.svg"} alt={fabric.name} className="w-6 h-6 rounded" />
-                  <span>{fabric.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="mt-4">
+          <h4 className="font-semibold mb-2">Price:</h4>
+          <p className="text-2xl font-bold">${design.price.toFixed(2)}</p>
         </div>
       </CardContent>
     </Card>

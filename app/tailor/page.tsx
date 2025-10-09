@@ -133,8 +133,11 @@ export default function Dashboard() {
       }
 
       const totalOrders = orders.length || 0;
-      const totalRevenue = orders.reduce((sum: number, order: {total_amount: number}) => 
-        sum + (Number(order.total_amount) || 0), 0) || 0;
+      // Only count revenue from delivered orders
+      const totalRevenue = orders
+        .filter((order: {status: string}) => order.status === 'delivered')
+        .reduce((sum: number, order: {total_amount: number}) => 
+          sum + (Number(order.total_amount) || 0), 0) || 0;
 
       const recentDesignsResponse = await withTimeout(
         supabase
@@ -455,7 +458,7 @@ export default function Dashboard() {
               <p className={styles.statNumber}>{memoizedStats.totalDesigns}</p>
             </Card>
             <Card className={styles.card}>
-              <h3>Total Orders</h3>
+              <h3>Successfully Delivered</h3>
               <p className={styles.statNumber}>{memoizedStats.totalOrders}</p>
             </Card>
             <Card className={styles.card}>

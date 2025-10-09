@@ -11,6 +11,8 @@ import { supabase } from "../../../lib/supabaseClient"
 import { toast } from "react-hot-toast"
 import { Info } from "lucide-react"
 import { Toaster } from 'react-hot-toast'
+import { useCurrency } from '../../../context/CurrencyContext'
+import { CURRENCIES } from '../../../lib/types'
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -19,12 +21,8 @@ interface DesignFormProps {
     title: string
     description: string
     images: string[]
-    fabrics: Array<{
-      name: string
-      image: string | null
-      totalPrice: number
-      colors: Array<{ name: string; image: string | null }>
-    }>
+    videos?: string[]
+    price?: number
     gender?: 'male' | 'female' | null
     completion_time?: number | null
   }
@@ -39,14 +37,18 @@ interface FormErrors {
 }
 
 export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
+  const { currency, convertToPreferred, getExchangeRate } = useCurrency()
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [images, setImages] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<string[]>(initialData?.images || [])
+  const [videos, setVideos] = useState<File[]>([])
+  const [existingVideos, setExistingVideos] = useState<string[]>(initialData?.videos || [])
   const [duration, setDuration] = useState<Duration>(null);
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [totalPrice, setTotalPrice] = useState<string>('')
+  const [priceInUSD, setPriceInUSD] = useState<number | null>(null) // Store the original USD price
   const [gender, setGender] = useState<'male' | 'female' | null>(
     initialData?.gender !== undefined ? initialData.gender : null
   )
@@ -56,6 +58,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       setTitle(initialData.title)
       setDescription(initialData.description)
       setExistingImages(initialData.images || [])
+      setExistingVideos(initialData.videos || [])
       setDuration(
         typeof initialData.completion_time === 'number'
           ? initialData.completion_time
@@ -63,13 +66,23 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
             ? null
             : null
       )
-      
-      // Extract price from existing fabrics (should be simple mode with one "Custom" fabric)
-      if (initialData.fabrics.length > 0) {
-        setTotalPrice(initialData.fabrics[0].totalPrice.toString())
+      // Set the price if available (stored in USD in database)
+      if (initialData.price !== undefined && initialData.price !== null) {
+        setPriceInUSD(initialData.price)
       }
     }
   }, [initialData])
+
+  // Convert price to selected currency whenever currency or priceInUSD changes
+  useEffect(() => {
+    async function updateDisplayPrice() {
+      if (priceInUSD !== null) {
+        const convertedPrice = await convertToPreferred(priceInUSD, 'USD')
+        setTotalPrice(convertedPrice.toFixed(2))
+      }
+    }
+    updateDisplayPrice()
+  }, [currency, priceInUSD, convertToPreferred])
 
   // Form validation
   const formValidation = useMemo(() => {
@@ -93,9 +106,10 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       return { valid: false, message: "Please select a gender category" }
     }
 
-    // Check if there are either new images or existing images
-    if (images.length === 0 && existingImages.length === 0) {
-      return { valid: false, message: "Please upload at least one image" }
+    // Check if there are either new images/videos or existing images/videos
+    const totalMedia = images.length + existingImages.length + videos.length + existingVideos.length
+    if (totalMedia === 0) {
+      return { valid: false, message: "Please upload at least one image or video" }
     }
 
     // Validate total price
@@ -108,7 +122,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
     setErrors(newErrors)
     return { valid: true, message: "" }
-  }, [title, description, duration, images, existingImages, totalPrice, gender]);
+  }, [title, description, duration, images, existingImages, videos, existingVideos, totalPrice, gender]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,38 +137,39 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
 
     setIsSubmitting(true)
 
-    const formData = new FormData()
-    formData.append("title", title)
-    formData.append("description", description)
-    formData.append("existingImages", JSON.stringify(existingImages))
-    formData.append("completion_time", duration === null ? "" : duration.toString())
-
-    if (gender !== null) {
-      formData.append("gender", gender)
-    }
-    
-    // Append new images
-    images.forEach((image) => {
-      formData.append("images", image)
-    })
-    
-    // Create simple fabric data with total price
-    const simpleFabricData = [{
-      name: "Custom",
-      image: null,
-      totalPrice: parseFloat(totalPrice),
-      colors: [{ name: "Custom", image: null }]
-    }]
-    
-    formData.append('fabrics', JSON.stringify(simpleFabricData))
-    formData.append('useSimplePricing', 'true')
-
-    // Add the user ID to the form data
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
-    formData.append('created_by', user.id)
-
     try {
+      // Convert price from selected currency to USD before saving
+      const priceInSelectedCurrency = parseFloat(totalPrice)
+      const exchangeRate = await getExchangeRate(currency, 'USD')
+      const priceInUSDForSaving = priceInSelectedCurrency * exchangeRate
+
+      const formData = new FormData()
+      formData.append("title", title)
+      formData.append("description", description)
+      formData.append("existingImages", JSON.stringify(existingImages))
+      formData.append("existingVideos", JSON.stringify(existingVideos))
+      formData.append("completion_time", duration === null ? "" : duration.toString())
+      formData.append("price", priceInUSDForSaving.toString())
+
+      if (gender !== null) {
+        formData.append("gender", gender)
+      }
+      
+      // Append new images
+      images.forEach((image) => {
+        formData.append("images", image)
+      })
+
+      // Append new videos
+      videos.forEach((video) => {
+        formData.append("videos", video)
+      })
+
+      // Add the user ID to the form data
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      formData.append('created_by', user.id)
+
       const url = initialData?.id ? `/api/designs/${initialData.id}` : "/api/designs"
       const method = initialData?.id ? "PUT" : "POST"
 
@@ -243,15 +258,17 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
               />
               <span>Male</span>
             </label>
-            <label className={`${styles.radioLabel} ${gender === 'female' ? styles.selected : ''}`}>
+            <label className={`${styles.radioLabel} ${styles.comingSoon}`}>
               <input
                 type="radio"
                 name="gender"
                 value="female"
                 checked={gender === 'female'}
                 onChange={() => setGender('female')}
+                disabled
               />
               <span>Female</span>
+              <span className={styles.comingSoonBadge}>Coming Soon</span>
             </label>
           </div>
         </div>
@@ -293,17 +310,24 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       </div>
       <div className={styles.uploadSection}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Images</h2>
+          <h2 className={styles.sectionTitle}>Media (Images & Videos)</h2>
           <div className={styles.infoTooltip}>
             <Info className={styles.infoIcon} />
             <div className={styles.tooltipContent}>
-              <p>Upload high-quality images of your design.</p>
-              <p>Best practices:</p>
+              <p>Upload high-quality images and videos of your design.</p>
+              <p>Images - Best practices:</p>
               <ul>
                 <li>Include front, back and detail views</li>
                 <li>Use good lighting and neutral backgrounds</li>
                 <li>Show the design on a model if possible</li>
                 <li>Recommended resolution: 1000px × 1000px minimum</li>
+              </ul>
+              <p>Videos - Best practices:</p>
+              <ul>
+                <li>Maximum duration: 20 seconds</li>
+                <li>Show 360° views and fabric movement</li>
+                <li>Good lighting and stable camera</li>
+                <li>Formats: MP4, MOV, WebM</li>
               </ul>
             </div>
           </div>
@@ -311,7 +335,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
         <ImageUpload 
           images={images} 
           setImages={setImages} 
-          initialImages={existingImages} 
+          initialImages={existingImages}
+          setExistingImages={setExistingImages}
+          videos={videos}
+          setVideos={setVideos}
+          initialVideos={existingVideos}
+          setExistingVideos={setExistingVideos}
         />
       </div>
       <div className={styles.pricingSection}>
@@ -322,18 +351,19 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
             <div className={styles.tooltipContent}>
               <p>Set the total price for your design.</p>
               <p>This should include all materials, labor, and any additional costs.</p>
+              <p className="text-sm text-gray-500 mt-2">Price is shown in {CURRENCIES[currency]?.name || currency}. It will be stored in USD and converted for customers based on their currency preference.</p>
             </div>
           </div>
         </div>
         <div className={styles.pricingContainer}>
           <div className={styles.formGroup}>
-            <Label htmlFor="total-price">Total Price ($)</Label>
+            <Label htmlFor="total-price">Total Price ({CURRENCIES[currency]?.symbol || currency})</Label>
             <Input
               id="total-price"
               type="number"
               min="0"
               step="0.01"
-              placeholder="e.g., 120.00"
+              placeholder={`e.g., ${currency === 'NGN' ? '50000' : '120.00'}`}
               value={totalPrice}
               onChange={(e) => setTotalPrice(e.target.value)}
               onWheel={(e) => {

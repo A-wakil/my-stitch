@@ -59,6 +59,25 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           </li>
           <li>
             <Link 
+              href="/tailor/orders" 
+              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
+              onClick={e => {
+                if (!hasProfile) {
+                  e.preventDefault();
+                }
+                if (isMobile && toggleSidebar) {
+                  toggleSidebar();
+                }
+              }}
+              title={!hasProfile ? "Create your profile first" : ""}
+              data-tooltip="Orders"
+            >
+              <ShoppingBag className={styles['sidebar-icon']} size={20} />
+              Orders
+            </Link>
+          </li>
+          <li>
+            <Link 
               href="/tailor/designs" 
               className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
               onClick={e => {
@@ -93,25 +112,6 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
             >
               <User className={styles['sidebar-icon']} size={20} />
               Profile
-            </Link>
-          </li>
-          <li>
-            <Link 
-              href="/tailor/orders" 
-              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
-              onClick={e => {
-                if (!hasProfile) {
-                  e.preventDefault();
-                }
-                if (isMobile && toggleSidebar) {
-                  toggleSidebar();
-                }
-              }}
-              title={!hasProfile ? "Create your profile first" : ""}
-              data-tooltip="Orders"
-            >
-              <ShoppingBag className={styles['sidebar-icon']} size={20} />
-              Orders
             </Link>
           </li>
         </ul>

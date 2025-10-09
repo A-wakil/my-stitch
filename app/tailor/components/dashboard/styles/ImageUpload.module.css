@@ -1,21 +1,154 @@
+.uploadWrapper {
+  width: 100%;
+}
+
+.uploadButtons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.uploadGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.uploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  justify-content: center;
+}
+
+.uploadLabel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.uploadIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fileInput {
+  display: none;
+}
+
 .design-image {
-  width: 60%;
-  max-width: 480px;
-  height: auto;
-  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(300px, 1fr));
-  /* gap: 0.1rem; */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
   margin-top: 1rem;
 }
 
 .image-container {
   position: relative;
   width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.image-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.deleteButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(4px);
+  border-radius: 50% !important;
+  padding: 6px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+}
+
+.deleteButton:hover {
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+.image-container:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton svg {
+  color: #ef4444 !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.mediaTypeIndicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  border-radius: 6px;
+  padding: 4px 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mediaIcon {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}
+
+.videoDurationBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .uploadButtons {
+    flex-direction: column;
+  }
+  
+  .uploadGroup {
+    width: 100%;
+  }
 } 

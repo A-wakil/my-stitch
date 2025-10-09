@@ -9,7 +9,7 @@ interface RatingModalProps {
   onClose: () => void;
   orderId: string;
   tailorId: string;
-  onSuccess?: () => void;
+  onSuccess?: (rating: number) => void;
 }
 
 export function RatingModal({ isOpen, onClose, orderId, tailorId, onSuccess }: RatingModalProps) {
@@ -64,7 +64,7 @@ export function RatingModal({ isOpen, onClose, orderId, tailorId, onSuccess }: R
       }
 
       // Success!
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(rating);
       onClose();
     } catch (e) {
       console.error('Error in rating submission:', e);

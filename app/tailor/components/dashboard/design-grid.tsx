@@ -13,12 +13,8 @@ interface Design {
   id: string
   title: string
   images: string[]
-  fabrics: {
-    name: string
-    image: string
-    totalPrice?: number
-    colors: { name: string; image: string }[]
-  }[]
+  videos?: string[]
+  price?: number
 }
 
 export function DesignGrid() {
@@ -97,15 +93,11 @@ export function DesignGrid() {
       const newPrices: Record<string, { totalPrice: string }> = {}
       
       for (const design of designs) {
-        if (design.fabrics && design.fabrics.length > 0) {
-          for (const [index, fabric] of design.fabrics.entries()) {
-            const totalPrice = fabric.totalPrice || 0
-            
-            const convertedTotalPrice = await convertToPreferred(totalPrice, 'USD')
-            
-            newPrices[`${design.id}-${index}`] = {
-              totalPrice: formatAmount(convertedTotalPrice)
-            }
+        if (design.price !== undefined && design.price !== null) {
+          const convertedTotalPrice = await convertToPreferred(design.price, 'USD')
+          
+          newPrices[design.id] = {
+            totalPrice: formatAmount(convertedTotalPrice)
           }
         }
       }
@@ -217,6 +209,24 @@ export function DesignGrid() {
                         alt={`${design.title} - Image ${currentIndex + 1}`} 
                         className={styles.designImage} 
                       />
+                      {design.videos && design.videos.length > 0 && (
+                        <div className={styles.videoBadge}>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="14" 
+                            height="14" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                          {design.videos.length} Video{design.videos.length > 1 ? 's' : ''}
+                        </div>
+                      )}
                     </div>
                     <div className={styles.thumbnails}>
                       {design.images?.map((image, index) => (
@@ -238,56 +248,12 @@ export function DesignGrid() {
                   </div>
                   <h3 className={styles['card-title']}>{design.title}</h3>
                   
-                  {/* Compact pricing display */}
-                  {design.fabrics && design.fabrics.length > 0 && 
-                    (design.fabrics.length === 1 || 
-                     (design.fabrics.length > 0 && design.fabrics.every(f => f.name === "Custom"))) && (
+                  {/* Pricing display */}
+                  {design.price !== undefined && design.price !== null && (
                     <div className={styles['compact-pricing']}>
                       <div className={styles['price-tag']}>
-                        <span>Total Price: {formattedPrices[`${design.id}-0`]?.totalPrice}</span>
+                        <span>Price: {formattedPrices[design.id]?.totalPrice}</span>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Only render fabric section if there are real fabric options (not just placeholder) */}
-                  {design.fabrics && design.fabrics.some(fabric => 
-                    fabric.name !== "Custom" && fabric.image && fabric.colors && fabric.colors.length > 0
-                  ) && (
-                    <div className={styles['fabric-container']}>
-                      {design.fabrics
-                        .filter(fabric => fabric.name !== "Custom" || (fabric.image && fabric.colors && fabric.colors.length > 0))
-                        .map((fabric, fabricIndex) => (
-                          <div key={fabricIndex} className={styles['fabric-item']}>
-                            <div className={styles['fabric-header']}>
-                              <img 
-                                src={fabric.image || "/placeholder.svg"}
-                                alt={`${fabric.name} fabric`}
-                                className={styles['fabric-image']}
-                              />
-                              <span className={styles['fabric-name']}>{fabric.name}</span>
-                            </div>
-                            
-                            {/* Add pricing under each fabric when there are multiple fabrics */}
-                            {design.fabrics && design.fabrics.length > 1 && (
-                              <div className={styles['fabric-pricing']}>
-                                <span>Total Price: {formattedPrices[`${design.id}-${fabricIndex}`]?.totalPrice}</span>
-                              </div>
-                            )}
-                            
-                            <div className={styles['color-list']}>
-                              {fabric.colors?.map((color, colorIndex) => (
-                                <div key={colorIndex} className={styles['color-item']}>
-                                  <div 
-                                    className={styles['color-swatch']} 
-                                    style={{ backgroundColor: color.name }}
-                                  />
-                                  <span className={styles['color-name']}>{color.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))
-                      }
                     </div>
                   )}
                   <div className={styles['card-footer']}>

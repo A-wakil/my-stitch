@@ -26,9 +26,6 @@ export default function EditDesignPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        if (data.fabric?.image) {
-          data.fabric.image = new URL(data.fabric.image, window.location.origin).toString()
-        }
         setDesign(data)
       } else {
         setError("Failed to fetch design")

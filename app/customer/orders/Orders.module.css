@@ -314,6 +314,35 @@
   background-color: #d1fae5;
 }
 
+.ratedButton {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+  margin-left: 0.75rem;
+  cursor: not-allowed;
+  border: 1px solid;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ratedGreen {
+  background-color: #d1fae5;
+  color: #059669;
+  border-color: #059669;
+}
+
+.ratedYellow {
+  background-color: #fef3c7;
+  color: #d97706;
+  border-color: #d97706;
+}
+
+.ratedRed {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
 .writeReviewButton {
   background: #f8f9fa;
   color: #333;
@@ -570,7 +599,7 @@
     gap: 0.75rem;
   }
   
-  .buyAgainButton, .rateButton {
+  .buyAgainButton, .rateButton, .ratedButton {
     width: 100%;
     text-align: center;
     margin-left: 0;
