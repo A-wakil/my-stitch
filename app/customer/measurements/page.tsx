@@ -527,7 +527,7 @@ export default function MeasurementsPage() {
                 {isCreatingNew ? (
                   <input
                     type="text"
-                    placeholder="Enter measurement name"
+                    placeholder="Name of Client"
                     value={newMeasurementName}
                     onChange={(e) => setNewMeasurementName(e.target.value)}
                     className="measurement-name-input"
@@ -535,34 +535,6 @@ export default function MeasurementsPage() {
                 ) : (
                   <h2 className="measurement-title">{currentMeasurementName}</h2>
                 )}
-              </div>
-
-              <div className="gender-selection-inline">
-                <span className="gender-label">Gender:</span>
-                <div className="gender-options">
-                  <label>
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="male"
-                      checked={measurements.gender === 'male'}
-                      onChange={(e) => handleInputChange('gender', e.target.value as 'male' | 'female')}
-                      disabled={!isFormEditable()}
-                    />
-                    Male
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="gender"
-                      value="female"
-                      checked={measurements.gender === 'female'}
-                      onChange={(e) => handleInputChange('gender', e.target.value as 'male' | 'female')}
-                      disabled={!isFormEditable()}
-                    />
-                    Female
-                  </label>
-                </div>
               </div>
             </div>
             <form className={`measurements-form ${isFormEditable() ? 'editing' : ''}`} onSubmit={handleSubmit}>

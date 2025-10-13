@@ -564,7 +564,15 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                     {showMeasurementDetails && (
                       <div className={styles.measurementGrid}>
                         {Object.entries(selectedMeasurement)
-                          .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key) && typeof selectedMeasurement[key as keyof Measurement] === 'number')
+                          .filter(([key, value]) => {
+                            // Exclude meta fields
+                            if (['id', 'user_id', 'created_at', 'updated_at', 'name'].includes(key)) {
+                              return false;
+                            }
+                            // Check if value is a number or can be converted to a number
+                            const numValue = typeof value === 'number' ? value : parseFloat(value as string);
+                            return !isNaN(numValue) && numValue > 0;
+                          })
                           .map(([key, value]) => (
                             <div key={key} className={styles.measurementItem}>
                               <span className={styles.measurementLabel}>
