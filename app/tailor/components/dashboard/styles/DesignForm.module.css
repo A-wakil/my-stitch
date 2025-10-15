@@ -308,63 +308,87 @@
 /* Coming Soon state for disabled options */
 .radioLabel.comingSoon {
   position: relative;
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
-  background-color: #f3f4f6;
+  background-color: #f9fafb;
   border-color: #e5e7eb;
-  overflow: hidden;
+  overflow: visible;
+  padding-right: 6rem;
 }
 
-.radioLabel.comingSoon span {
+.radioLabel.comingSoon span:first-of-type {
   color: #9ca3af;
-}
-
-.radioLabel.comingSoon::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 70%
-  );
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
 }
 
 .radioLabel.comingSoon:hover {
   border-color: #e5e7eb;
-  background-color: #f3f4f6;
+  background-color: #f9fafb;
   cursor: not-allowed;
 }
 
 .comingSoonBadge {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 0.5rem;
   transform: translateY(-50%);
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: white;
   font-size: 0.65rem;
   font-weight: 700;
-  padding: 0.2rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
-  z-index: 1;
+  white-space: nowrap;
 }
 
+/* Mobile responsive styles for gender section */
+@media (max-width: 768px) {
+  .categorySection {
+    padding: 1rem;
+  }
+
+  .radioGroup {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .radioLabel {
+    padding: 0.75rem 1rem;
+    width: 100%;
+  }
+
+  .radioLabel.comingSoon {
+    padding-right: 1rem;
+  }
+
+  .comingSoonBadge {
+    position: static;
+    transform: none;
+    margin-left: 0.5rem;
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form {
+    padding: 1.5rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.1rem;
+  }
+
+  .radioLabel span {
+    font-size: 0.85rem;
+  }
+
+  .comingSoonBadge {
+    font-size: 0.55rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
 
