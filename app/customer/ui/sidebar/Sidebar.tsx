@@ -24,7 +24,7 @@ const mainNavItems = [
 ]
 
 const secondaryNavItems = [
-  { name: 'Your Tailor Account', path: '/tailor', icon: <LuScissors size={20} /> },
+  { name: 'My Tailor Account', path: '/tailor', icon: <LuScissors size={20} /> },
   { name: 'Contact Us', path: 'mailto:abdulwakil.ola@gmail.com', icon: <HiOutlineMail size={20} /> },
 ]
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import './Header.css'
 import { IoMenu, IoPerson, IoBagHandle } from "react-icons/io5";
@@ -23,7 +23,9 @@ export function Header() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Bag context
   const { items } = useBag()
@@ -38,6 +40,23 @@ export function Header() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showUserMenu])
 
   const closeSidebar = () => {
     setIsSidebarOpen(false)
@@ -132,6 +151,15 @@ export function Header() {
     await supabase.auth.signOut()
     setUser(null)
     setShowLogoutConfirm(false)
+    setShowUserMenu(false)
+  }
+
+  const toggleUserMenu = () => {
+    if (user) {
+      setShowUserMenu(!showUserMenu)
+    } else {
+      toggleAuthDialog()
+    }
   }
 
   return (
@@ -154,7 +182,6 @@ export function Header() {
           <div className='header-content right'>
             <div className='right-icons'>
               <GenderToggle currentGender={gender} onGenderChange={setGender} />
-              <CurrencyToggle />
               <div
                 className="bag-icon-wrapper"
                 onClick={() => router.push('/customer/bag')}
@@ -167,21 +194,45 @@ export function Header() {
                   </span>
                 )}
               </div>
-              <div
-                className=''
-                onClick={user ? undefined : toggleAuthDialog}
-                style={{
-                  cursor: user ? 'default' : 'pointer',
-                  position: 'relative',
-                  opacity: user ? 0.5 : 1
-                }}
-                title={user ? `Welcome ${user.user_metadata.first_name} ${user.user_metadata.last_name}` : undefined}
-              >
-                <IoPerson />
+              <div className='user-menu-container' ref={userMenuRef}>
+                <div
+                  className='user-icon-wrapper'
+                  onClick={toggleUserMenu}
+                  style={{ cursor: 'pointer', position: 'relative' }}
+                >
+                  <IoPerson size={20} />
+                  {user && <span className="user-active-dot"></span>}
+                </div>
+                {showUserMenu && (
+                  <div className="user-dropdown">
+                    {user ? (
+                      <>
+                        <div className="user-info">
+                          <p className="user-name">{user.user_metadata.first_name} {user.user_metadata.last_name}</p>
+                          <p className="user-email">{user.email}</p>
+                        </div>
+                        <div className="user-menu-divider"></div>
+                      </>
+                    ) : null}
+                    <div className="user-menu-section">
+                      <label className="user-menu-label">Currency</label>
+                      <CurrencyToggle />
+                    </div>
+                    {user ? (
+                      <>
+                        <div className="user-menu-divider"></div>
+                        <button className="user-menu-item logout-item" onClick={() => {
+                          setShowUserMenu(false)
+                          setShowLogoutConfirm(true)
+                        }}>
+                          <LogOut size={16} />
+                          <span>Logout</span>
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                )}
               </div>
-              {user && <Button onClick={() => setShowLogoutConfirm(true)} variant="ghost" size="icon">
-                <LogOut size={15} />
-              </Button>}
             </div>
           </div>
         </div>
