@@ -1,18 +1,18 @@
-'use client'
-
 import { ReactNode } from 'react'
-import { AuthProvider } from "./lib/AuthContext"
+import { Metadata } from 'next'
+import { Providers } from "./providers/Providers"
 import "./globals.css"
-import { Toaster } from 'react-hot-toast'
-import { ProfileProvider } from "./context/ProfileContext"
-import { AuthDialogWrapper } from "./components/AuthDialogWrapper"
-import { PostHogProvider } from "./providers/PostHogProvider"
-import { CurrencyProvider } from "./context/CurrencyContext"
-import { GenderProvider } from "./context/GenderContext"
-import { BagProvider } from "./context/BagContext"
 
 interface RootLayoutProps {
   children: ReactNode
+}
+
+export const metadata: Metadata = {
+  title: "My Tailor Mint — Custom Tailoring, Made-to-Measure",
+  description: "Bespoke outfits from vetted tailors. Precise measurements, easy ordering, and tracked delivery.",
+  icons: {
+    icon: [{ url: "/favicon.ico", sizes: "any" }],
+  },
 }
 
 export default function RootLayout({
@@ -23,21 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <PostHogProvider>
-          <AuthProvider>
-            <ProfileProvider>
-              <CurrencyProvider>
-                <GenderProvider>
-                  <BagProvider>
-                    {children}
-                    <Toaster />
-                    <AuthDialogWrapper />
-                  </BagProvider>
-                </GenderProvider>
-              </CurrencyProvider>
-            </ProfileProvider>
-          </AuthProvider>
-        </PostHogProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

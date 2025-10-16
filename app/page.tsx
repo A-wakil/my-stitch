@@ -151,7 +151,7 @@ export default function Home() {
         
         {/* Show Coming Soon for Female designs */}
         {gender === 'female' ? (
-          <div className="coming-soon-container">
+          <div className="coming-soon-container" data-nosnippet>
             <div className="coming-soon-content">
               <div className="coming-soon-icon">
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
