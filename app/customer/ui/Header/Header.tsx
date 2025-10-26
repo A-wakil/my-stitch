@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import './Header.css'
 import { IoMenu, IoPerson, IoBagHandle } from "react-icons/io5";
-import { LuScissors } from 'react-icons/lu'
 import { Sidebar } from '../sidebar/Sidebar'
 import { AuthDialog } from '../../../components/AuthDialog/AuthDialog'
 import { supabase } from '../../../lib/supabaseClient'
@@ -167,14 +166,18 @@ export function Header() {
       <header className="header">
         <div className="header-container">
           <div className='header-content left'>
-            <div className='left-sub' onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
+            <div className='left-sub menu-button' onClick={toggleSidebar} style={{ cursor: 'pointer' }}>
               <IoMenu />
               <span className='menu-text'>Menu</span>
             </div>
-            <div className='left-sub' onClick={!user ? toggleAuthDialog : () => router.push('/tailor')} style={{ cursor: 'pointer' }}>
-              <LuScissors />
+            <button 
+              className='tailor-button' 
+              onClick={!user ? toggleAuthDialog : () => router.push('/tailor')}
+              title="Go to Tailor Dashboard"
+            >
+              <span className='tailor-icon'>✂️</span>
               <span className='tailor-text'>Tailor Dashboard</span>
-            </div>
+            </button>
           </div>
           <div className="header-content center">
               <h1 className="header-title">Tailor Mint</h1>
