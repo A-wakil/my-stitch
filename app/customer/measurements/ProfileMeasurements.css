@@ -747,8 +747,8 @@ input:disabled {
     border-bottom: none;
   }
   
-  .sidebar-toggle {
-    display: flex;
+  .mobile-back-button {
+    display: inline-flex;
   }
   
   .modal-content {
@@ -936,28 +936,20 @@ button[type="submit"]:hover {
   font-style: italic;
 }
 
-.sidebar-toggle {
+.mobile-back-button {
   display: none;
-  padding: 0.75rem 1rem;
-  background-color: #f5f5f5;
-  border: none;
-  border-bottom: 1px solid #ddd;
-  width: 100%;
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: #333;
-  cursor: pointer;
-  display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.5rem 0.25rem;
+  background: transparent;
+  border: none;
+  color: #111;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 
-.sidebar-toggle:hover {
-  background-color: #e9ecef;
-}
-
-.sidebar-toggle svg {
-  margin-left: 0.5rem;
+.mobile-back-button svg {
+  flex-shrink: 0;
 }
 
 

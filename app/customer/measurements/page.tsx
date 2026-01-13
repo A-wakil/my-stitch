@@ -7,7 +7,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import { supabase } from "../../lib/supabaseClient"
 import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
-import { FiChevronDown, FiChevronUp, FiChevronRight, FiPlayCircle } from 'react-icons/fi'
+import { FiChevronRight, FiPlayCircle } from 'react-icons/fi'
 
 // Update type to match database column names and include gender
 type MeasurementsType = {
@@ -737,11 +737,13 @@ export default function MeasurementsPage() {
       setSelectedMeasurementId(null);
     } else {
       setIsEditing(false);
+      if (isMobile) {
+        setSelectedMeasurementId(null);
+      }
     }
-  };
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    if (isMobile) {
+      setCurrentMobileStep(0);
+    }
   };
 
   // Get the current measurement name
@@ -867,11 +869,19 @@ export default function MeasurementsPage() {
     )
   }
 
+  const handleMobileBack = () => {
+    setSelectedMeasurementId(null);
+    setIsCreatingNew(false);
+    setIsEditing(false);
+    setCurrentMobileStep(0);
+    setSidebarCollapsed(false);
+  };
+
   const renderMobileSelectionPanel = () => (
     <div className="mobile-selection-panel">
       <div className="mobile-selection-text">
         <h2>Select a measurement or create a new one</h2>
-        <p>Choose an existing measurement from the sidebar or tap "+ New Measurement" to create a new one.</p>
+        <p>Choose an existing measurement below or tap "+ New Measurement" to create a new one.</p>
       </div>
       <div className="mobile-selection-actions">
         <button
@@ -976,20 +986,11 @@ export default function MeasurementsPage() {
         </div>
       </div>
 
-      {/* Mobile sidebar toggle button */}
-      {isMobile && (
-        <button className="sidebar-toggle" onClick={toggleSidebar}>
-          {sidebarCollapsed ? (
-            <>
-              <span>Select Measurement</span>
-              <FiChevronDown />
-            </>
-          ) : (
-            <>
-              <span>Hide Measurement List</span>
-              <FiChevronUp />
-            </>
-          )}
+      {/* Mobile back button */}
+      {isMobile && (isCreatingNew || selectedMeasurementId) && (
+        <button className="mobile-back-button" onClick={handleMobileBack}>
+          <IoArrowBack size={20} />
+          <span>Back</span>
         </button>
       )}
 
