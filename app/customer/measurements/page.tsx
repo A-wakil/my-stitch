@@ -730,6 +730,14 @@ export default function MeasurementsPage() {
     )
   }
 
+  const exitToMobileSelection = () => {
+    setSelectedMeasurementId(null);
+    setIsCreatingNew(false);
+    setIsEditing(false);
+    setCurrentMobileStep(0);
+    setSidebarCollapsed(false);
+  }
+
   const handleCancel = () => {
     if (isCreatingNew) {
       setIsCreatingNew(false);
@@ -737,12 +745,9 @@ export default function MeasurementsPage() {
       setSelectedMeasurementId(null);
     } else {
       setIsEditing(false);
-      if (isMobile) {
-        setSelectedMeasurementId(null);
-      }
     }
     if (isMobile) {
-      setCurrentMobileStep(0);
+      exitToMobileSelection();
     }
   };
 
@@ -870,11 +875,7 @@ export default function MeasurementsPage() {
   }
 
   const handleMobileBack = () => {
-    setSelectedMeasurementId(null);
-    setIsCreatingNew(false);
-    setIsEditing(false);
-    setCurrentMobileStep(0);
-    setSidebarCollapsed(false);
+    exitToMobileSelection();
   };
 
   const renderMobileSelectionPanel = () => (
