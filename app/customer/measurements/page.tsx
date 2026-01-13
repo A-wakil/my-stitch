@@ -7,7 +7,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import { supabase } from "../../lib/supabaseClient"
 import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
-import { FiChevronDown, FiChevronUp, FiPlayCircle } from 'react-icons/fi'
+import { FiChevronDown, FiChevronUp, FiChevronRight, FiPlayCircle } from 'react-icons/fi'
 
 // Update type to match database column names and include gender
 type MeasurementsType = {
@@ -508,6 +508,7 @@ export default function MeasurementsPage() {
       bust: '',
       ankle_trouser_end: ''
     })
+    setCurrentMobileStep(0)
 
     // Expand sidebar if collapsed on mobile when creating new
     if (isMobile && sidebarCollapsed) {
@@ -593,6 +594,13 @@ export default function MeasurementsPage() {
       toast.error('Failed to delete measurement')
     }
     setActiveMenu(null)
+  }
+
+  const handleMeasurementSelect = (id: number) => {
+    setSelectedMeasurementId(id)
+    setIsCreatingNew(false)
+    setIsEditing(false)
+    setCurrentMobileStep(0)
   }
 
   // Helper function to check if form is editable
@@ -859,6 +867,46 @@ export default function MeasurementsPage() {
     )
   }
 
+  const renderMobileSelectionPanel = () => (
+    <div className="mobile-selection-panel">
+      <div className="mobile-selection-text">
+        <h2>Select a measurement or create a new one</h2>
+        <p>Choose an existing measurement from the sidebar or tap "+ New Measurement" to create a new one.</p>
+      </div>
+      <div className="mobile-selection-actions">
+        <button
+          type="button"
+          className="new-measurement-button"
+          onClick={handleNewMeasurement}
+        >
+          + New Measurement
+        </button>
+        <div className="mobile-selection-cards">
+          {measurementsList.length === 0 ? (
+            <div className="mobile-selection-empty">
+              <p>No saved measurements yet.</p>
+            </div>
+          ) : (
+            measurementsList.map(item => (
+              <button
+                type="button"
+                key={item.id}
+                className="mobile-selection-card"
+                onClick={() => handleMeasurementSelect(item.id)}
+              >
+                <div className="mobile-selection-card-content">
+                  <BsPerson className="person-icon" />
+                  <span>{item.name}</span>
+                </div>
+                <FiChevronRight aria-hidden="true" />
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="measurements-page">
       <div ref={sidebarRef} className={`measurements-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
@@ -882,11 +930,7 @@ export default function MeasurementsPage() {
             >
               <div
                 className="measurement-item-content"
-                onClick={() => {
-                  setSelectedMeasurementId(item.id)
-                  setIsCreatingNew(false)
-                  setIsEditing(false)
-                }}
+                onClick={() => handleMeasurementSelect(item.id)}
               >
                 <BsPerson className="person-icon" />
                 <span>{item.name}</span>
@@ -1018,10 +1062,12 @@ export default function MeasurementsPage() {
             )}
           </>
         ) : (
-          <div className="no-measurement-selected">
-            <h2>Select a measurement or create a new one</h2>
-            <p>Choose an existing measurement from the sidebar or click "+ New Measurement" to create a new one.</p>
-          </div>
+          isMobile ? renderMobileSelectionPanel() : (
+            <div className="no-measurement-selected">
+              <h2>Select a measurement or create a new one</h2>
+              <p>Choose an existing measurement from the sidebar or click "+ New Measurement" to create a new one.</p>
+            </div>
+          )
         )}
       </div>
 

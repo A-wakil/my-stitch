@@ -397,6 +397,85 @@ input:disabled {
   line-height: 1.5;
 }
 
+.mobile-selection-panel {
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  border: 1px solid #e4e7ec;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mobile-selection-text h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.4rem;
+}
+
+.mobile-selection-text p {
+  margin: 0;
+  color: #475467;
+  line-height: 1.5;
+}
+
+.mobile-selection-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mobile-selection-panel .new-measurement-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.mobile-selection-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobile-selection-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  text-align: left;
+  gap: 0.75rem;
+}
+
+.mobile-selection-card:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.mobile-selection-card-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mobile-selection-card svg {
+  font-size: 1.2rem;
+  color: #94a3b8;
+}
+
+.mobile-selection-empty {
+  padding: 1rem;
+  border-radius: 12px;
+  background: #f1f5f9;
+  text-align: center;
+  color: #475569;
+}
+
 .mobile-measurements-form {
   width: 100%;
 }
