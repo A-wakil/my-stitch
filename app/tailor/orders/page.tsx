@@ -15,7 +15,7 @@ type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_sh
 export default function TailorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<OrderStatus>('pending')
+  const [activeTab, setActiveTab] = useState<OrderStatus>('all')
   const [selectedImages, setSelectedImages] = useState<Record<string, number>>({})  // Track selected image index for each order
   const [clientProfiles, setClientProfiles] = useState<Record<string, Profile>>({})
   const [tailorProfile, setTailorProfile] = useState<Profile | null>(null)
@@ -250,6 +250,12 @@ export default function TailorOrdersPage() {
   }, [orders])
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    if (newStatus === 'shipped') {
+      toast.error('Only admins can mark orders as shipped.');
+      console.warn('Attempted to set order status to shipped from tailor UI');
+      return;
+    }
+
     setProcessingOrderId(orderId);
     try {
       console.log(`Updating order ${orderId} to status: ${newStatus}`);
@@ -503,6 +509,15 @@ export default function TailorOrdersPage() {
           className={`${styles.tabs} ${isMobile && !isTabsExpanded ? styles.tabsCollapsed : ''}`}
         >
           <button 
+            className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
+            onClick={() => {
+              setActiveTab('all');
+              if (isMobile) setIsTabsExpanded(false);
+            }}
+          >
+            All Orders ({orders.length})
+          </button>
+          <button 
             className={`${styles.tab} ${activeTab === 'pending' ? styles.activeTab : ''}`}
             onClick={() => {
               setActiveTab('pending');
@@ -546,15 +561,6 @@ export default function TailorOrdersPage() {
             }}
           >
             Shipped ({orderCounts['shipped'] || 0})
-          </button>
-          <button 
-            className={`${styles.tab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-            onClick={() => {
-              setActiveTab('all');
-              if (isMobile) setIsTabsExpanded(false);
-            }}
-          >
-            All Orders ({orders.length})
           </button>
         </div>
       </div>
@@ -666,13 +672,9 @@ export default function TailorOrdersPage() {
                 )}
 
                 {order.status === 'ready_to_ship' && (
-                  <button 
-                    className={styles.shipButton}
-                    onClick={() => updateOrderStatus(order.id, 'shipped')}
-                    disabled={processingOrderId === order.id}
-                  >
-                    {processingOrderId === order.id ? 'Processing...' : 'Mark as Shipped'}
-                  </button>
+                  <div className={styles.statusNote}>
+                    Orders ready to ship will be finalized by an admin.
+                  </div>
                 )}
               </div>
             </div>
