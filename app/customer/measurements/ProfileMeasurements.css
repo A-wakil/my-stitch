@@ -330,12 +330,312 @@ input:disabled {
   flex: 1;
   color: #666;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.measurement-label > span {
+  flex: 1;
+}
+
+.video-icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #d5d5d5;
+  background: #fff;
+  color: #007bff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.video-icon-button:hover,
+.video-icon-button:focus-visible {
+  background: #e9f2ff;
+  border-color: #007bff;
+  color: #0056b3;
+  outline: none;
+}
+
+.video-icon-button:active {
+  transform: scale(0.95);
 }
 
 .measurement-field input {
   flex: 1;
   text-align: right;
   transition: all 0.2s ease;
+}
+
+.video-guide-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f5faff;
+  border: 1px solid #d7e9ff;
+  border-radius: 8px;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+}
+
+.video-guide-hint svg {
+  font-size: 1.5rem;
+  color: #007bff;
+  flex-shrink: 0;
+}
+
+.video-guide-hint p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mobile-measurements-form {
+  width: 100%;
+}
+
+.mobile-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mobile-stepper-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mobile-step-count {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.mobile-stepper-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.mobile-stepper-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #00b4d8);
+  transition: width 0.3s ease;
+}
+
+.mobile-step-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mobile-step-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mobile-step-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.mobile-step-title span {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.mobile-step-description {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.mobile-step-video-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: #f0f9ff;
+  color: #0f172a;
+}
+
+.mobile-step-video-info svg {
+  color: #007bff;
+  font-size: 1.25rem;
+}
+
+.mobile-step-instruction {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.mobile-step-video {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+.mobile-step-video-player {
+  width: 100%;
+  min-height: 260px;
+  border: none;
+  display: block;
+}
+
+.mobile-step-video-placeholder {
+  border-radius: 16px;
+  border: 1px dashed #cbd5f5;
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mobile-step-video-placeholder svg {
+  font-size: 1.75rem;
+  color: #007bff;
+}
+
+.mobile-step-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mobile-step-field label {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.mobile-step-field input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+}
+
+.mobile-step-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.mobile-step-actions button {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.mobile-step-actions button:first-child {
+  background: #edf2f7;
+  color: #1f2933;
+}
+
+.mobile-step-actions button:last-child {
+  background: #111827;
+  color: #fff;
+}
+
+.mobile-step-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mobile-cancel {
+  margin-top: -0.5rem;
+}
+
+.video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.video-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: min(700px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+}
+
+.video-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  gap: 1rem;
+}
+
+.video-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #111;
+}
+
+.video-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s ease;
+}
+
+.video-modal-close:hover,
+.video-modal-close:focus-visible {
+  color: #111827;
+  outline: none;
+}
+
+.video-modal-body {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.video-player,
+.video-iframe {
+  width: 100%;
+  min-height: 320px;
+  border-radius: 12px;
+  border: none;
+  background: #000;
 }
 
 .measurement-unit {
@@ -385,6 +685,10 @@ input:disabled {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .measurement-label {
+    width: 100%;
+  }
   
   .measurement-field input {
     width: 100%;
@@ -409,13 +713,21 @@ input:disabled {
     font-size: 1.5rem;
   }
   
-  .video-guide {
-    padding: 0.75rem;
+  .video-guide-hint {
+    flex-direction: column;
+  }
+
+  .video-modal {
+    border-radius: 12px;
+  }
+
+  .video-player,
+  .video-iframe {
+    min-height: 220px;
   }
   
-  .video-link {
-    width: 100%;
-    justify-content: center;
+  .mobile-step-video-player {
+    min-height: 220px;
   }
   
   button[type="submit"] {
@@ -543,36 +855,6 @@ button[type="submit"]:hover {
   padding-left: 1rem;
   border-left: 2px solid #e5e7eb;
   font-style: italic;
-}
-
-.video-guide {
-  text-align: center;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.video-guide p {
-  margin-bottom: 0.5rem;
-  color: #666;
-}
-
-.video-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #333;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.video-link:hover {
-  background-color: #000;
 }
 
 .sidebar-toggle {
