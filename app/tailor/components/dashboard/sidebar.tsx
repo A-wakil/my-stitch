@@ -19,18 +19,15 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
   return (
     <div className={styles.sidebar}>
       <div className={styles['sidebar-header']}>
-        <span className={styles['sidebar-title']}>
-          Tailor Dashboard
-          {isMobile && toggleSidebar && (
-            <button 
-              onClick={toggleSidebar}
-              className={styles['close-button']}
-              aria-label="Close sidebar"
-            >
-              <X size={18} strokeWidth={2.5} />
-            </button>
-          )}
-        </span>
+        {isMobile && toggleSidebar && (
+          <button 
+            onClick={toggleSidebar}
+            className={styles['close-button-only']}
+            aria-label="Close sidebar"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
+        )}
         <Link href="/" className={styles['marketplace-link']} onClick={() => {
           if (isMobile && toggleSidebar) toggleSidebar();
         }}>

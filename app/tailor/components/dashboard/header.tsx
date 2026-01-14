@@ -9,18 +9,22 @@ interface HeaderProps {
   toggleLogoutDialog: () => Promise<void>
   toggleSidebar?: () => void
   isMobile?: boolean
+  title?: string
 }
 
-export function Header({ toggleLogoutDialog, toggleSidebar, isMobile }: HeaderProps) {
+export function Header({ toggleLogoutDialog, toggleSidebar, isMobile, title = "Tailor Dashboard" }: HeaderProps) {
   const [showConfirm, setShowConfirm] = useState(false)
 
   return (
     <header className={styles.header}>
-      {isMobile && toggleSidebar && (
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className={styles.iconButton} data-tooltip="Menu">
-          <Menu size={20} />
-        </Button>
-      )}
+      <div className={styles.leftSection}>
+        {isMobile && toggleSidebar && (
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className={styles.iconButton} data-tooltip="Menu">
+            <Menu size={20} />
+          </Button>
+        )}
+        <h1 className={styles.headerTitle}>{title}</h1>
+      </div>
       <div className={styles.buttonGroup}>
         <CurrencyToggle />
         <Button variant="ghost" size="icon" className={styles.iconButton} data-tooltip="Notifications">

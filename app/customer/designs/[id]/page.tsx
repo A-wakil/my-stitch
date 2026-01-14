@@ -14,6 +14,7 @@ import { IoPersonCircleOutline } from "react-icons/io5"
 import { StarRating } from "../../../components/ui/StarRating"
 import { useCurrency } from '../../../context/CurrencyContext'
 import { useBag } from '../../../context/BagContext'
+import { calculateCustomerPrice } from '../../../lib/pricing'
 
 interface DesignDetail {
   id: string
@@ -255,7 +256,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const totalPrice = useMemo(() => {
     if (!design) return 0;
     if (typeof design.price === 'number') {
-      return design.price;
+      // Apply 30% markup with $10 minimum to tailor's price
+      return calculateCustomerPrice(design.price);
     }
     return 0;
   }, [design]);

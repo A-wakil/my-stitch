@@ -57,6 +57,33 @@
   transform: translateY(-50%) scale(0.95) rotate(90deg);
 }
 
+.close-button-only {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button-only:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.close-button-only:active {
+  background-color: rgba(239, 68, 68, 0.3);
+  transform: scale(0.95);
+}
+
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
