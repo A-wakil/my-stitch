@@ -394,21 +394,9 @@
   }
   
   .addToCartButton {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    border-radius: 0;
-    z-index: 100;
+    margin: 1.5rem 0 2rem 0;
+    border-radius: 8px;
     padding: 1rem;
-  }
-  
-  /* Add some bottom padding to avoid content being hidden behind the fixed button */
-  .container::after {
-    content: '';
-    display: block;
-    height: 4rem;
   }
   
   .tailorProfileModal {
@@ -1054,21 +1042,9 @@
   }
   
   .addToCartButton {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    border-radius: 0;
-    z-index: 100;
+    margin: 1.5rem 0 2rem 0;
+    border-radius: 8px;
     padding: 1rem;
-  }
-  
-  /* Add some bottom padding to avoid content being hidden behind the fixed button */
-  .container::after {
-    content: '';
-    display: block;
-    height: 4rem;
   }
   
   .tailorProfileModal {
