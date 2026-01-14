@@ -861,13 +861,21 @@ export default function MeasurementsPage() {
           )}
         </div>
 
-        {isLastMobileStep && isFormEditable() && (
+        {isFormEditable() ? (
           <button
             type="button"
             className="cancel-button mobile-cancel"
             onClick={handleCancel}
           >
-            Cancel
+            Cancel & Exit
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="exit-button mobile-exit"
+            onClick={exitToMobileSelection}
+          >
+            Exit to Measurements
           </button>
         )}
       </div>
@@ -1002,21 +1010,23 @@ export default function MeasurementsPage() {
       <div className="modal-content">
         {(isCreatingNew || selectedMeasurementId) ? (
           <>
-            <div className="header-section">
-              <div className="measurement-name-section">
-                {isCreatingNew ? (
-                  <input
-                    type="text"
-                    placeholder="Name of Client"
-                    value={newMeasurementName}
-                    onChange={(e) => setNewMeasurementName(e.target.value)}
-                    className="measurement-name-input"
-                  />
-                ) : (
-                  <h2 className="measurement-title">{currentMeasurementName}</h2>
-                )}
+            {!isMobile && (
+              <div className="header-section">
+                <div className="measurement-name-section">
+                  {isCreatingNew ? (
+                    <input
+                      type="text"
+                      placeholder="Name of Client"
+                      value={newMeasurementName}
+                      onChange={(e) => setNewMeasurementName(e.target.value)}
+                      className="measurement-name-input"
+                    />
+                  ) : (
+                    <h2 className="measurement-title">{currentMeasurementName}</h2>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
             {isMobile ? (
               <form
                 className={`mobile-measurements-form ${isFormEditable() ? 'editing' : ''}`}

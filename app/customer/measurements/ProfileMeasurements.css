@@ -648,8 +648,34 @@ input:disabled {
   cursor: not-allowed;
 }
 
-.mobile-cancel {
+.mobile-cancel,
+.mobile-exit {
   margin-top: -0.5rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-cancel {
+  background-color: #dc3545;
+  color: white;
+}
+
+.mobile-cancel:hover {
+  background-color: #c82333;
+}
+
+.mobile-exit {
+  background-color: #6c757d;
+  color: white;
+}
+
+.mobile-exit:hover {
+  background-color: #5a6268;
 }
 
 .video-modal-overlay {
