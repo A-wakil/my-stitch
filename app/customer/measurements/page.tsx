@@ -918,9 +918,12 @@ export default function MeasurementsPage() {
     </div>
   )
 
+  const showSidebar = !isMobile
+
   return (
     <div className="measurements-page">
-      <div ref={sidebarRef} className={`measurements-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
+      {showSidebar && (
+        <div ref={sidebarRef} className={`measurements-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <button onClick={() => router.push('/')} className="back-button">
           <IoArrowBack size={24} />
           <span>Back</span>
@@ -986,6 +989,7 @@ export default function MeasurementsPage() {
           ))}
         </div>
       </div>
+      )}
 
       {/* Mobile back button */}
       {isMobile && (isCreatingNew || selectedMeasurementId) && (
