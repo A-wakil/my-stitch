@@ -408,6 +408,30 @@ input:disabled {
   gap: 1.25rem;
 }
 
+.mobile-selection-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: #111;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  align-self: flex-start;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-selection-back:hover {
+  background-color: #f1f5f9;
+}
+
+.mobile-selection-back svg {
+  flex-shrink: 0;
+}
+
 .mobile-selection-text h2 {
   margin: 0 0 0.5rem;
   font-size: 1.4rem;
@@ -649,7 +673,8 @@ input:disabled {
 }
 
 .mobile-cancel,
-.mobile-exit {
+.mobile-exit,
+.mobile-edit {
   margin-top: -0.5rem;
   width: 100%;
   padding: 0.85rem 1rem;
@@ -676,6 +701,23 @@ input:disabled {
 
 .mobile-exit:hover {
   background-color: #5a6268;
+}
+
+.mobile-edit {
+  background-color: #007bff;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-edit:hover {
+  background-color: #0056b3;
+}
+
+.mobile-view-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: -0.5rem;
 }
 
 .video-modal-overlay {

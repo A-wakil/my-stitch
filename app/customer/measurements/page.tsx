@@ -850,7 +850,7 @@ export default function MeasurementsPage() {
                 {isSubmitting ? 'Saving...' : 'Save Measurements'}
               </button>
             ) : (
-              <button type="button" onClick={() => setCurrentMobileStep(0)}>
+              <button type="button" onClick={exitToMobileSelection}>
                 Done
               </button>
             )
@@ -870,13 +870,22 @@ export default function MeasurementsPage() {
             Cancel & Exit
           </button>
         ) : (
-          <button
-            type="button"
-            className="exit-button mobile-exit"
-            onClick={exitToMobileSelection}
-          >
-            Exit to Measurements
-          </button>
+          <div className="mobile-view-actions">
+            <button
+              type="button"
+              className="edit-button mobile-edit"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit Measurements
+            </button>
+            <button
+              type="button"
+              className="exit-button mobile-exit"
+              onClick={exitToMobileSelection}
+            >
+              Exit to Measurements
+            </button>
+          </div>
         )}
       </div>
     )
@@ -888,6 +897,10 @@ export default function MeasurementsPage() {
 
   const renderMobileSelectionPanel = () => (
     <div className="mobile-selection-panel">
+      <button className="mobile-selection-back" onClick={() => router.push('/')}>
+        <IoArrowBack size={20} />
+        <span>Back to Home</span>
+      </button>
       <div className="mobile-selection-text">
         <h2>Select a measurement or create a new one</h2>
         <p>Choose an existing measurement below or tap "+ New Measurement" to create a new one.</p>
