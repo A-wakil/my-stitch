@@ -464,6 +464,9 @@
 
 .measurementValue {
   color: #333;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Measurements Header */
@@ -473,6 +476,69 @@
   margin: -1.5rem -1.5rem 1.5rem -1.5rem;
   border-radius: 8px 8px 0 0;
   border-bottom: 2px solid #dee2e6;
+}
+
+.measurementVideoButton {
+  margin-left: 0.5rem;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.measurementVideoButton:hover {
+  color: #1d4ed8;
+}
+
+.videoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.videoModal {
+  background: #fff;
+  border-radius: 12px;
+  width: min(720px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.35);
+}
+
+.videoModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  gap: 1rem;
+}
+
+.videoModalHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #111;
+}
+
+.videoModalBody {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.videoPlayer {
+  width: 100%;
+  min-height: 320px;
+  border-radius: 10px;
+  border: none;
+  background: #000;
 }
 
 .measurementHeaderRow {

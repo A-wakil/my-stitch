@@ -8,9 +8,42 @@ import { useRouter } from 'next/navigation'
 import { Spinner } from '../components/ui/spinner'
 import { sendOrderNotification } from '../../lib/notifications'
 import { toast } from 'react-hot-toast'
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import { FiChevronDown, FiChevronUp, FiPlayCircle } from 'react-icons/fi'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'rejected'
+
+const measurementVideoLinks: Record<string, string> = {
+  cap: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/cap.mp4',
+  shoulders: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shoulder.mp4',
+  chest: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/chest.mp4',
+  waist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/waist.mp4',
+  hips: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/hips.mp4',
+  thigh: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/thigh.mp4',
+  knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/knee.mp4',
+  shoulder_to_elbow: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/sleeves.mp4',
+  shoulder_to_wrist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/sleeves.mp4',
+  waist_to_knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/trouserLength.mp4',
+  waist_to_ankle: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/trouserLength.mp4',
+  round_sleeves: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/bicep.mp4',
+  wrist: '',
+  tummy: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/tummy.mp4',
+  shirt_shoulder_to_wrist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  shirt_shoulder_to_knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  shirt_shoulder_to_ankle: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  calves: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/calves.mp4',
+  ankle_width: '',
+  neck: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/neck.mp4',
+  off_shoulder_top: '',
+  underbust: '',
+  top_length: '',
+  bust_length: '',
+  underbust_length: '',
+  nipple_to_nipple: '',
+  upper_waist: '',
+  lower_waist: '',
+  bust: '',
+  ankle_trouser_end: '',
+}
 
 export default function TailorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -27,6 +60,7 @@ export default function TailorOrdersPage() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null)
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null)
+  const [activeVideoGuide, setActiveVideoGuide] = useState<{ title: string; url: string } | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [isTabsExpanded, setIsTabsExpanded] = useState(false)
   const [dataLoaded, setDataLoaded] = useState(false) // Track if data has been loaded
@@ -464,6 +498,36 @@ export default function TailorOrdersPage() {
     setIsModalOpen(true)
   }
 
+  const openMeasurementVideo = (label: string, key: string) => {
+    const url = measurementVideoLinks[key]
+    if (!url) {
+      toast('Video guide coming soon.')
+      return
+    }
+    setActiveVideoGuide({ title: label, url })
+  }
+
+  const closeMeasurementVideo = () => setActiveVideoGuide(null)
+
+  const renderVideoContent = (url: string, title: string) => {
+    const trimmed = url.trim()
+    const isFile = /\.(mp4|webm|ogg|mov)$/i.test(trimmed)
+    if (isFile) {
+      return (
+        <video className={styles.videoPlayer} src={trimmed} controls autoPlay playsInline />
+      )
+    }
+    return (
+      <iframe
+        className={styles.videoPlayer}
+        src={trimmed}
+        title={`${title} tutorial`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    )
+  }
+
   const toggleTabs = () => {
     setIsTabsExpanded(!isTabsExpanded);
   };
@@ -882,7 +946,7 @@ export default function TailorOrdersPage() {
                   : selectedMeasurements;
 
                 // Skip these technical fields
-                const skipFields = ['id', 'user_id', 'created_at', 'updated_at', 'name', 'gender'];
+                const skipFields = ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at', 'name', 'gender'];
                 
                 // Define gender-specific measurements
                 const maleSpecificFields = [
@@ -909,6 +973,7 @@ export default function TailorOrdersPage() {
                     </div>
                   </div>
                 );
+
                 
                 // Filter measurements based on gender
                 const filteredMeasurements = Object.entries(measurements)
@@ -935,16 +1000,33 @@ export default function TailorOrdersPage() {
                     
                     return true;
                   })
-                  .map(([key, value]) => (
-                    <div key={key} className={styles.measurementRow}>
-                      <span className={styles.measurementLabel}>
-                        {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}:
-                      </span>
-                      <span className={styles.measurementValue}>
-                        {typeof value === 'number' ? `${value} inches` : String(value)}
-                      </span>
-                    </div>
-                  ));
+                  .map(([key, value]) => {
+                    const label = key
+                      .split('_')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ')
+                    const videoUrl = measurementVideoLinks[key]
+                    return (
+                      <div key={key} className={styles.measurementRow}>
+                        <span className={styles.measurementLabel}>
+                          {label}:
+                        </span>
+                        <span className={styles.measurementValue}>
+                          {typeof value === 'number' ? `${value} inches` : String(value)}
+                          {videoUrl && (
+                            <button
+                              type="button"
+                              className={styles.measurementVideoButton}
+                              onClick={() => openMeasurementVideo(label, key)}
+                              aria-label={`Play ${label} tutorial`}
+                            >
+                              <FiPlayCircle aria-hidden="true" />
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                    )
+                  });
                 
                 return (
                   <>
@@ -959,6 +1041,36 @@ export default function TailorOrdersPage() {
                   </>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeVideoGuide && (
+        <div
+          className={styles.videoOverlay}
+          role="dialog"
+          aria-modal="true"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeMeasurementVideo()
+            }
+          }}
+        >
+          <div className={styles.videoModal}>
+            <div className={styles.videoModalHeader}>
+              <h3>{activeVideoGuide.title} Tutorial</h3>
+              <button
+                type="button"
+                className={styles.closeButton}
+                onClick={closeMeasurementVideo}
+                aria-label="Close video tutorial"
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.videoModalBody}>
+              {renderVideoContent(activeVideoGuide.url, activeVideoGuide.title)}
             </div>
           </div>
         </div>

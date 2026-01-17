@@ -591,6 +591,19 @@ input:disabled {
   color: #dc2626;
 }
 
+.mobile-icon-button.delete {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: #fff;
+}
+
+.mobile-icon-button.delete:hover,
+.mobile-icon-button.delete:focus-visible {
+  background: #fffbeb;
+  border-color: #d97706;
+  color: #d97706;
+}
+
 .mobile-step-count {
   font-weight: 600;
   color: #0f172a;

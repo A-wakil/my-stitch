@@ -7,7 +7,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import { supabase } from "../../lib/supabaseClient"
 import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
-import { FiChevronRight, FiEdit2, FiPlayCircle, FiX } from 'react-icons/fi'
+import { FiChevronRight, FiEdit2, FiPlayCircle, FiTrash2, FiX } from 'react-icons/fi'
 
 // Update type to match database column names and include gender
 type MeasurementsType = {
@@ -33,7 +33,7 @@ type MeasurementsType = {
   // Male-specific measurements
   round_sleeves: string;
   wrist: string;
-  waist_shirt: string;
+  tummy: string;
   
   // Shirt length measurements (grouped - shoulder to wrist, shoulder to knee, shoulder to ankle)
   shirt_shoulder_to_wrist: string;
@@ -62,29 +62,29 @@ type MeasurementVideoLink = string | { default?: string; male?: string; female?:
 
 // Replace the empty strings below with the actual short video URLs for each measurement.
 const measurementVideoLinks: Partial<Record<MeasurementFieldKey, MeasurementVideoLink>> = {
-  cap: '',
-  shoulders: '',
-  chest: '',
-  waist: '',
-  hips: '',
-  thigh: '',
-  knee: '',
+  cap: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/cap.mp4',
+  shoulders: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shoulder.mp4',
+  chest: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/chest.mp4',
+  waist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/waist.mp4',
+  hips: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/hips.mp4',
+  thigh: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/thigh.mp4',
+  knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/knee.mp4',
   // Sleeve measurements share one video
-  shoulder_to_elbow: '',
-  shoulder_to_wrist: '',
+  shoulder_to_elbow: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/sleeves.mp4',
+  shoulder_to_wrist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/sleeves.mp4',
   // Trouser length measurements share one video
-  waist_to_knee: '',
-  waist_to_ankle: '',
-  round_sleeves: '',
+  waist_to_knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/trouserLength.mp4',
+  waist_to_ankle: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/trouserLength.mp4',
+  round_sleeves: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/bicep.mp4',
   wrist: '',
-  waist_shirt: '',
+  tummy: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/tummy.mp4',
   // Shirt length measurements share one video
-  shirt_shoulder_to_wrist: '',
-  shirt_shoulder_to_knee: '',
-  shirt_shoulder_to_ankle: '',
-  calves: '',
+  shirt_shoulder_to_wrist: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  shirt_shoulder_to_knee: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  shirt_shoulder_to_ankle: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/shirtLength.mp4',
+  calves: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/calves.mp4',
   ankle_width: '',
-  neck: '',
+  neck: 'https://ewfttdrfsdhgslldfgmz.supabase.co/storage/v1/object/public/tutorial-videos/neck.mp4',
   off_shoulder_top: '',
   underbust: '',
   top_length: '',
@@ -235,7 +235,7 @@ const measurementFieldGroups: Record<'common' | 'male' | 'female', MeasurementIt
       instruction: 'Wrap the tape around the wrist. The point where the tip meets the rest of the tape in a circle is your wrist size.',
     },
     {
-      key: 'waist_shirt',
+      key: 'tummy',
       label: 'Tummy',
       instruction: 'Wrap the tape around the tummy area. Keep it flat and firm with no folds or errors at the back.',
     },
@@ -326,7 +326,7 @@ export default function MeasurementsPage() {
     // Male-specific measurements
     round_sleeves: '',
     wrist: '',
-    waist_shirt: '',
+    tummy: '',
     // Shirt length measurements (grouped)
     shirt_shoulder_to_wrist: '',
     shirt_shoulder_to_knee: '',
@@ -356,6 +356,7 @@ export default function MeasurementsPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [currentMobileStep, setCurrentMobileStep] = useState(0)
   const [activeVideoGuide, setActiveVideoGuide] = useState<{ title: string; url: string } | null>(null)
+  const [showMobileDeleteConfirm, setShowMobileDeleteConfirm] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   const orderedMobileFields = useMemo(() => {
@@ -466,6 +467,7 @@ export default function MeasurementsPage() {
           .from('measurements')
           .select('id, name, created_at')
           .eq('user_id', user.id)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -506,7 +508,7 @@ export default function MeasurementsPage() {
           // Male-specific measurements
           round_sleeves: '',
           wrist: '',
-          waist_shirt: '',
+          tummy: '',
           // Shirt length measurements (grouped)
           shirt_shoulder_to_wrist: '',
           shirt_shoulder_to_knee: '',
@@ -534,6 +536,7 @@ export default function MeasurementsPage() {
           .from('measurements')
           .select('*')
           .eq('id', selectedMeasurementId)
+          .is('deleted_at', null)
           .single()
 
         if (error) throw error
@@ -558,7 +561,7 @@ export default function MeasurementsPage() {
             // Male-specific measurements
             round_sleeves: data.round_sleeves?.toString() || '',
             wrist: data.wrist?.toString() || '',
-            waist_shirt: data.waist_shirt?.toString() || '',
+            tummy: data.tummy?.toString() || '',
             // Shirt length measurements (grouped)
             shirt_shoulder_to_wrist: data.shirt_shoulder_to_wrist?.toString() || '',
             shirt_shoulder_to_knee: data.shirt_shoulder_to_knee?.toString() || '',
@@ -650,7 +653,7 @@ export default function MeasurementsPage() {
       // Male-specific measurements
       round_sleeves: '',
       wrist: '',
-      waist_shirt: '',
+      tummy: '',
       // Shirt length measurements (grouped)
       shirt_shoulder_to_wrist: '',
       shirt_shoulder_to_knee: '',
@@ -719,6 +722,7 @@ export default function MeasurementsPage() {
         .from('measurements')
         .select('id, name, created_at')
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
 
       if (refreshError) throw refreshError
@@ -741,7 +745,7 @@ export default function MeasurementsPage() {
     try {
       const { error } = await supabase
         .from('measurements')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
 
       if (error) throw error
@@ -961,6 +965,22 @@ export default function MeasurementsPage() {
     }
   };
 
+  const handleMobileDelete = () => {
+    if (!selectedMeasurementId) return;
+    setShowMobileDeleteConfirm(true);
+  };
+
+  const confirmMobileDelete = () => {
+    if (!selectedMeasurementId) return;
+    handleDelete(selectedMeasurementId);
+    setShowMobileDeleteConfirm(false);
+    exitToMobileSelection();
+  };
+
+  const cancelMobileDelete = () => {
+    setShowMobileDeleteConfirm(false);
+  };
+
   // Get the current measurement name
   const currentMeasurementName = isCreatingNew
     ? "New Measurement"
@@ -1014,6 +1034,16 @@ export default function MeasurementsPage() {
                     aria-label="Edit measurements"
                   >
                     <FiEdit2 aria-hidden="true" />
+                  </button>
+                )}
+                {!isCreatingNew && selectedMeasurementId && (
+                  <button
+                    type="button"
+                    className="mobile-icon-button delete"
+                    onClick={handleMobileDelete}
+                    aria-label="Delete measurements"
+                  >
+                    <FiTrash2 aria-hidden="true" />
                   </button>
                 )}
                 <button
@@ -1318,7 +1348,7 @@ export default function MeasurementsPage() {
 
                     const groupedItems = allMeasurements.filter(isMeasurementGroup)
                     const leftColumnIndividualKeys = new Set<MeasurementFieldKey>([
-                      'waist_shirt',
+                      'tummy',
                       'calves',
                     ])
                     const individualItems = allMeasurements.filter(isMeasurementField)
@@ -1406,6 +1436,44 @@ export default function MeasurementsPage() {
             </div>
             <div className="video-modal-body">
               {renderVideoPlayer()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMobileDeleteConfirm && (
+        <div
+          className="video-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              cancelMobileDelete()
+            }
+          }}
+        >
+          <div className="video-modal">
+            <div className="video-modal-header">
+              <h3>Delete measurement?</h3>
+              <button
+                type="button"
+                className="video-modal-close"
+                aria-label="Close delete confirmation"
+                onClick={cancelMobileDelete}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="video-modal-body">
+              <p>This will remove the measurement from your list.</p>
+              <div className="form-buttons">
+                <button type="button" className="cancel-button" onClick={cancelMobileDelete}>
+                  Cancel
+                </button>
+                <button type="button" onClick={confirmMobileDelete}>
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
