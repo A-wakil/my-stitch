@@ -7,31 +7,41 @@ import { IoArrowBack } from 'react-icons/io5'
 import { toast } from 'react-hot-toast'
 import { supabase } from "../../lib/supabaseClient"
 import { BsPerson, BsThreeDotsVertical } from 'react-icons/bs'
-import { FiChevronRight, FiPlayCircle } from 'react-icons/fi'
+import { FiChevronRight, FiEdit2, FiPlayCircle, FiX } from 'react-icons/fi'
 
 // Update type to match database column names and include gender
 type MeasurementsType = {
   gender: 'male' | 'female';
 
   // Common measurements (used by both genders)
+  cap: string;
   shoulders: string;
-  sleeves: string;
   chest: string;
   waist: string;
   hips: string;
   thigh: string;
   knee: string;
-  trouser_length: string;
+
+  // Sleeve measurements (grouped - shoulder to elbow, shoulder to wrist)
+  shoulder_to_elbow: string;
+  shoulder_to_wrist: string;
+
+  // Trouser length measurements (grouped - waist to knee, waist to ankle)
+  waist_to_knee: string;
+  waist_to_ankle: string;
 
   // Male-specific measurements
   round_sleeves: string;
   wrist: string;
   waist_shirt: string;
-  shirt_length: string;
+  
+  // Shirt length measurements (grouped - shoulder to wrist, shoulder to knee, shoulder to ankle)
+  shirt_shoulder_to_wrist: string;
+  shirt_shoulder_to_knee: string;
+  shirt_shoulder_to_ankle: string;
+  
   calves: string;
   ankle_width: string;
-  agbada_length: string;
-  agbada_width: string;
 
   // Female-specific measurements
   neck: string;
@@ -52,22 +62,28 @@ type MeasurementVideoLink = string | { default?: string; male?: string; female?:
 
 // Replace the empty strings below with the actual short video URLs for each measurement.
 const measurementVideoLinks: Partial<Record<MeasurementFieldKey, MeasurementVideoLink>> = {
+  cap: '',
   shoulders: '',
-  sleeves: '',
   chest: '',
   waist: '',
   hips: '',
   thigh: '',
   knee: '',
-  trouser_length: '',
+  // Sleeve measurements share one video
+  shoulder_to_elbow: '',
+  shoulder_to_wrist: '',
+  // Trouser length measurements share one video
+  waist_to_knee: '',
+  waist_to_ankle: '',
   round_sleeves: '',
   wrist: '',
   waist_shirt: '',
-  shirt_length: '',
+  // Shirt length measurements share one video
+  shirt_shoulder_to_wrist: '',
+  shirt_shoulder_to_knee: '',
+  shirt_shoulder_to_ankle: '',
   calves: '',
   ankle_width: '',
-  agbada_length: '',
-  agbada_width: '',
   neck: '',
   off_shoulder_top: '',
   underbust: '',
@@ -87,27 +103,80 @@ type MeasurementFieldConfig = {
   instruction: string
 }
 
-const measurementFieldGroups: Record<'common' | 'male' | 'female', MeasurementFieldConfig[]> = {
+type MeasurementGroupConfig = {
+  groupLabel: string
+  groupInstruction: string
+  videoKey: MeasurementFieldKey  // Shared video for all fields in the group
+  fields: MeasurementFieldConfig[]
+}
+
+type MeasurementItemConfig = MeasurementFieldConfig | MeasurementGroupConfig
+
+function isMeasurementGroup(item: MeasurementItemConfig): item is MeasurementGroupConfig {
+  return 'fields' in item
+}
+
+function isMeasurementField(item: MeasurementItemConfig): item is MeasurementFieldConfig {
+  return !isMeasurementGroup(item)
+}
+
+const measurementFieldGroups: Record<'common' | 'male' | 'female', MeasurementItemConfig[]> = {
   common: [
+    // Grouped measurements first
+    {
+      groupLabel: 'Sleeve Measurements',
+      groupInstruction: 'Measure from the tip of the shoulder.',
+      videoKey: 'shoulder_to_elbow',
+      fields: [
+        {
+          key: 'shoulder_to_elbow',
+          label: 'Shoulder to Elbow',
+          instruction: 'Start at the tip of the shoulder. Run the tape down to the elbow.',
+        },
+        {
+          key: 'shoulder_to_wrist',
+          label: 'Shoulder to Wrist',
+          instruction: 'Continue from the elbow down to the bony point at the wrist.',
+        },
+      ],
+    },
+    {
+      groupLabel: 'Trouser Length',
+      groupInstruction: 'Measure from the waist down the leg.',
+      videoKey: 'waist_to_knee',
+      fields: [
+        {
+          key: 'waist_to_knee',
+          label: 'Waist to Knee',
+          instruction: 'Start at the waistline. Run the tape down the side of the leg to the knee.',
+        },
+        {
+          key: 'waist_to_ankle',
+          label: 'Waist to Ankle',
+          instruction: 'Continue from the knee down to the ankle bone.',
+        },
+      ],
+    },
+    // Individual measurements
+    {
+      key: 'cap',
+      label: 'Cap',
+      instruction: 'Wrap the measuring tape around the widest vertical part of the head, typically above the eyebrows and around the back at the widest point.',
+    },
     {
       key: 'shoulders',
       label: 'Shoulders',
       instruction: 'Place the tip of the tape on the farthest point of one shoulder. Trace the tape across the back to the farthest point on the other shoulder.',
     },
     {
-      key: 'sleeves',
-      label: 'Sleeves',
-      instruction: 'Start at the highest point of the arm, near where it meets the shoulder. Run the tape down to the bony point at the wrist.',
-    },
-    {
       key: 'chest',
       label: 'Chest',
-      instruction: 'Wrap the tape around the back and bring it to the front at chest level. Ensure the tape is flat and firm across the widest part of the chest. Add 3 inches for comfort.',
+      instruction: 'Wrap the tape around the back and bring it to the front at chest level. Ensure the tape is flat and firm across the widest part of the chest.',
     },
     {
       key: 'waist',
       label: 'Waist',
-      instruction: 'Wrap the tape around the waistline, just above the belly button. Keep the tape flat and snug, and add 2 inches.',
+      instruction: 'Wrap the tape around the waistline, just above the belly button. Keep the tape flat and snug.',
     },
     {
       key: 'hips',
@@ -125,21 +194,40 @@ const measurementFieldGroups: Record<'common' | 'male' | 'female', MeasurementFi
       instruction: 'Wrap the tape around the knee joint. The point where the tape meets is your knee measurement.',
     },
     {
-      key: 'trouser_length',
-      label: 'Trouser Length',
-      instruction: 'Start at the waistline. Run the tape down the side of the leg to the ankle bone.',
-    },
-    {
       key: 'ankle_width',
       label: 'Ankle Width',
       instruction: 'Ask the client to remove their shoes. Wrap the tape diagonally around the joint where the leg meets the foot.',
     },
   ],
   male: [
+    // Grouped measurements first
+    {
+      groupLabel: 'Shirt Length',
+      groupInstruction: 'Measure from the shoulder down the body.',
+      videoKey: 'shirt_shoulder_to_wrist',
+      fields: [
+        {
+          key: 'shirt_shoulder_to_wrist',
+          label: 'Shoulder to Wrist',
+          instruction: 'Start at the point where the neck meets the shoulder. Run the tape straight down to the wrist.',
+        },
+        {
+          key: 'shirt_shoulder_to_knee',
+          label: 'Shoulder to Knee',
+          instruction: 'Continue from the wrist down to the knee.',
+        },
+        {
+          key: 'shirt_shoulder_to_ankle',
+          label: 'Shoulder to Ankle',
+          instruction: 'Continue from the knee down to the ankle.',
+        },
+      ],
+    },
+    // Individual measurements
     {
       key: 'round_sleeves',
       label: 'Round Sleeves (Bicep)',
-      instruction: 'Ask the person to flex their bicep tightly. Wrap the tape around the widest part of the bicep. Add 1 inch for comfort.',
+      instruction: 'Ask the person to flex their bicep tightly. Wrap the tape around the widest part of the bicep.',
     },
     {
       key: 'wrist',
@@ -148,28 +236,13 @@ const measurementFieldGroups: Record<'common' | 'male' | 'female', MeasurementFi
     },
     {
       key: 'waist_shirt',
-      label: 'Waist (Shirt)',
-      instruction: 'Wrap the tape around the tummy (called the shirt waist area). Keep it flat and firm with no folds or errors at the back. Add 2 inches for comfort.',
-    },
-    {
-      key: 'shirt_length',
-      label: 'Shirt Length',
-      instruction: 'Start at the point where the neck meets the shoulder. Run the tape down to the bone at the base of the thumb.',
+      label: 'Tummy',
+      instruction: 'Wrap the tape around the tummy area. Keep it flat and firm with no folds or errors at the back.',
     },
     {
       key: 'calves',
       label: 'Calves',
       instruction: "Wrap the tape around the widest part of the calf. Ensure it's comfortable and allows for movement.",
-    },
-    {
-      key: 'agbada_length',
-      label: 'Agbada Length',
-      instruction: 'Start at the point where the neck meets the shoulder. Run the tape down past the knee to the desired length of your agbada.',
-    },
-    {
-      key: 'agbada_width',
-      label: 'Agbada Width',
-      instruction: 'Ask the person to stretch both arms out to the sides at shoulder level, forming a straight horizontal line. Measure from the tip of one wrist across the back to the tip of the opposite wrist.',
     },
   ],
   female: [
@@ -237,23 +310,29 @@ export default function MeasurementsPage() {
   const [measurements, setMeasurements] = useState<MeasurementsType>({
     gender: 'male', // Default to male
     // Common measurements (used by both genders)
+    cap: '',
     shoulders: '',
-    sleeves: '',
     chest: '',
     waist: '',
     hips: '',
     thigh: '',
     knee: '',
-    trouser_length: '',
+    // Sleeve measurements (grouped)
+    shoulder_to_elbow: '',
+    shoulder_to_wrist: '',
+    // Trouser length measurements (grouped)
+    waist_to_knee: '',
+    waist_to_ankle: '',
     // Male-specific measurements
     round_sleeves: '',
     wrist: '',
     waist_shirt: '',
-    shirt_length: '',
+    // Shirt length measurements (grouped)
+    shirt_shoulder_to_wrist: '',
+    shirt_shoulder_to_knee: '',
+    shirt_shoulder_to_ankle: '',
     calves: '',
     ankle_width: '',
-    agbada_length: '',
-    agbada_width: '',
     // Female-specific measurements
     neck: '',
     off_shoulder_top: '',
@@ -284,7 +363,72 @@ export default function MeasurementsPage() {
       measurements.gender === 'male'
         ? measurementFieldGroups.male
         : measurementFieldGroups.female
-    return [...measurementFieldGroups.common, ...genderSpecific]
+    
+    // Flatten the structure but keep track of groups for mobile view
+    // For mobile, we only want one step per group (showing all grouped fields together)
+    const flattenItems = (items: MeasurementItemConfig[]) => {
+      const result: Array<MeasurementFieldConfig & { isGrouped?: boolean; groupLabel?: string; videoKey?: MeasurementFieldKey; isFirstInGroup?: boolean; isLastInGroup?: boolean }> = []
+      
+      for (const item of items) {
+        if (isMeasurementGroup(item)) {
+          // For grouped items in mobile, only add the first field as a step
+          // but mark all fields with group metadata so we can access them
+          item.fields.forEach((field, index) => {
+            result.push({
+              ...field,
+              isGrouped: true,
+              groupLabel: item.groupLabel,
+              videoKey: item.videoKey,
+              isFirstInGroup: index === 0,
+              isLastInGroup: index === item.fields.length - 1,
+            })
+          })
+        } else {
+          // For individual items, just add them
+          result.push(item)
+        }
+      }
+      
+      return result
+    }
+    
+    const allFields = flattenItems([...measurementFieldGroups.common, ...genderSpecific])
+    
+    // For mobile view, filter to only show one step per group (only first field in each group)
+    return allFields.filter(field => !field.isGrouped || field.isFirstInGroup)
+  }, [measurements.gender])
+  
+  // Keep all fields for reference (needed for rendering grouped fields)
+  const allMobileFields = useMemo(() => {
+    const genderSpecific =
+      measurements.gender === 'male'
+        ? measurementFieldGroups.male
+        : measurementFieldGroups.female
+    
+    const flattenItems = (items: MeasurementItemConfig[]) => {
+      const result: Array<MeasurementFieldConfig & { isGrouped?: boolean; groupLabel?: string; videoKey?: MeasurementFieldKey; isFirstInGroup?: boolean; isLastInGroup?: boolean }> = []
+      
+      for (const item of items) {
+        if (isMeasurementGroup(item)) {
+          item.fields.forEach((field, index) => {
+            result.push({
+              ...field,
+              isGrouped: true,
+              groupLabel: item.groupLabel,
+              videoKey: item.videoKey,
+              isFirstInGroup: index === 0,
+              isLastInGroup: index === item.fields.length - 1,
+            })
+          })
+        } else {
+          result.push(item)
+        }
+      }
+      
+      return result
+    }
+    
+    return flattenItems([...measurementFieldGroups.common, ...genderSpecific])
   }, [measurements.gender])
 
   // Check if the screen is mobile size
@@ -346,23 +490,29 @@ export default function MeasurementsPage() {
         setMeasurements({
           gender: 'male', // Default to male
           // Common measurements (used by both genders)
+          cap: '',
           shoulders: '',
-          sleeves: '',
           chest: '',
           waist: '',
           hips: '',
           thigh: '',
           knee: '',
-          trouser_length: '',
+          // Sleeve measurements (grouped)
+          shoulder_to_elbow: '',
+          shoulder_to_wrist: '',
+          // Trouser length measurements (grouped)
+          waist_to_knee: '',
+          waist_to_ankle: '',
           // Male-specific measurements
           round_sleeves: '',
           wrist: '',
           waist_shirt: '',
-          shirt_length: '',
+          // Shirt length measurements (grouped)
+          shirt_shoulder_to_wrist: '',
+          shirt_shoulder_to_knee: '',
+          shirt_shoulder_to_ankle: '',
           calves: '',
           ankle_width: '',
-          agbada_length: '',
-          agbada_width: '',
           // Female-specific measurements
           neck: '',
           off_shoulder_top: '',
@@ -392,23 +542,29 @@ export default function MeasurementsPage() {
           const formattedData = {
             gender: data.gender || 'male', // Default to male if not found
             // Common measurements (used by both genders)
+            cap: data.cap?.toString() || '',
             shoulders: data.shoulders?.toString() || '',
-            sleeves: data.sleeves?.toString() || '',
             chest: data.chest?.toString() || '',
             waist: data.waist?.toString() || '',
             hips: data.hips?.toString() || '',
             thigh: data.thigh?.toString() || '',
             knee: data.knee?.toString() || '',
-            trouser_length: data.trouser_length?.toString() || '',
+            // Sleeve measurements (grouped)
+            shoulder_to_elbow: data.shoulder_to_elbow?.toString() || '',
+            shoulder_to_wrist: data.shoulder_to_wrist?.toString() || '',
+            // Trouser length measurements (grouped)
+            waist_to_knee: data.waist_to_knee?.toString() || '',
+            waist_to_ankle: data.waist_to_ankle?.toString() || '',
             // Male-specific measurements
             round_sleeves: data.round_sleeves?.toString() || '',
             wrist: data.wrist?.toString() || '',
             waist_shirt: data.waist_shirt?.toString() || '',
-            shirt_length: data.shirt_length?.toString() || '',
+            // Shirt length measurements (grouped)
+            shirt_shoulder_to_wrist: data.shirt_shoulder_to_wrist?.toString() || '',
+            shirt_shoulder_to_knee: data.shirt_shoulder_to_knee?.toString() || '',
+            shirt_shoulder_to_ankle: data.shirt_shoulder_to_ankle?.toString() || '',
             calves: data.calves?.toString() || '',
             ankle_width: data.ankle_width?.toString() || '',
-            agbada_length: data.agbada_length?.toString() || '',
-            agbada_width: data.agbada_width?.toString() || '',
             // Female-specific measurements
             neck: data.neck?.toString() || '',
             off_shoulder_top: data.off_shoulder_top?.toString() || '',
@@ -478,23 +634,29 @@ export default function MeasurementsPage() {
     setMeasurements({
       gender: 'male', // Default to male
       // Common measurements (used by both genders)
+      cap: '',
       shoulders: '',
-      sleeves: '',
       chest: '',
       waist: '',
       hips: '',
       thigh: '',
       knee: '',
-      trouser_length: '',
+      // Sleeve measurements (grouped)
+      shoulder_to_elbow: '',
+      shoulder_to_wrist: '',
+      // Trouser length measurements (grouped)
+      waist_to_knee: '',
+      waist_to_ankle: '',
       // Male-specific measurements
       round_sleeves: '',
       wrist: '',
       waist_shirt: '',
-      shirt_length: '',
+      // Shirt length measurements (grouped)
+      shirt_shoulder_to_wrist: '',
+      shirt_shoulder_to_knee: '',
+      shirt_shoulder_to_ankle: '',
       calves: '',
       ankle_width: '',
-      agbada_length: '',
-      agbada_width: '',
       // Female-specific measurements
       neck: '',
       off_shoulder_top: '',
@@ -649,8 +811,8 @@ export default function MeasurementsPage() {
   const closeVideoGuide = () => setActiveVideoGuide(null)
 
   const renderMeasurementLabel = (fieldKey: MeasurementFieldKey, label: string) => (
-    <span className="measurement-label">
-      <span>{label}</span>
+    <div className="measurement-label-container">
+      <span className="measurement-label-text">{label}</span>
       <button
         type="button"
         className="video-icon-button"
@@ -659,7 +821,7 @@ export default function MeasurementsPage() {
       >
         <FiPlayCircle aria-hidden="true" />
       </button>
-    </span>
+    </div>
   )
 
   const renderVideoContent = (url: string, title: string, className: string) => {
@@ -695,25 +857,73 @@ export default function MeasurementsPage() {
   }
 
   const renderMeasurementField = (field: MeasurementFieldConfig) => (
-    <div key={field.key} className="measurement-field">
-      {renderMeasurementLabel(field.key, field.label)}
+    <div key={field.key} className="measurement-field individual">
+      <div className="measurement-field-header">
+        {renderMeasurementLabel(field.key, field.label)}
+      </div>
       <p className="measurement-instruction">{field.instruction}</p>
-      <input
-        type="number"
-        min="0"
-        step="any"
-        placeholder={field.label}
-        value={measurements[field.key]}
-        onChange={e => handleInputChange(field.key, e.target.value)}
-        onWheel={(e) => (e.target as HTMLElement).blur()}
-        disabled={!isFormEditable()}
-      />
-      {!isFormEditable() && <span className="measurement-unit">inches</span>}
+      <div className="measurement-input-wrapper">
+        <input
+          type="number"
+          min="0"
+          step="any"
+          placeholder={field.label}
+          value={measurements[field.key]}
+          onChange={e => handleInputChange(field.key, e.target.value)}
+          onWheel={(e) => (e.target as HTMLElement).blur()}
+          disabled={!isFormEditable()}
+        />
+        {!isFormEditable() && <span className="measurement-unit">inches</span>}
+      </div>
     </div>
   )
 
-  const renderMobileStepVideo = (field: MeasurementFieldConfig) => {
-    const url = getVideoUrl(field.key)
+  const renderMeasurementItem = (item: MeasurementItemConfig) => {
+    if (isMeasurementGroup(item)) {
+      // Render grouped measurements
+      return (
+        <div key={item.groupLabel} className="measurement-group">
+          <div className="measurement-group-header">
+            <h4>{item.groupLabel}</h4>
+            <button
+              type="button"
+              className="video-icon-button"
+              onClick={() => openVideoGuide(item.videoKey, item.groupLabel)}
+              aria-label={`Watch tutorial for ${item.groupLabel}`}
+            >
+              <FiPlayCircle aria-hidden="true" />
+            </button>
+          </div>
+          <p className="measurement-group-instruction">{item.groupInstruction}</p>
+          <div className="measurement-group-fields">
+            {item.fields.map(field => (
+              <div key={field.key} className="measurement-field grouped">
+                <label>{field.label}</label>
+                <p className="measurement-instruction">{field.instruction}</p>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder={field.label}
+                  value={measurements[field.key]}
+                  onChange={e => handleInputChange(field.key, e.target.value)}
+                  onWheel={(e) => (e.target as HTMLElement).blur()}
+                  disabled={!isFormEditable()}
+                />
+                {!isFormEditable() && <span className="measurement-unit">inches</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    } else {
+      return renderMeasurementField(item)
+    }
+  }
+
+  const renderMobileStepVideo = (field: MeasurementFieldConfig & { videoKey?: MeasurementFieldKey }) => {
+    const videoKey = field.videoKey || field.key
+    const url = getVideoUrl(videoKey)
     if (!url) {
       return (
         <div className="mobile-step-video-placeholder">
@@ -762,6 +972,24 @@ export default function MeasurementsPage() {
 
   const goToPreviousStep = () => setCurrentMobileStep(prev => Math.max(prev - 1, 0))
   const goToNextStep = () => setCurrentMobileStep(prev => Math.min(prev + 1, totalMobileSteps - 1))
+  const isCurrentMobileStepComplete = () => {
+    if (currentMobileStep === 0) return true
+    const activeField =
+      currentMobileStep === 0
+        ? null
+        : orderedMobileFields[Math.min(currentMobileStep - 1, orderedMobileFields.length - 1)]
+    if (!activeField) return true
+
+    if (activeField.isGrouped && activeField.groupLabel) {
+      const groupFields = allMobileFields.filter(
+        (field) => field.isGrouped && field.groupLabel === activeField.groupLabel
+      )
+      return groupFields.every((field) => measurements[field.key] !== '')
+    }
+
+    return measurements[activeField.key] !== ''
+  }
+  const shouldDisableNext = isFormEditable() && !isCurrentMobileStepComplete()
 
   const renderMobileStepper = () => {
     const activeField =
@@ -772,8 +1000,32 @@ export default function MeasurementsPage() {
     return (
       <div className="mobile-stepper">
         <div className="mobile-stepper-header">
-          <div className="mobile-step-count">
-            Step {currentMobileStep + 1} of {totalMobileSteps}
+          <div className="mobile-stepper-header-top">
+            <div className="mobile-step-count">
+              Step {currentMobileStep + 1} of {totalMobileSteps}
+            </div>
+            {(isCreatingNew || selectedMeasurementId) && (
+              <div className="mobile-stepper-actions">
+                {!isFormEditable() && !isCreatingNew && (
+                  <button
+                    type="button"
+                    className="mobile-icon-button edit"
+                    onClick={() => setIsEditing(true)}
+                    aria-label="Edit measurements"
+                  >
+                    <FiEdit2 aria-hidden="true" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="mobile-icon-button close"
+                  onClick={isFormEditable() ? handleCancel : exitToMobileSelection}
+                  aria-label={isFormEditable() ? 'Cancel and exit' : 'Exit measurements'}
+                >
+                  <FiX aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
           <div className="mobile-stepper-progress">
             <div
@@ -811,27 +1063,64 @@ export default function MeasurementsPage() {
           activeField && (
             <div className="mobile-step-card">
               <div className="mobile-step-title">
-                <h3>{activeField.label}</h3>
+                <h3>{activeField.groupLabel || activeField.label}</h3>
                 <span>({currentMobileStep} of {totalMobileSteps - 1})</span>
               </div>
-              <p className="mobile-step-instruction">{activeField.instruction}</p>
-              {renderMobileStepVideo(activeField)}
-              <div className="mobile-step-field">
-                <label htmlFor={`mobile-${activeField.key}`}>
-                  Enter measurement value (inches)
-                </label>
-                <input
-                  id={`mobile-${activeField.key}`}
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder={activeField.label}
-                  value={measurements[activeField.key]}
-                  onChange={e => handleInputChange(activeField.key, e.target.value)}
-                  onWheel={(e) => (e.target as HTMLElement).blur()}
-                  disabled={!isFormEditable()}
-                />
-              </div>
+              {activeField.isGrouped && activeField.isFirstInGroup ? (
+                // For grouped fields, show all fields in the group together
+                <>
+                  {renderMobileStepVideo(activeField)}
+                  <div className="mobile-step-grouped-fields">
+                    {(() => {
+                      // Find all fields in this group
+                      const groupFields = allMobileFields.filter(
+                        f => f.isGrouped && f.groupLabel === activeField.groupLabel
+                      )
+                      return groupFields.map(field => (
+                        <div key={field.key} className="mobile-step-field">
+                          <label htmlFor={`mobile-${field.key}`}>
+                            {field.label}
+                          </label>
+                          <p className="mobile-step-instruction">{field.instruction}</p>
+                          <input
+                            id={`mobile-${field.key}`}
+                            type="number"
+                            min="0"
+                            step="any"
+                            placeholder={field.label}
+                            value={measurements[field.key]}
+                            onChange={e => handleInputChange(field.key, e.target.value)}
+                            onWheel={(e) => (e.target as HTMLElement).blur()}
+                            disabled={!isFormEditable()}
+                          />
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                </>
+              ) : !activeField.isGrouped ? (
+                // For non-grouped fields, show as before
+                <>
+                  <p className="mobile-step-instruction">{activeField.instruction}</p>
+                  {renderMobileStepVideo(activeField)}
+                  <div className="mobile-step-field">
+                    <label htmlFor={`mobile-${activeField.key}`}>
+                      Enter measurement value (inches)
+                    </label>
+                    <input
+                      id={`mobile-${activeField.key}`}
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder={activeField.label}
+                      value={measurements[activeField.key]}
+                      onChange={e => handleInputChange(activeField.key, e.target.value)}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                      disabled={!isFormEditable()}
+                    />
+                  </div>
+                </>
+              ) : null}
             </div>
           )
         )}
@@ -855,38 +1144,11 @@ export default function MeasurementsPage() {
               </button>
             )
           ) : (
-            <button type="button" onClick={goToNextStep}>
+            <button type="button" onClick={goToNextStep} disabled={shouldDisableNext}>
               Next
             </button>
           )}
         </div>
-
-        {isFormEditable() ? (
-          <button
-            type="button"
-            className="cancel-button mobile-cancel"
-            onClick={handleCancel}
-          >
-            Cancel & Exit
-          </button>
-        ) : (
-          <div className="mobile-view-actions">
-            <button
-              type="button"
-              className="edit-button mobile-edit"
-              onClick={() => setIsEditing(true)}
-            >
-              Edit Measurements
-            </button>
-            <button
-              type="button"
-              className="exit-button mobile-exit"
-              onClick={exitToMobileSelection}
-            >
-              Exit to Measurements
-            </button>
-          </div>
-        )}
       </div>
     )
   }
@@ -1012,13 +1274,6 @@ export default function MeasurementsPage() {
       </div>
       )}
 
-      {/* Mobile back button */}
-      {isMobile && (isCreatingNew || selectedMeasurementId) && (
-        <button className="mobile-back-button" onClick={handleMobileBack}>
-          <IoArrowBack size={20} />
-          <span>Back</span>
-        </button>
-      )}
 
       <div className="modal-content">
         {(isCreatingNew || selectedMeasurementId) ? (
@@ -1053,25 +1308,51 @@ export default function MeasurementsPage() {
                   <FiPlayCircle aria-hidden="true" />
                   <p>Tap the play icon beside any measurement to watch a quick tutorial without leaving the app.</p>
                 </div>
-                <div className="measurements-items">
-                  <div className="form-section">
-                    <h3>Common Measurements</h3>
-                    {measurementFieldGroups.common.map(renderMeasurementField)}
-                  </div>
+                <div className="measurements-items two-column">
+                  {(() => {
+                    const genderSpecific =
+                      measurements.gender === 'male'
+                        ? measurementFieldGroups.male
+                        : measurementFieldGroups.female
+                    const allMeasurements = [...measurementFieldGroups.common, ...genderSpecific]
 
-                  {measurements.gender === 'male' && (
-                    <div className="form-section">
-                      <h3>Male-Specific Measurements</h3>
-                      {measurementFieldGroups.male.map(renderMeasurementField)}
-                    </div>
-                  )}
+                    const groupedItems = allMeasurements.filter(isMeasurementGroup)
+                    const leftColumnIndividualKeys = new Set<MeasurementFieldKey>([
+                      'waist_shirt',
+                      'calves',
+                    ])
+                    const individualItems = allMeasurements.filter(isMeasurementField)
+                    const leftColumnIndividuals = individualItems.filter((item) =>
+                      leftColumnIndividualKeys.has(item.key)
+                    )
+                    const rightColumnIndividuals = individualItems.filter(
+                      (item) => !leftColumnIndividualKeys.has(item.key)
+                    )
 
-                  {measurements.gender === 'female' && (
-                    <div className="form-section">
-                      <h3>Female-Specific Measurements</h3>
-                      {measurementFieldGroups.female.map(renderMeasurementField)}
-                    </div>
-                  )}
+                    return (
+                      <>
+                        <div className="measurement-column grouped-column">
+                          {groupedItems.map((item) => (
+                            <div key={item.groupLabel} className="measurement-item-wrapper grouped">
+                              {renderMeasurementItem(item)}
+                            </div>
+                          ))}
+                          {leftColumnIndividuals.map((item) => (
+                            <div key={item.key} className="measurement-item-wrapper individual">
+                              {renderMeasurementItem(item)}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="measurement-column individual-column">
+                          {rightColumnIndividuals.map((item) => (
+                            <div key={item.key} className="measurement-item-wrapper individual">
+                              {renderMeasurementItem(item)}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
                 {isFormEditable() && (
                   <div className="form-buttons">

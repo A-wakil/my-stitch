@@ -56,10 +56,18 @@
  text-align: center;
 }
 
-.measurements-items {
+.measurements-items.two-column {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.measurement-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .form-section {
@@ -293,8 +301,8 @@ input:disabled {
 
 /* Style for view mode */
 .measurements-form:not(.editing) .measurement-field input {
-  background: none;
-  border: none;
+  background: white;
+  border: 1px solid #e5e7eb;
   font-size: 1rem;
   color: #333;
   cursor: default;
@@ -319,25 +327,38 @@ input:disabled {
 
 /* Ensure measurement units are properly aligned */
 .measurement-field {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
-  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.measurement-label {
-  flex: 1;
-  color: #666;
-  font-size: 0.9rem;
+.measurement-field.individual {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.measurement-field-header {
+  margin-bottom: 0.75rem;
+}
+
+.measurement-label-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.measurement-label > span {
-  flex: 1;
+.measurement-label-text {
+  font-size: 1.05rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.measurement-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .video-icon-button {
@@ -368,20 +389,27 @@ input:disabled {
 }
 
 .measurement-field input {
-  flex: 1;
-  text-align: right;
+  width: 100%;
   transition: all 0.2s ease;
+}
+
+.measurement-input-wrapper input {
+  flex: 1;
 }
 
 .video-guide-hint {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   background: #f5faff;
   border: 1px solid #d7e9ff;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #0f172a;
+  margin-bottom: 1.5rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 1.5rem;
 }
 
@@ -514,6 +542,53 @@ input:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.mobile-stepper-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.mobile-stepper-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.mobile-icon-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-icon-button:hover,
+.mobile-icon-button:focus-visible {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1f2937;
+  outline: none;
+}
+
+.mobile-icon-button.close {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fff;
+}
+
+.mobile-icon-button.close:hover,
+.mobile-icon-button.close:focus-visible {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 .mobile-step-count {
@@ -674,50 +749,9 @@ input:disabled {
 
 .mobile-cancel,
 .mobile-exit,
-.mobile-edit {
-  margin-top: -0.5rem;
-  width: 100%;
-  padding: 0.85rem 1rem;
-  border-radius: 999px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.mobile-cancel {
-  background-color: #dc3545;
-  color: white;
-}
-
-.mobile-cancel:hover {
-  background-color: #c82333;
-}
-
-.mobile-exit {
-  background-color: #6c757d;
-  color: white;
-}
-
-.mobile-exit:hover {
-  background-color: #5a6268;
-}
-
-.mobile-edit {
-  background-color: #007bff;
-  color: white;
-  margin-bottom: 0.5rem;
-}
-
-.mobile-edit:hover {
-  background-color: #0056b3;
-}
-
+.mobile-edit,
 .mobile-view-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: -0.5rem;
+  display: none;
 }
 
 .video-modal-overlay {
@@ -823,29 +857,25 @@ input:disabled {
     padding: 1rem;
   }
   
-  .measurements-items {
+  .measurements-items.two-column {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .measurement-field {
-    flex-direction: column;
-    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .measurement-label {
-    width: 100%;
+  .measurement-column {
+    gap: 1rem;
   }
   
-  .measurement-field input {
-    width: 100%;
-    margin-top: 0.25rem;
-    text-align: left;
+  .measurement-field.individual {
+    padding: 1rem;
+  }
+  
+  .measurement-label-text {
+    font-size: 1rem;
   }
   
   .measurement-unit {
-    position: absolute;
-    right: 1.5rem;
+    flex-shrink: 0;
   }
   
   .form-buttons {
@@ -954,7 +984,9 @@ input:disabled {
   display: flex;
   gap: 1rem;
   margin-top: 1.5rem;
-  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
   align-items: center;
 }
 
@@ -996,12 +1028,85 @@ button[type="submit"]:hover {
 
 .measurement-instruction {
   font-size: 0.9rem;
-  color: #666;
+  color: #475569;
   margin: 0.5rem 0;
-  line-height: 1.4;
-  padding-left: 1rem;
-  border-left: 2px solid #e5e7eb;
-  font-style: italic;
+  line-height: 1.5;
+  padding: 0.6rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Grouped measurements styles */
+.measurement-group {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.measurement-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+}
+
+.measurement-group-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.measurement-group-instruction {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+  padding: 0.6rem 0.75rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+}
+
+.measurement-group-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.measurement-field.grouped {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 0;
+}
+
+.measurement-field.grouped label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.measurement-field.grouped input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.mobile-step-grouped-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .mobile-back-button {

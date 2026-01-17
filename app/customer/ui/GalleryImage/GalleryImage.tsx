@@ -6,9 +6,10 @@ interface GalleryImageProps {
   images: string[]
   alt: string
   onClick: () => void
+  isNavigating?: boolean
 }
 
-export function GalleryImage({ images, alt, onClick }: GalleryImageProps) {
+export function GalleryImage({ images, alt, onClick, isNavigating = false }: GalleryImageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('');
 
@@ -32,8 +33,16 @@ export function GalleryImage({ images, alt, onClick }: GalleryImageProps) {
     setCurrentImageIndex(index);
   };
 
+  const handleClick = () => {
+    if (isNavigating) return
+    onClick()
+  }
+
   return (
-    <div className="gallery-image-container" onClick={onClick}>
+    <div
+      className={`gallery-image-container ${isNavigating ? 'is-loading' : ''}`}
+      onClick={handleClick}
+    >
       <div className="image-wrapper">
         <Image
           key={currentImageIndex}
@@ -45,6 +54,12 @@ export function GalleryImage({ images, alt, onClick }: GalleryImageProps) {
           className={`gallery-image w-full h-full object-cover ${slideDirection}`}
           onAnimationEnd={() => setSlideDirection('')}
         />
+        {isNavigating && (
+          <div className="gallery-image-loading" role="status" aria-live="polite">
+            <div className="gallery-image-spinner" aria-hidden="true" />
+            <span>Opening design…</span>
+          </div>
+        )}
       </div>
       {hasMultipleImages && (
         <div className="gallery-controls">

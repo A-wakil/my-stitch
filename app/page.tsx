@@ -2,7 +2,7 @@
 
 
 import "./page.css"
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Header } from "./customer/ui/Header/Header"
 import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
@@ -32,6 +32,9 @@ export default function Home() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
+  const [isLoadingDesigns, setIsLoadingDesigns] = useState(true)
+  const [navigatingDesignId, setNavigatingDesignId] = useState<string | null>(null)
+  const designsCacheRef = useRef<Record<string, Design[]>>({})
   const router = useRouter()
 
   // Use gender context instead of local state
@@ -47,6 +50,15 @@ export default function Home() {
 
   const fetchDesigns = async () => {
     try {
+      setIsLoadingDesigns(true)
+      const cacheKey = gender || 'all'
+      const cached = designsCacheRef.current[cacheKey]
+      if (cached) {
+        setDesigns(cached)
+        setHasMore(cached.length >= 10)
+        setIsLoadingDesigns(false)
+        return
+      }
       // Build the URL with query parameters for filters
       let apiUrl = '/api/designs?';
       
@@ -64,14 +76,18 @@ export default function Home() {
       }
       
       const data = await response.json();
+      designsCacheRef.current[cacheKey] = data;
       setDesigns(data);
       setHasMore(data.length >= 10);
     } catch (error) {
       console.error('Error fetching designs:', error);
+    } finally {
+      setIsLoadingDesigns(false)
     }
   }
 
   useEffect(() => {
+    setIsLoadingDesigns(true)
     fetchDesigns()
   }, [gender]) // Re-fetch when filters change
 
@@ -84,6 +100,8 @@ export default function Home() {
       return;
     }
     
+    if (navigatingDesignId) return
+    setNavigatingDesignId(design.id)
     // Navigate to design detail page
     router.push(`customer/designs/${design.id}`)
   }
@@ -191,6 +209,8 @@ export default function Home() {
               </button>
             </div>
           </div>
+        ) : isLoadingDesigns ? (
+          <p className="loading-message">Loading designs...</p>
         ) : filteredDesigns.length === 0 ? (
           <div className="no-results">
             <p>No designs match your selected filters.</p>
@@ -203,6 +223,7 @@ export default function Home() {
                 images={design.images}
                 alt={design.title}
                 onClick={() => handleDesignClick(design)}
+                isNavigating={navigatingDesignId === design.id}
               />
             ))}
           </div>

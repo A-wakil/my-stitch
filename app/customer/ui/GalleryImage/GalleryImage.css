@@ -115,11 +115,49 @@
     flex-direction: column;
     gap: 12px;
   }
+
+.gallery-image-container.is-loading {
+  pointer-events: none;
+}
   
   .image-wrapper {
     position: relative;
     overflow: hidden; /* Hide sliding images */
   }
+
+.gallery-image-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
+
+.gallery-image-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gallery-image-container.is-loading .gallery-controls,
+.gallery-image-container.is-loading .dot-indicators {
+  opacity: 0.3;
+}
   
   .gallery-image {
     will-change: transform;
