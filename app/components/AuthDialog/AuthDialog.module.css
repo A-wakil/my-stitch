@@ -181,6 +181,46 @@
   gap: 0.5rem;
 }
 
+.rolePills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.rolePill {
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  color: #4b5563;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rolePill:hover:not(:disabled) {
+  border-color: #111;
+  color: #111;
+}
+
+.rolePillActive {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.rolePillActive:hover:not(:disabled) {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.rolePill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @keyframes slideIn {
   to {
     opacity: 1;

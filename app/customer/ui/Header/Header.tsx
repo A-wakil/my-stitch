@@ -24,6 +24,8 @@ export function Header() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [authDefaultRole, setAuthDefaultRole] = useState<'customer' | 'tailor' | 'both'>('customer')
+  const [authRedirectTo, setAuthRedirectTo] = useState<string | null>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Bag context
@@ -66,11 +68,20 @@ export function Header() {
   }
 
   const toggleAuthDialog = () => {
+    setAuthDefaultRole('customer')
+    setAuthRedirectTo(null)
     setIsAuthDialogOpen(!isAuthDialogOpen)
   }
 
   const closeAuthDialog = () => {
     setIsAuthDialogOpen(false)
+    setAuthRedirectTo(null)
+  }
+
+  const openTailorAuth = () => {
+    setAuthDefaultRole('tailor')
+    setAuthRedirectTo('/tailor')
+    setIsAuthDialogOpen(true)
   }
 
   const handleSubmit = async (email: string, password: string) => {
@@ -172,7 +183,7 @@ export function Header() {
             </div>
             <button 
               className='tailor-button' 
-              onClick={!user ? toggleAuthDialog : () => router.push('/tailor')}
+              onClick={!user ? openTailorAuth : () => router.push('/tailor')}
               title="Go to Tailor Dashboard"
             >
               <span className='tailor-icon'>✂️</span>
@@ -242,6 +253,8 @@ export function Header() {
         <AuthDialog
           isOpen={isAuthDialogOpen}
           onClose={closeAuthDialog}
+          defaultRole={authDefaultRole}
+          redirectTo={authRedirectTo}
         />
       </header>
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={user} toggleAuthDialog={toggleAuthDialog} />

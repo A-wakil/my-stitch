@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useId } from 'react'
+import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { IoClose } from 'react-icons/io5'
 import { FiEye, FiEyeOff } from 'react-icons/fi'
@@ -10,18 +11,22 @@ import { supabase } from '../../lib/supabaseClient'
 interface AuthDialogProps {
   isOpen: boolean
   onClose: () => void
+  defaultRole?: 'customer' | 'tailor' | 'both'
+  redirectTo?: string | null
 }
 
-export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
+export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirectTo }: AuthDialogProps) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [role, setRole] = useState<'customer' | 'tailor' | 'both'>(defaultRole)
   const [isSignUp, setIsSignUp] = useState(false)
   const [isForgotPassword, setIsForgotPassword] = useState(false)
   const [infoMessage, setInfoMessage] = useState('')
   const [generalError, setGeneralError] = useState('')
-  const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string }>({})
+  const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string; role?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -38,6 +43,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
       setInfoMessage('')
       setGeneralError('')
       setErrors({})
+      setRole(defaultRole)
 
       // Focus email input on open
       setTimeout(() => document.getElementById(emailInputId)?.focus(), 50)
@@ -76,7 +82,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
   }, [errors, isSignUp, isOpen])
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string; firstName?: string; lastName?: string } = {}
+    const newErrors: { email?: string; password?: string; firstName?: string; lastName?: string; role?: string } = {}
 
     if (!email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email format'
@@ -89,6 +95,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
       if (isSignUp) {
         if (!firstName) newErrors.firstName = 'First name is required'
         if (!lastName) newErrors.lastName = 'Last name is required'
+        if (!role) newErrors.role = 'Please select a role'
       }
     }
 
@@ -130,7 +137,7 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
             data: {
               first_name: firstName,
               last_name: lastName,
-              roles: 'customer'
+              roles: role
             },
           },
         })
@@ -165,6 +172,30 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
         if (data && !data.user?.email_confirmed_at) {
           setInfoMessage('📧 Please verify your email before signing in.')
           await supabase.auth.signOut().catch(console.error)
+          return
+        }
+
+        const userRole = data?.user?.user_metadata?.roles
+        let target = redirectTo || null
+
+        if (!target && (userRole === 'tailor' || userRole === 'both')) {
+          target = '/tailor'
+        }
+
+        if (!target && data?.user?.id) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('roles')
+            .eq('id', data.user.id)
+            .single()
+          if (profileData?.roles === 'tailor' || profileData?.roles === 'both') {
+            target = '/tailor'
+          }
+        }
+
+        if (target) {
+          onClose()
+          router.push(target)
           return
         }
 
@@ -319,6 +350,29 @@ export function AuthDialog({ isOpen, onClose,}: AuthDialogProps) {
                     placeholder="Last name"
                   />
                   {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
+                </div>
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>Role</label>
+                  <div className={styles.rolePills} role="radiogroup" aria-invalid={!!errors.role}>
+                    {[
+                      { value: 'customer', label: 'Customer' },
+                      { value: 'tailor', label: 'Tailor' },
+                      { value: 'both', label: 'Both' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`${styles.rolePill} ${role === option.value ? styles.rolePillActive : ''}`}
+                        onClick={() => setRole(option.value as 'customer' | 'tailor' | 'both')}
+                        disabled={isLoading}
+                        role="radio"
+                        aria-checked={role === option.value}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.role && <span className={styles.error}>{errors.role}</span>}
                 </div>
               </>
             )}
