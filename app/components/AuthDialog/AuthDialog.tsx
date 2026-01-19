@@ -357,13 +357,12 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
                     {[
                       { value: 'customer', label: 'Customer' },
                       { value: 'tailor', label: 'Tailor' },
-                      { value: 'both', label: 'Both' },
                     ].map((option) => (
                       <button
                         key={option.value}
                         type="button"
                         className={`${styles.rolePill} ${role === option.value ? styles.rolePillActive : ''}`}
-                        onClick={() => setRole(option.value as 'customer' | 'tailor' | 'both')}
+                        onClick={() => setRole(option.value as 'customer' | 'tailor')}
                         disabled={isLoading}
                         role="radio"
                         aria-checked={role === option.value}
