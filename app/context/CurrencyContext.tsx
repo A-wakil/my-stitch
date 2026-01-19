@@ -23,7 +23,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       try {
         if (typeof window !== 'undefined') {
           const cached = window.localStorage.getItem('preferred_currency')
-          if (cached && CURRENCIES[cached as CurrencyCode]) {
+          const source = window.localStorage.getItem('preferred_currency_source')
+          if (source === 'manual' && cached && CURRENCIES[cached as CurrencyCode]) {
             setCurrencyState(cached as CurrencyCode)
             return
           }
@@ -61,11 +62,13 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
             // Add more mappings as needed
           }
           
-          const detectedCurrency = countryCurrencyMap[data.country_code] || null
+          const ipCurrency = typeof data.currency === 'string' ? data.currency.toUpperCase() : null
+          const detectedCurrency = countryCurrencyMap[data.country_code] || (ipCurrency === 'NGN' ? 'NGN' : null)
           if (detectedCurrency) {
             setCurrencyState(detectedCurrency)
             if (typeof window !== 'undefined') {
               window.localStorage.setItem('preferred_currency', detectedCurrency)
+              window.localStorage.setItem('preferred_currency_source', 'auto')
             }
             if (user) {
               await supabase
@@ -83,9 +86,12 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         // Fallback: infer from browser locale
         if (typeof window !== 'undefined') {
           const locale = Intl.NumberFormat().resolvedOptions().locale.toLowerCase()
-          const fallbackCurrency = locale.includes('ng') ? 'NGN' : 'USD'
+          const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone?.toLowerCase() || ''
+          const isNigeria = locale.includes('ng') || timeZone.includes('lagos')
+          const fallbackCurrency = isNigeria ? 'NGN' : 'USD'
           setCurrencyState(fallbackCurrency)
           window.localStorage.setItem('preferred_currency', fallbackCurrency)
+          window.localStorage.setItem('preferred_currency_source', 'auto')
           if (user) {
             await supabase
               .from('profiles')
@@ -107,6 +113,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     setCurrencyState(code)
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('preferred_currency', code)
+      window.localStorage.setItem('preferred_currency_source', 'manual')
     }
 
     // Save preference if user is logged in

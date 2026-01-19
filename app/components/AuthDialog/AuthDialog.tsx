@@ -139,6 +139,7 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
               last_name: lastName,
               roles: role
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
 
