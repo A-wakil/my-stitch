@@ -13,11 +13,21 @@ function AuthCallbackContent() {
     const finalizeAuth = async () => {
       try {
         const code = searchParams.get('code')
+        const tokenHash = searchParams.get('token_hash')
+        const type = searchParams.get('type')
+
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) {
-            setMessage('We could not confirm your email. Please try signing in.')
-            return
+            console.warn('Exchange code error:', error)
+          }
+        } else if (tokenHash && type) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change',
+          })
+          if (error) {
+            console.warn('Verify OTP error:', error)
           }
         }
 
