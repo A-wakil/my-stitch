@@ -92,10 +92,10 @@
   @media (max-width: 768px) {
     /* Shrink sidebar to icon-only on mobile */
     .sidebar.open {
-      width: 100px !important;
+      width: 120px !important;
     }
     .sidebar {
-      width: 60px !important;
+      width: 90px !important;
     }
     .nav-list {
       padding: 1rem !important;
@@ -108,16 +108,24 @@
       padding: 0.5rem 0 !important;
       position: relative !important;
     }
-    /* Hide text, show only icons */
-    .nav-text {
-      display: none !important;
-    }
-    /* Center icons */
+    /* Stack icon + label */
     .nav-item {
       text-align: center !important;
     }
+    .nav-link {
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
     .nav-icon {
       margin: 0 auto !important;
+    }
+    .nav-text {
+      display: block !important;
+      font-size: 0.75rem;
+      line-height: 1.1;
+      text-align: center;
+      color: #cbd5f5;
     }
     .close-btn-txt {
       display: none;
@@ -127,21 +135,10 @@
       margin-right: 15px;
     }
     
-    /* Tooltip styles for mobile view */
+    /* Tooltip no longer needed when labels are visible */
     .nav-link[data-tooltip]:hover::after,
     .close-button[data-tooltip]:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      z-index: 100;
+      content: none;
     }
   }
   

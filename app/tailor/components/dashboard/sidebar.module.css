@@ -111,16 +111,21 @@
   margin-right: 0.5rem; /* mr-2 */
 } 
 
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
 .marketplace-link {
   display: block;
-  font-size: 0.875rem;
-  color: #666;
-  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #4b5563;
   text-decoration: none;
 }
 
 .marketplace-link:hover {
-  color: #333;
+  color: #111827;
   text-decoration: underline;
 }
 
@@ -170,5 +175,45 @@
     font-size: 12px;
     white-space: nowrap;
     z-index: 100;
+  }
+
+  .sidebar {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .close-button-only {
+    position: static;
+    margin: 0;
+  }
+
+  .sidebar-menu {
+    align-items: center;
+  }
+
+  .sidebar-link {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .sidebar-icon {
+    margin-right: 0;
+  }
+
+  .sidebar-link {
+    font-size: 0.75rem;
+  }
+
+  .sidebar-link[data-tooltip]:hover::after {
+    content: none;
   }
 }

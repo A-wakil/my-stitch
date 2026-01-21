@@ -20,7 +20,7 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
     <div className={styles.sidebar}>
       <div className={styles['sidebar-header']}>
         {isMobile && toggleSidebar && (
-          <button 
+          <button
             onClick={toggleSidebar}
             className={styles['close-button-only']}
             aria-label="Close sidebar"
@@ -28,11 +28,6 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
             <X size={20} strokeWidth={2.5} />
           </button>
         )}
-        <Link href="/" className={styles['marketplace-link']} onClick={() => {
-          if (isMobile && toggleSidebar) toggleSidebar();
-        }}>
-          ← Go back to Marketplace
-        </Link>
       </div>
       <nav className={styles['sidebar-nav']}>
         <ul className={styles['sidebar-menu']}>
@@ -113,6 +108,17 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           </li>
         </ul>
       </nav>
+      <div className={styles['sidebar-footer']}>
+        <Link
+          href="/"
+          className={styles['marketplace-link']}
+          onClick={() => {
+            if (isMobile && toggleSidebar) toggleSidebar();
+          }}
+        >
+          Go to Marketplace
+        </Link>
+      </div>
     </div>
   )
 }
