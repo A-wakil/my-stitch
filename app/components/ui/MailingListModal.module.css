@@ -1,0 +1,160 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.formContainer {
+  margin-bottom: 1rem;
+}
+
+.inputGroup {
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancelButton, .submitButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.cancelButton:hover {
+  background-color: #f3f4f6;
+}
+
+.cancelButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.submitButton {
+  background-color: #f59e0b;
+  border: none;
+  color: white;
+}
+
+.submitButton:hover {
+  background-color: #d97706;
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Success state styles */
+.successContainer {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.successIcon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1rem;
+  background-color: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.successTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.successMessage {
+  color: #6b7280;
+  font-size: 0.95rem;
+}

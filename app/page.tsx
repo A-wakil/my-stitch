@@ -8,6 +8,7 @@ import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { useGender } from "./context/GenderContext"
 import { AuthDialog } from "./components/AuthDialog/AuthDialog";
+import { MailingListModal } from "./components/ui/MailingListModal";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
@@ -30,6 +31,7 @@ export default function Home() {
   const [designs, setDesigns] = useState<Design[]>([])
   const [page, setPage] = useState(1)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const [isMailingListModalOpen, setIsMailingListModalOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingDesigns, setIsLoadingDesigns] = useState(true)
@@ -200,10 +202,7 @@ export default function Home() {
               </div>
               <button 
                 className="notify-me-btn"
-                onClick={() => {
-                  // You can add email subscription logic here later
-                  alert('Thank you for your interest! We\'ll notify you when our women\'s collection launches.');
-                }}
+                onClick={() => setIsMailingListModalOpen(true)}
               >
                 Notify Me When Available
               </button>
@@ -234,6 +233,10 @@ export default function Home() {
       <AuthDialog
         isOpen={isAuthDialogOpen}
         onClose={closeAuthDialog}
+      />
+      <MailingListModal
+        isOpen={isMailingListModalOpen}
+        onClose={() => setIsMailingListModalOpen(false)}
       />
     </div>
   );

@@ -249,7 +249,7 @@
   left: 0;
   width: 0;
   height: 100%;
-  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(251, 191, 36, 0.3));
   transition: width 0.3s ease;
   z-index: 0;
 }
@@ -260,7 +260,7 @@
 
 .notify-me-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
 }
 
 .notify-me-btn span {

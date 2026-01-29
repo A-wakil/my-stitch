@@ -386,7 +386,10 @@ export default function MeasurementsPage() {
           })
         } else {
           // For individual items, just add them
-          result.push(item)
+          result.push({
+            ...item,
+            isGrouped: false
+          })
         }
       }
       
@@ -396,7 +399,13 @@ export default function MeasurementsPage() {
     const allFields = flattenItems([...measurementFieldGroups.common, ...genderSpecific])
     
     // For mobile view, filter to only show one step per group (only first field in each group)
-    return allFields.filter(field => !field.isGrouped || field.isFirstInGroup)
+    const filtered = allFields.filter(field => !field.isGrouped || field.isFirstInGroup)
+    console.log('📱 ALL fields before filtering:', allFields.map(f => ({ key: f.key, label: f.label, isGrouped: f.isGrouped, isFirstInGroup: f.isFirstInGroup })))
+    console.log('📱 FILTERED mobile fields:', filtered.map(f => ({ key: f.key, label: f.label, isGrouped: f.isGrouped })))
+    console.log('📱 Total mobile steps (including intro):', filtered.length + 1)
+    console.log('📱 Does filtered include calves?:', filtered.some(f => f.key === 'calves'))
+    console.log('📱 Last field in filtered array:', filtered[filtered.length - 1]?.label || filtered[filtered.length - 1]?.key)
+    return filtered
   }, [measurements.gender])
   
   // Keep all fields for reference (needed for rendering grouped fields)
@@ -630,6 +639,7 @@ export default function MeasurementsPage() {
     setCurrentMobileStep(0);
   }, [measurements.gender, selectedMeasurementId, isMobile, isCreatingNew]);
 
+
   const handleNewMeasurement = () => {
     setSelectedMeasurementId(null)
     setIsCreatingNew(true)
@@ -681,8 +691,10 @@ export default function MeasurementsPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent | React.MouseEvent) => {
+    if (e) e.preventDefault()
+    console.log('🔥 Form submit triggered! e.type:', e?.type, 'e.nativeEvent:', (e as any)?.nativeEvent)
+
     setIsSubmitting(true)
 
     try {
@@ -989,9 +1001,32 @@ export default function MeasurementsPage() {
   const totalMobileSteps = orderedMobileFields.length + 1
   const isLastMobileStep = currentMobileStep === totalMobileSteps - 1
   const progressRatio = totalMobileSteps > 1 ? currentMobileStep / (totalMobileSteps - 1) : 0
+  
+  // Debug logging for step calculation
+  console.log('📊 Step calculation:', {
+    currentStep: currentMobileStep,
+    totalSteps: totalMobileSteps,
+    isLastStep: isLastMobileStep,
+    currentFieldKey: currentMobileStep > 0 ? orderedMobileFields[currentMobileStep - 1]?.key : 'intro',
+    currentFieldLabel: currentMobileStep > 0 ? orderedMobileFields[currentMobileStep - 1]?.label : 'intro',
+  })
 
   const goToPreviousStep = () => setCurrentMobileStep(prev => Math.max(prev - 1, 0))
-  const goToNextStep = () => setCurrentMobileStep(prev => Math.min(prev + 1, totalMobileSteps - 1))
+  const goToNextStep = () => {
+    console.log('🔄 goToNextStep called, current step:', currentMobileStep)
+    const nextStep = Math.min(currentMobileStep + 1, totalMobileSteps - 1)
+    const currentField = currentMobileStep > 0 ? orderedMobileFields[currentMobileStep - 1] : null
+    const nextField = nextStep > 0 ? orderedMobileFields[nextStep - 1] : null
+    console.log(`🔄 Step ${currentMobileStep} → ${nextStep}`)
+    console.log(`  Current field:`, currentField?.label || 'Intro')
+    console.log(`  Next field:`, nextField?.label || 'Intro')
+    console.log(`  Total steps:`, totalMobileSteps)
+    console.log(`  Is last step?:`, nextStep === totalMobileSteps - 1)
+    console.log(`  Next step will be:`, nextStep)
+
+    // Only go to next step, NEVER submit the form here
+    setCurrentMobileStep(nextStep)
+  }
   const isCurrentMobileStepComplete = () => {
     if (currentMobileStep === 0) return true
     const activeField =
@@ -1074,6 +1109,12 @@ export default function MeasurementsPage() {
                   placeholder="Name of Client"
                   value={newMeasurementName}
                   onChange={(e) => setNewMeasurementName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      console.log('🚫 Prevented Enter key form submission (name field)')
+                    }
+                  }}
                   className="measurement-name-input"
                 />
               ) : (
@@ -1121,6 +1162,12 @@ export default function MeasurementsPage() {
                             value={measurements[field.key]}
                             onChange={e => handleInputChange(field.key, e.target.value)}
                             onWheel={(e) => (e.target as HTMLElement).blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault()
+                                console.log('🚫 Prevented Enter key form submission (grouped field)')
+                              }
+                            }}
                             disabled={!isFormEditable()}
                           />
                         </div>
@@ -1146,6 +1193,12 @@ export default function MeasurementsPage() {
                       value={measurements[activeField.key]}
                       onChange={e => handleInputChange(activeField.key, e.target.value)}
                       onWheel={(e) => (e.target as HTMLElement).blur()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          console.log('🚫 Prevented Enter key form submission (individual field)')
+                        }
+                      }}
                       disabled={!isFormEditable()}
                     />
                   </div>
@@ -1163,21 +1216,41 @@ export default function MeasurementsPage() {
           >
             Back
           </button>
-          {isLastMobileStep ? (
-            isFormEditable() ? (
-              <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Measurements'}
-              </button>
+          {(() => {
+            console.log('🔘 Button render logic:', {
+              isLastMobileStep,
+              isFormEditable: isFormEditable(),
+              currentStep: currentMobileStep,
+              totalSteps: totalMobileSteps,
+              calculation: `${currentMobileStep} === ${totalMobileSteps - 1}`,
+              shouldShowSubmitButton: isLastMobileStep && isFormEditable(),
+            })
+            return isLastMobileStep ? (
+              isFormEditable() ? (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  className="submit-button"
+                  data-testid="save-measurements-button"
+                  onClick={(e) => {
+                    console.log('🎯 Save button clicked directly!')
+                    e.preventDefault()
+                    handleSubmit(e as any)
+                  }}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Measurements'}
+                </button>
+              ) : (
+                <button type="button" onClick={exitToMobileSelection}>
+                  Done
+                </button>
+              )
             ) : (
-              <button type="button" onClick={exitToMobileSelection}>
-                Done
+              <button type="button" onClick={goToNextStep} disabled={shouldDisableNext}>
+                Next
               </button>
             )
-          ) : (
-            <button type="button" onClick={goToNextStep} disabled={shouldDisableNext}>
-              Next
-            </button>
-          )}
+          })()}
         </div>
       </div>
     )
@@ -1326,12 +1399,11 @@ export default function MeasurementsPage() {
               </div>
             )}
             {isMobile ? (
-              <form
+              <div
                 className={`mobile-measurements-form ${isFormEditable() ? 'editing' : ''}`}
-                onSubmit={handleSubmit}
               >
                 {renderMobileStepper()}
-              </form>
+              </div>
             ) : (
               <form className={`measurements-form ${isFormEditable() ? 'editing' : ''}`} onSubmit={handleSubmit}>
                 <div className="video-guide-hint">
