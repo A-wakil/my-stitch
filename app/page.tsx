@@ -18,6 +18,7 @@ interface Design {
   title: string
   description: string
   images: string[]
+  price?: number
   fabrics: Array<{
     name: string
     image: string | File | null
@@ -26,6 +27,8 @@ interface Design {
   }>
   gender?: string | null
 }
+
+const scrollPositions: Record<string, number> = {}
 
 export default function Home() {
   const [designs, setDesigns] = useState<Design[]>([])
@@ -38,6 +41,7 @@ export default function Home() {
   const [navigatingDesignId, setNavigatingDesignId] = useState<string | null>(null)
   const designsCacheRef = useRef<Record<string, Design[]>>({})
   const router = useRouter()
+  const prevGenderRef = useRef<string | null>(null)
 
   // Use gender context instead of local state
   const { gender, setGender } = useGender()
@@ -89,9 +93,28 @@ export default function Home() {
   }
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const currentGender = gender || 'all'
+    const previousGender = prevGenderRef.current
+
+    if (previousGender && previousGender !== currentGender) {
+      scrollPositions[previousGender] = window.scrollY
+    }
+
+    prevGenderRef.current = currentGender
     setIsLoadingDesigns(true)
     fetchDesigns()
   }, [gender]) // Re-fetch when filters change
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (isLoadingDesigns) return
+    const currentGender = gender || 'all'
+    const storedScroll = scrollPositions[currentGender]
+    if (typeof storedScroll === 'number') {
+      window.scrollTo(0, storedScroll)
+    }
+  }, [isLoadingDesigns, gender])
 
   // No need for client-side filtering since we're filtering in the database query
   const filteredDesigns = designs;
@@ -103,6 +126,9 @@ export default function Home() {
     }
     
     if (navigatingDesignId) return
+    if (typeof window !== 'undefined') {
+      scrollPositions[gender || 'all'] = window.scrollY
+    }
     setNavigatingDesignId(design.id)
     // Navigate to design detail page
     router.push(`customer/designs/${design.id}`)
@@ -223,6 +249,7 @@ export default function Home() {
                 alt={design.title}
                 onClick={() => handleDesignClick(design)}
                 isNavigating={navigatingDesignId === design.id}
+                price={design.price}
               />
             ))}
           </div>

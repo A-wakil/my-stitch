@@ -99,6 +99,7 @@ export function formatCurrency(amount: number, currency: CurrencyCode): string {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });

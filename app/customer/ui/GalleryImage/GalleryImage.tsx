@@ -1,19 +1,54 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import './GalleryImage.css'
+import { useCurrency } from '../../../context/CurrencyContext'
+import { calculateCustomerPrice } from '../../../lib/pricing'
 
 interface GalleryImageProps {
   images: string[]
   alt: string
   onClick: () => void
   isNavigating?: boolean
+  price?: number
 }
 
-export function GalleryImage({ images, alt, onClick, isNavigating = false }: GalleryImageProps) {
+export function GalleryImage({ images, alt, onClick, isNavigating = false, price }: GalleryImageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('');
+  const [formattedPrice, setFormattedPrice] = useState<string | null>(null);
+  const { formatAmount, convertToPreferred } = useCurrency()
 
   const hasMultipleImages = images.length > 1;
+
+  useEffect(() => {
+    let isMounted = true
+
+    const formatPrice = async () => {
+      if (typeof price !== 'number' || Number.isNaN(price)) {
+        if (isMounted) setFormattedPrice(null)
+        return
+      }
+
+      const customerPrice = calculateCustomerPrice(price)
+      try {
+        const converted = await convertToPreferred(customerPrice, 'USD')
+        if (isMounted) {
+          setFormattedPrice(formatAmount(converted))
+        }
+      } catch (error) {
+        console.error('Error converting price:', error)
+        if (isMounted) {
+          setFormattedPrice(formatAmount(customerPrice))
+        }
+      }
+    }
+
+    formatPrice()
+
+    return () => {
+      isMounted = false
+    }
+  }, [price, convertToPreferred, formatAmount])
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,6 +89,11 @@ export function GalleryImage({ images, alt, onClick, isNavigating = false }: Gal
           className={`gallery-image w-full h-full object-cover ${slideDirection}`}
           onAnimationEnd={() => setSlideDirection('')}
         />
+        {formattedPrice && (
+          <div className="price-tag" aria-label={`Price ${formattedPrice}`}>
+            {formattedPrice}
+          </div>
+        )}
         {isNavigating && (
           <div className="gallery-image-loading" role="status" aria-live="polite">
             <div className="gallery-image-spinner" aria-hidden="true" />

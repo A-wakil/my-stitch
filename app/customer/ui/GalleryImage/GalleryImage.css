@@ -125,6 +125,32 @@
     overflow: hidden; /* Hide sliding images */
   }
 
+.price-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 3px 8px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+  letter-spacing: 0.1px;
+  pointer-events: none;
+  transform-origin: right center;
+  animation: priceTagFloat 3s ease-in-out infinite;
+}
+
+@keyframes priceTagFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 .gallery-image-loading {
   position: absolute;
   inset: 0;
