@@ -20,21 +20,21 @@ export function GenderToggle({ currentGender, onGenderChange }: GenderToggleProp
   // Determine what to show in the pill
   const getDisplayText = () => {
     if (currentGender === 'male') {
-      return 'Men'
-    } else if (currentGender === 'female') {
       return 'Women'
+    } else if (currentGender === 'female') {
+      return 'Men'
     } else {
-      return 'Men' // Default fallback
+      return 'Women' // Default fallback
     }
   }
 
   const getDisplayIcon = () => {
     if (currentGender === 'male') {
-      return '👔'
-    } else if (currentGender === 'female') {
       return '👗'
+    } else if (currentGender === 'female') {
+      return '👔'
     } else {
-      return '👔' // Default fallback
+      return '👗' // Default fallback
     }
   }
 
