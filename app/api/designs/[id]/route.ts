@@ -42,6 +42,7 @@ export async function PUT(
     const formData = await request.formData()
     const created_by = formData.get("created_by") as string
     const price = parseFloat(formData.get("price") as string)
+    const currency_code = (formData.get("currency_code") as string) || 'USD'
 
     // Process design images and videos (using same bucket but separate columns)
     const imageUrls = await processImages(formData, 'design-images')
@@ -58,6 +59,7 @@ export async function PUT(
         images: imageUrls, // Images in images column
         videos: videoUrls, // Videos in videos column
         price: price,
+        currency_code: currency_code,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string

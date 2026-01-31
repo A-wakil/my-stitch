@@ -98,6 +98,7 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const created_by = formData.get("created_by") as string
     const price = parseFloat(formData.get("price") as string)
+    const currency_code = (formData.get("currency_code") as string) || 'USD'
     
     console.log('Processing design submission...')
     console.log('Created by:', created_by)
@@ -117,6 +118,7 @@ export async function POST(request: Request) {
         images: imageUrls, // Images in images column
         videos: videoUrls, // Videos in videos column
         price: price,
+        currency_code: currency_code,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string
@@ -148,6 +150,7 @@ export async function PUT(request: Request) {
     const designId = formData.get("id")
     const created_by = formData.get("created_by") as string
     const price = parseFloat(formData.get("price") as string)
+    const currency_code = (formData.get("currency_code") as string) || 'USD'
     
     const imageUrls = await processImages(formData, 'design-images')
     const videoUrls = await processVideos(formData, 'design-images') // Using design-images bucket
@@ -163,6 +166,7 @@ export async function PUT(request: Request) {
         images: imageUrls, // Images in images column
         videos: videoUrls, // Videos in videos column
         price: price,
+        currency_code: currency_code,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string

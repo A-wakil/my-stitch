@@ -3,6 +3,7 @@ import Image from 'next/image'
 import './GalleryImage.css'
 import { useCurrency } from '../../../context/CurrencyContext'
 import { calculateCustomerPrice } from '../../../lib/pricing'
+import { CurrencyCode } from '../../../lib/types'
 
 interface GalleryImageProps {
   images: string[]
@@ -10,9 +11,17 @@ interface GalleryImageProps {
   onClick: () => void
   isNavigating?: boolean
   price?: number
+  priceCurrency?: CurrencyCode
 }
 
-export function GalleryImage({ images, alt, onClick, isNavigating = false, price }: GalleryImageProps) {
+export function GalleryImage({
+  images,
+  alt,
+  onClick,
+  isNavigating = false,
+  price,
+  priceCurrency = 'USD'
+}: GalleryImageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('');
   const [formattedPrice, setFormattedPrice] = useState<string | null>(null);
@@ -31,7 +40,7 @@ export function GalleryImage({ images, alt, onClick, isNavigating = false, price
 
       const customerPrice = calculateCustomerPrice(price)
       try {
-        const converted = await convertToPreferred(customerPrice, 'USD')
+        const converted = await convertToPreferred(customerPrice, priceCurrency)
         if (isMounted) {
           setFormattedPrice(formatAmount(converted))
         }

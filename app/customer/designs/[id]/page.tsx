@@ -5,7 +5,7 @@ import { supabase } from '../../../lib/supabaseClient'
 import styles from './DesignDetail.module.css'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
-import { Measurement } from '../../../lib/types'
+import { CurrencyCode, Measurement } from '../../../lib/types'
 import { IoArrowBack } from "react-icons/io5"
 import { IoChevronDown, IoChevronUp } from "react-icons/io5"
 import { IoInformationCircleOutline } from "react-icons/io5"
@@ -24,6 +24,7 @@ interface DesignDetail {
   videos?: string[]
   // Some existing designs may not have fabrics; fallback to price
   price?: number
+  currency_code?: CurrencyCode
   fabrics?: Array<{
     name: string
     image: string
@@ -69,7 +70,7 @@ interface OrderDetails {
 }
 
 export default function DesignDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { formatAmount, convertToPreferred } = useCurrency()
+  const { formatAmount, convertToPreferred, getExchangeRate } = useCurrency()
 
   // Unwrap the promise to get the actual params
   const { id } = use(params)
@@ -90,6 +91,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [showTailorProfile, setShowTailorProfile] = useState(false)
   const [tailorNotes, setTailorNotes] = useState<string>('')
   const [formattedTotalPrice, setFormattedTotalPrice] = useState<string>('')
+  const [priceInUsdForBag, setPriceInUsdForBag] = useState<number>(0)
   const [isMobile, setIsMobile] = useState(false)
   const [isImageZoomed, setIsImageZoomed] = useState(false)
   const [showReviewsModal, setShowReviewsModal] = useState(false)
@@ -266,12 +268,21 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     async function updatePrices() {
       if (!design) return
       const total = totalPrice
-      const convertedTotal = await convertToPreferred(total, 'USD')
+      const designCurrency: CurrencyCode = design.currency_code || 'USD'
+      const convertedTotal = await convertToPreferred(total, designCurrency)
       setFormattedTotalPrice(formatAmount(convertedTotal))
+
+      try {
+        const rateToUsd = await getExchangeRate(designCurrency, 'USD')
+        setPriceInUsdForBag(total * rateToUsd)
+      } catch (error) {
+        console.error('Failed to convert price to USD for bag:', error)
+        setPriceInUsdForBag(total)
+      }
     }
 
     updatePrices()
-  }, [design, totalPrice, convertToPreferred, formatAmount]);
+  }, [design, totalPrice, convertToPreferred, formatAmount, getExchangeRate]);
 
 
   const handleAddToCart = async () => {
@@ -287,7 +298,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     try {
       setLoading(true)
 
-      const itemTotalPrice = totalPrice
+      const itemTotalPrice = priceInUsdForBag || totalPrice
 
       await addItem({
         tailor_id: design.created_by,

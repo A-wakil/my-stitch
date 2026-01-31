@@ -4,6 +4,11 @@ import { supabase } from '../supabaseClient'
 const EXCHANGE_RATE_CACHE_DURATION = 1000 * 60 * 15; // 15 minutes
 let rateCache: { [key: string]: ExchangeRate } = {};
 
+const CURRENCY_FRACTION_DIGITS: Record<CurrencyCode, number> = {
+  USD: 2,
+  NGN: 0
+};
+
 // Get API key from environment variables
 const EXCHANGE_RATE_API_KEY = process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY;
 
@@ -96,15 +101,20 @@ export async function getExchangeRate(from: CurrencyCode, to: CurrencyCode): Pro
 }
 
 export function formatCurrency(amount: number, currency: CurrencyCode): string {
+  const fractionDigits = CURRENCY_FRACTION_DIGITS[currency] ?? 2;
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency,
     currencyDisplay: 'narrowSymbol',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits
   });
 
   return formatter.format(amount);
+}
+
+export function getCurrencyFractionDigits(currency: CurrencyCode): number {
+  return CURRENCY_FRACTION_DIGITS[currency] ?? 2;
 }
 
 export async function convertAmount(

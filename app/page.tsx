@@ -12,6 +12,7 @@ import { MailingListModal } from "./components/ui/MailingListModal";
 import { supabase } from "./lib/supabaseClient";
 import { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import { CurrencyCode } from './lib/types'
 
 interface Design {
   id: string
@@ -19,6 +20,7 @@ interface Design {
   description: string
   images: string[]
   price?: number
+  currency_code?: CurrencyCode | null
   fabrics: Array<{
     name: string
     image: string | File | null
@@ -250,6 +252,7 @@ export default function Home() {
                 onClick={() => handleDesignClick(design)}
                 isNavigating={navigatingDesignId === design.id}
                 price={design.price}
+                priceCurrency={design.currency_code || undefined}
               />
             ))}
           </div>

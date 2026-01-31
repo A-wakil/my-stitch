@@ -12,7 +12,8 @@ import { toast } from "react-hot-toast"
 import { Info } from "lucide-react"
 import { Toaster } from 'react-hot-toast'
 import { useCurrency } from '../../../context/CurrencyContext'
-import { CURRENCIES } from '../../../lib/types'
+import { CURRENCIES, CurrencyCode } from '../../../lib/types'
+import { getCurrencyFractionDigits } from '../../../lib/services/currencyService'
 
 interface DesignFormProps {
   onSubmitSuccess: () => void
@@ -23,6 +24,7 @@ interface DesignFormProps {
     images: string[]
     videos?: string[]
     price?: number
+    currency_code?: CurrencyCode
     gender?: 'male' | 'female' | null
     completion_time?: number | null
   }
@@ -37,7 +39,7 @@ interface FormErrors {
 }
 
 export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
-  const { currency, convertToPreferred, getExchangeRate } = useCurrency()
+  const { currency, convertToPreferred } = useCurrency()
   const [title, setTitle] = useState(initialData?.title || "")
   const [description, setDescription] = useState(initialData?.description || "")
   const [images, setImages] = useState<File[]>([])
@@ -48,7 +50,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [totalPrice, setTotalPrice] = useState<string>('')
-  const [priceInUSD, setPriceInUSD] = useState<number | null>(null) // Store the original USD price
+  const [storedPrice, setStoredPrice] = useState<number | null>(null)
+  const [storedCurrency, setStoredCurrency] = useState<CurrencyCode>('USD')
   const [gender, setGender] = useState<'male' | 'female' | null>(
     initialData?.gender !== undefined ? initialData.gender : null
   )
@@ -66,9 +69,10 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
             ? null
             : null
       )
-      // Set the price if available (stored in USD in database)
+      // Set the price if available (stored in its original currency in database)
       if (initialData.price !== undefined && initialData.price !== null) {
-        setPriceInUSD(initialData.price)
+        setStoredPrice(initialData.price)
+        setStoredCurrency(initialData.currency_code || 'USD')
       }
     }
   }, [initialData])
@@ -76,13 +80,14 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   // Convert price to selected currency whenever currency or priceInUSD changes
   useEffect(() => {
     async function updateDisplayPrice() {
-      if (priceInUSD !== null) {
-        const convertedPrice = await convertToPreferred(priceInUSD, 'USD')
-        setTotalPrice(convertedPrice.toFixed(2))
+      if (storedPrice !== null) {
+        const convertedPrice = await convertToPreferred(storedPrice, storedCurrency)
+        const fractionDigits = getCurrencyFractionDigits(currency)
+        setTotalPrice(convertedPrice.toFixed(fractionDigits))
       }
     }
     updateDisplayPrice()
-  }, [currency, priceInUSD, convertToPreferred])
+  }, [currency, storedPrice, storedCurrency, convertToPreferred])
 
   // Form validation
   const formValidation = useMemo(() => {
@@ -138,10 +143,10 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     setIsSubmitting(true)
 
     try {
-      // Convert price from selected currency to USD before saving
+      // Save price in the selected currency
       const priceInSelectedCurrency = parseFloat(totalPrice)
-      const exchangeRate = await getExchangeRate(currency, 'USD')
-      const priceInUSDForSaving = priceInSelectedCurrency * exchangeRate
+      const selectedFractionDigits = getCurrencyFractionDigits(currency)
+      const priceForSaving = Number(priceInSelectedCurrency.toFixed(selectedFractionDigits))
 
       const formData = new FormData()
       formData.append("title", title)
@@ -149,7 +154,8 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
       formData.append("existingImages", JSON.stringify(existingImages))
       formData.append("existingVideos", JSON.stringify(existingVideos))
       formData.append("completion_time", duration === null ? "" : duration.toString())
-      formData.append("price", priceInUSDForSaving.toString())
+      formData.append("price", priceForSaving.toString())
+      formData.append("currency_code", currency)
 
       if (gender !== null) {
         formData.append("gender", gender)
