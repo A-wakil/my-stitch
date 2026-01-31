@@ -130,6 +130,13 @@ export default function Home() {
     if (navigatingDesignId) return
     if (typeof window !== 'undefined') {
       scrollPositions[gender || 'all'] = window.scrollY
+      try {
+        const ids = filteredDesigns.map((item) => item.id)
+        sessionStorage.setItem('designs:sequence', JSON.stringify(ids))
+        sessionStorage.setItem('designs:current', design.id)
+      } catch (error) {
+        console.error('Failed to store design sequence:', error)
+      }
     }
     setNavigatingDesignId(design.id)
     // Navigate to design detail page
@@ -253,6 +260,7 @@ export default function Home() {
                 isNavigating={navigatingDesignId === design.id}
                 price={design.price}
                 priceCurrency={design.currency_code || undefined}
+                isPriority={index < 4}
               />
             ))}
           </div>

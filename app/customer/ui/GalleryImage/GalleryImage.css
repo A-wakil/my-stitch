@@ -122,7 +122,12 @@
   
   .image-wrapper {
     position: relative;
-    overflow: hidden; /* Hide sliding images */
+  overflow: hidden; /* Hide sliding images */
+  aspect-ratio: 2 / 3;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   }
 
 .price-tag {
@@ -186,6 +191,10 @@
 }
   
   .gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: top center;
     will-change: transform;
     animation-duration: 0.3s;
     animation-fill-mode: forwards;
@@ -275,5 +284,15 @@
     background: #3B82F6;
     transform: scale(1.2);
   }
+
+@media (max-width: 480px) {
+  .image-wrapper {
+    aspect-ratio: auto;
+  }
+
+  .gallery-image {
+    height: auto;
+  }
+}
   
   

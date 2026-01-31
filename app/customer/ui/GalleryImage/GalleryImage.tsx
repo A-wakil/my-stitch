@@ -12,6 +12,7 @@ interface GalleryImageProps {
   isNavigating?: boolean
   price?: number
   priceCurrency?: CurrencyCode
+  isPriority?: boolean
 }
 
 export function GalleryImage({
@@ -20,7 +21,8 @@ export function GalleryImage({
   onClick,
   isNavigating = false,
   price,
-  priceCurrency = 'USD'
+  priceCurrency = 'USD',
+  isPriority = false
 }: GalleryImageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('');
@@ -94,8 +96,9 @@ export function GalleryImage({
           alt={alt}
           width={400}
           height={600}
-          priority={true}
-          className={`gallery-image w-full h-full object-cover ${slideDirection}`}
+          priority={isPriority}
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          className={`gallery-image ${slideDirection}`}
           onAnimationEnd={() => setSlideDirection('')}
         />
         {formattedPrice && (

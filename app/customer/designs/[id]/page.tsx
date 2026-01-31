@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use, useMemo } from 'react'
+import { useState, useEffect, use, useMemo, useRef } from 'react'
 import { supabase } from '../../../lib/supabaseClient'
 import styles from './DesignDetail.module.css'
 import { useRouter } from 'next/navigation'
@@ -35,6 +35,14 @@ interface DesignDetail {
   created_by: string
   brand_name: string
   completion_time: number
+}
+
+const designCache = new Map<string, DesignDetail>()
+const designCacheKey = 'designs:cache'
+
+type CachedDesignEntry = {
+  design: DesignDetail
+  brandName?: string
 }
 
 type MediaItem = {
@@ -97,6 +105,10 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [showReviewsModal, setShowReviewsModal] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
   const [isLoadingReviews, setIsLoadingReviews] = useState(false)
+  const [designSequence, setDesignSequence] = useState<string[]>([])
+  const [currentDesignIndex, setCurrentDesignIndex] = useState<number | null>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const [isMediaLoading, setIsMediaLoading] = useState(true)
 
   // Bag context
   const { addItem } = useBag()
@@ -142,6 +154,37 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     async function fetchDesign() {
+      setIsLoading(true)
+
+      const cached = designCache.get(id)
+      if (cached) {
+        setDesign(cached)
+        setTailorId(cached.created_by)
+        setIsLoading(false)
+        return
+      }
+
+      if (typeof window !== 'undefined') {
+        const stored = sessionStorage.getItem(`${designCacheKey}:${id}`)
+        if (stored) {
+          try {
+            const parsed: CachedDesignEntry = JSON.parse(stored)
+            if (parsed?.design?.id === id) {
+              designCache.set(id, parsed.design)
+              setDesign(parsed.design)
+              setTailorId(parsed.design.created_by)
+              if (parsed.brandName) {
+                setBrandName(parsed.brandName)
+              }
+              setIsLoading(false)
+              return
+            }
+          } catch (error) {
+            console.error('Failed to parse design cache entry:', error)
+          }
+        }
+      }
+
       const { data, error } = await supabase
         .from('designs')
         .select('*')
@@ -149,43 +192,34 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
         .single()
       if (error) {
         console.error('Error fetching design:', error)
+        setIsLoading(false)
           return
         }
 
-      const { data: brandData, error: brandError } = await supabase
-        .from('designs')
-        .select('created_by')
-        .eq('id', id)
-        .single()
-
-      if (brandError) {
-        console.error('Error fetching brand:', brandError)
-        return
-      }
-
-      if (!brandData || !brandData.created_by) {
+      if (!data?.created_by) {
         console.error('No created_by field found for design')
         return
       }
 
-      setTailorId(brandData.created_by)
+      setTailorId(data.created_by)
 
       // Add .maybeSingle() instead of .single() to handle cases with no rows
       const { data: brandName, error: brandNameError } = await supabase
         .from('tailor_details')
         .select('brand_name')
-        .eq('id', brandData.created_by)
+        .eq('id', data.created_by)
         .maybeSingle()
 
       if (brandNameError) {
         console.error('Error fetching brand name:', brandNameError)
+        setIsLoading(false)
         return
       }
 
       if (brandName) {
         setBrandName(brandName.brand_name)
       } else {
-        console.log('No brand name found for tailor ID:', brandData.created_by)
+        console.log('No brand name found for tailor ID:', data.created_by)
         setBrandName('Unknown Brand')
       }
 
@@ -194,11 +228,51 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       const design = {
         ...data
       }
+      designCache.set(id, design)
       setDesign(design)
+
+      if (typeof window !== 'undefined') {
+        try {
+          const cacheEntry: CachedDesignEntry = {
+            design,
+            brandName: brandName?.brand_name || 'Unknown Brand'
+          }
+          sessionStorage.setItem(`${designCacheKey}:${id}`, JSON.stringify(cacheEntry))
+        } catch (error) {
+          console.error('Failed to store design cache entry:', error)
+        }
+      }
+
+      setIsLoading(false)
     }
 
     fetchDesign()
   }, [id])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = sessionStorage.getItem('designs:sequence')
+    if (!stored) return
+    try {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setDesignSequence(parsed.filter((item) => typeof item === 'string'))
+      }
+    } catch (error) {
+      console.error('Failed to parse design sequence:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!designSequence.length) return
+    const index = designSequence.indexOf(id)
+    setCurrentDesignIndex(index >= 0 ? index : null)
+  }, [designSequence, id])
+
+  useEffect(() => {
+    if (!mediaItems.length) return
+    setIsMediaLoading(true)
+  }, [selectedMediaIndex, mediaItems.length])
 
 
 
@@ -317,6 +391,63 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     }
   }
 
+  const navigateToIndex = (nextIndex: number) => {
+    if (!designSequence.length) return
+    if (nextIndex < 0 || nextIndex >= designSequence.length) return
+    const nextId = designSequence[nextIndex]
+    if (!nextId || nextId === id) return
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('designs:current', nextId)
+    }
+    router.push(`/customer/designs/${nextId}`)
+  }
+
+  const handleSwipe = (direction: 'left' | 'right') => {
+    if (currentDesignIndex === null) return
+    if (direction === 'left') {
+      navigateToIndex(currentDesignIndex + 1)
+    } else {
+      navigateToIndex(currentDesignIndex - 1)
+    }
+  }
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0]
+    if (!touch) return
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current) return
+    const touch = event.changedTouches[0]
+    if (!touch) return
+
+    const deltaX = touch.clientX - touchStartRef.current.x
+    const deltaY = touch.clientY - touchStartRef.current.y
+    touchStartRef.current = null
+
+    const swipeThreshold = 60
+    if (Math.abs(deltaX) < swipeThreshold || Math.abs(deltaX) < Math.abs(deltaY)) {
+      return
+    }
+
+    if (deltaX < 0) {
+      handleSwipe('left')
+    } else {
+      handleSwipe('right')
+    }
+  }
+
+  const handlePrevMedia = () => {
+    if (!mediaItems.length) return
+    setSelectedMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
+  }
+
+  const handleNextMedia = () => {
+    if (!mediaItems.length) return
+    setSelectedMediaIndex((prev) => (prev + 1) % mediaItems.length)
+  }
+
 
 
   // Add a check to determine if this is a simple pricing design or has real fabrics
@@ -364,8 +495,23 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     fetchReviews();
   };
 
-  if (!design) {
-    return <div>Loading...</div>
+  if (!design || isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.skeletonHeader} />
+        <div className={styles.skeletonGrid}>
+          <div className={styles.skeletonMedia} />
+          <div className={styles.skeletonDetails}>
+            <div className={styles.skeletonTitle} />
+            <div className={styles.skeletonLine} />
+            <div className={styles.skeletonLine} />
+            <div className={styles.skeletonLineShort} />
+            <div className={styles.skeletonPrice} />
+            <div className={styles.skeletonButton} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -376,11 +522,59 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
       >
         <IoArrowBack /> Back to Home
       </button>
+      {designSequence.length > 1 && (
+        <div className={styles.designNav}>
+          <button
+            className={styles.designNavButton}
+            onClick={() => handleSwipe('right')}
+            disabled={currentDesignIndex === null || currentDesignIndex <= 0}
+            aria-label="Previous design"
+          >
+            ‹
+          </button>
+          <span className={styles.designNavLabel}>
+            Browse designs
+          </span>
+          <button
+            className={styles.designNavButton}
+            onClick={() => handleSwipe('left')}
+            disabled={
+              currentDesignIndex === null ||
+              currentDesignIndex >= designSequence.length - 1
+            }
+            aria-label="Next design"
+          >
+            ›
+          </button>
+        </div>
+      )}
 
       <div className={styles.productGrid}>
         {/* Left side - Media gallery */}
         <div className={styles.imageSection}>
-          <div className={styles.mainImage}>
+          <div
+            className={`${styles.mainImage} ${isMediaLoading ? styles.mediaLoading : ''}`}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {mediaItems.length > 1 && (
+              <>
+                <button
+                  className={`${styles.mediaNavArrow} ${styles.mediaNavArrowLeft}`}
+                  onClick={handlePrevMedia}
+                  aria-label="Previous media"
+                >
+                  ‹
+                </button>
+                <button
+                  className={`${styles.mediaNavArrow} ${styles.mediaNavArrowRight}`}
+                  onClick={handleNextMedia}
+                  aria-label="Next media"
+                >
+                  ›
+                </button>
+              </>
+            )}
             {mediaItems[selectedMediaIndex]?.type === 'video' ? (
               <video 
                 src={mediaItems[selectedMediaIndex]?.url}
@@ -389,6 +583,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 loop
                 muted
                 playsInline
+                onLoadedData={() => setIsMediaLoading(false)}
               />
             ) : (
               <img 
@@ -397,9 +592,16 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 className={styles.primaryImage}
                 onClick={() => setIsImageZoomed(true)}
                 style={{ cursor: 'zoom-in' }}
+                onLoad={() => setIsMediaLoading(false)}
               />
             )}
+            {isMediaLoading && <div className={styles.mediaSkeleton} />}
           </div>
+          {designSequence.length > 1 && (
+            <div className={styles.swipeHint}>
+              {isMobile ? 'Swipe to browse designs' : 'Use the arrows above to browse designs'}
+            </div>
+          )}
           <div className={styles.thumbnails}>
             {mediaItems.map((item, index) => (
               <div 
