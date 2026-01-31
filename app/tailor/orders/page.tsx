@@ -45,6 +45,12 @@ const measurementVideoLinks: Record<string, string> = {
   ankle_trouser_end: '',
 }
 
+const ordersCache = new Map<string, {
+  orders: Order[]
+  clientProfiles: Record<string, Profile>
+  tailorProfile: Profile | null
+}>()
+
 export default function TailorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -196,6 +202,7 @@ export default function TailorOrdersPage() {
       const userIds = [...new Set(ordersWithDesigns.map(order => order.user_id))];
       console.log('Customer IDs from orders:', userIds);
       
+      let profileMap: Record<string, Profile> = {};
       if (userIds.length > 0) {
         // Fetch client profiles - with improved query
         const { data: profiles, error: profilesError } = await supabase
@@ -210,7 +217,6 @@ export default function TailorOrdersPage() {
         } else {
           console.log(`Found ${profiles.length} customer profiles`);
           
-          const profileMap: Record<string, Profile> = {};
           profiles.forEach(profile => {
             profileMap[profile.id] = profile;
           });
@@ -219,6 +225,11 @@ export default function TailorOrdersPage() {
       }
 
       setOrders(ordersWithDesigns);
+      ordersCache.set(user.id, {
+        orders: ordersWithDesigns,
+        clientProfiles: profileMap,
+        tailorProfile
+      });
     } catch (err) {
       console.error('Error in fetchOrders:', err);
       setOrders([]);
@@ -236,6 +247,17 @@ export default function TailorOrdersPage() {
         return
       }
       setUser(currentUser)
+      if (currentUser) {
+        const cached = ordersCache.get(currentUser.id)
+        if (cached) {
+          setOrders(cached.orders)
+          setClientProfiles(cached.clientProfiles)
+          setTailorProfile(cached.tailorProfile)
+          setDataLoaded(true)
+          setIsLoading(false)
+          return
+        }
+      }
       if (currentUser) {
         const profile = await ensureProfileExists(
           currentUser.id,

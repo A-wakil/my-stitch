@@ -17,6 +17,8 @@ interface Design {
   price?: number
 }
 
+const designGridCache = new Map<string, Design[]>()
+
 export function DesignGrid() {
   const { formatAmount, convertToPreferred } = useCurrency()
   const [designs, setDesigns] = useState<Design[] | null>(null)
@@ -42,11 +44,20 @@ export function DesignGrid() {
         return
       }
 
+      const cachedDesigns = designGridCache.get(user.id)
+      if (cachedDesigns) {
+        setDesigns(cachedDesigns)
+        setDataLoaded(true)
+        setIsLoading(false)
+        return
+      }
+
       // Fetch only designs created by the current tailor
       const response = await fetch(`/api/designs?created_by=${user.id}`)
       if (response.ok) {
         const data = await response.json()
         setDesigns(data)
+        designGridCache.set(user.id, data)
         setDataLoaded(true)
       } else {
         console.error("Failed to fetch designs")
@@ -139,7 +150,12 @@ export function DesignGrid() {
       if (response.ok) {
         // Remove the deleted design from the UI
         if (designs) {
-          setDesigns(designs.filter((design) => design.id !== designToDelete))
+          const nextDesigns = designs.filter((design) => design.id !== designToDelete)
+          setDesigns(nextDesigns)
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            designGridCache.set(user.id, nextDesigns)
+          }
         }
         console.log("Design successfully marked as deleted")
       } else {

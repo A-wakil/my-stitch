@@ -107,6 +107,17 @@
   background-color: #f3f4f6; /* hover:bg-gray-100 */
 }
 
+.sidebar-link-active {
+  background-color: #eef2ff;
+  color: #1e3a8a;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #6366f1;
+}
+
+.sidebar-link-active .sidebar-icon {
+  color: #4338ca;
+}
+
 .sidebar-icon {
   margin-right: 0.5rem; /* mr-2 */
 } 

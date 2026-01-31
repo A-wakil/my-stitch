@@ -40,6 +40,8 @@ interface DashboardStats {
   recentOrders: Order[];
 }
 
+const dashboardCache = new Map<string, { stats: DashboardStats; tailorProfile: any | null }>()
+
 // Add this utility function for timeouts
 function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -83,15 +85,16 @@ export default function Dashboard() {
   const isPageLoading = isLoading || (user != null && isLoadingStats);
 
   // Memoize fetchDashboardStats with useCallback
-  const fetchDashboardStats = useCallback(async (userId: string) => {
+  const fetchDashboardStats = useCallback(async (userId: string): Promise<DashboardStats> => {
     if (!userId) {
       console.log('[fetchDashboardStats] No user ID provided.');
       setIsLoadingStats(false);
-      setStats({ 
+      const emptyStats = { 
         totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
         averageRating: 0, recentDesigns: [], recentOrders: [] 
-      });
-      return;
+      };
+      setStats(emptyStats);
+      return emptyStats;
     }
 
     console.log(`[fetchDashboardStats] Starting for user: ${userId}`);
@@ -257,29 +260,49 @@ export default function Dashboard() {
       }
       
       
-      setStats({
+      const computedStats = {
         totalDesigns: designsCount || 0,
         totalOrders,
         totalRevenue,
         averageRating: parseFloat(averageRating.toFixed(1)),
         recentDesigns: recentDesigns || [],
         recentOrders: recentOrders || []
-      });
+      };
+      setStats(computedStats);
       console.log('[fetchDashboardStats] Stats updated successfully');
+      return computedStats;
     } catch (error) {
       console.error('[fetchDashboardStats] Error:', error instanceof Error ? error.message : error);
-      setStats({ 
+      const emptyStats = { 
           totalDesigns: 0, totalOrders: 0, totalRevenue: 0, 
           averageRating: 0, recentDesigns: [], recentOrders: [] 
-      });
+      };
+      setStats(emptyStats);
+      return emptyStats;
     } finally {
       setIsLoadingStats(false);
     }
   }, []); // Remove supabase dependency as it's stable
 
   useEffect(() => {
+    if (!user?.id) {
+      setIsLoading(false);
+      setIsLoadingStats(false);
+      return;
+    }
+
+    const cached = dashboardCache.get(user.id)
+    if (cached) {
+      setTailorProfile(cached.tailorProfile)
+      setStats(cached.stats)
+      setDataLoaded(true)
+      setIsLoading(false)
+      setIsLoadingStats(false)
+      return
+    }
+
     // Prevent re-running if data is already loaded and user hasn't changed
-    if (dataLoaded && user?.id) {
+    if (dataLoaded) {
       return;
     }
 
@@ -324,7 +347,11 @@ export default function Dashboard() {
         
         // 3. Fetch dashboard stats with timeout
         try {
-          await fetchDashboardStats(user.id);
+          const computedStats = await fetchDashboardStats(user.id);
+          dashboardCache.set(user.id, {
+            stats: computedStats,
+            tailorProfile: profileResponse.data ?? null
+          });
         } catch (statsError) {
           console.error('[checkAndFetchData] Error fetching dashboard stats:', statsError);
           // Reset stats to empty state on error
@@ -354,7 +381,7 @@ export default function Dashboard() {
     checkAndFetchData();
     
   // Only depend on user.id, not the entire user object or other functions
-  }, [user?.id, fetchDashboardStats]);
+  }, [user?.id, dataLoaded, fetchDashboardStats]);
 
   // Handle page visibility changes to prevent unnecessary reloads
   useEffect(() => {

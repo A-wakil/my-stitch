@@ -31,6 +31,8 @@ interface Design {
 }
 
 const scrollPositions: Record<string, number> = {}
+const designsCache = new Map<string, Design[]>()
+const designsCacheKey = 'designs:list'
 
 export default function Home() {
   const [designs, setDesigns] = useState<Design[]>([])
@@ -41,7 +43,6 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingDesigns, setIsLoadingDesigns] = useState(true)
   const [navigatingDesignId, setNavigatingDesignId] = useState<string | null>(null)
-  const designsCacheRef = useRef<Record<string, Design[]>>({})
   const router = useRouter()
   const prevGenderRef = useRef<string | null>(null)
 
@@ -60,12 +61,29 @@ export default function Home() {
     try {
       setIsLoadingDesigns(true)
       const cacheKey = gender || 'all'
-      const cached = designsCacheRef.current[cacheKey]
+      const cached = designsCache.get(cacheKey)
       if (cached) {
         setDesigns(cached)
         setHasMore(cached.length >= 10)
         setIsLoadingDesigns(false)
         return
+      }
+      if (typeof window !== 'undefined') {
+        const stored = sessionStorage.getItem(`${designsCacheKey}:${cacheKey}`)
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored)
+            if (Array.isArray(parsed)) {
+              designsCache.set(cacheKey, parsed)
+              setDesigns(parsed)
+              setHasMore(parsed.length >= 10)
+              setIsLoadingDesigns(false)
+              return
+            }
+          } catch (error) {
+            console.error('Failed to parse designs cache:', error)
+          }
+        }
       }
       // Build the URL with query parameters for filters
       let apiUrl = '/api/designs?';
@@ -84,7 +102,14 @@ export default function Home() {
       }
       
       const data = await response.json();
-      designsCacheRef.current[cacheKey] = data;
+      designsCache.set(cacheKey, data);
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(`${designsCacheKey}:${cacheKey}`, JSON.stringify(data))
+        } catch (error) {
+          console.error('Failed to store designs cache:', error)
+        }
+      }
       setDesigns(data);
       setHasMore(data.length >= 10);
     } catch (error) {

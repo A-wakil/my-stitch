@@ -1,5 +1,6 @@
 'use client'
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Home, Scissors, User, ShoppingBag, X } from "lucide-react"
 import styles from "./sidebar.module.css"
 import { useProfile } from "../../../context/ProfileContext"
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
   const { hasProfile, isLoading } = useProfile()
+  const pathname = usePathname()
 
   if (isLoading) {
     return <div className={styles.sidebar}>Loading...</div>
@@ -34,7 +36,7 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           <li>
             <Link 
               href="/tailor" 
-              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
+              className={`${styles['sidebar-link']} ${pathname === '/tailor' ? styles['sidebar-link-active'] : ''} ${!hasProfile && styles['sidebar-link-disabled']}`}
               onClick={e => {
                 if (!hasProfile) {
                   e.preventDefault();
@@ -52,7 +54,7 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           <li>
             <Link 
               href="/tailor/orders" 
-              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
+              className={`${styles['sidebar-link']} ${pathname === '/tailor/orders' ? styles['sidebar-link-active'] : ''} ${!hasProfile && styles['sidebar-link-disabled']}`}
               onClick={e => {
                 if (!hasProfile) {
                   e.preventDefault();
@@ -71,7 +73,7 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           <li>
             <Link 
               href="/tailor/designs" 
-              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
+              className={`${styles['sidebar-link']} ${pathname === '/tailor/designs' ? styles['sidebar-link-active'] : ''} ${!hasProfile && styles['sidebar-link-disabled']}`}
               onClick={e => {
                 if (!hasProfile) {
                   e.preventDefault();
@@ -90,7 +92,7 @@ export function Sidebar({ isMobile, toggleSidebar }: SidebarProps) {
           <li>
             <Link 
               href="/tailor/profile" 
-              className={`${styles['sidebar-link']} ${!hasProfile && styles['sidebar-link-disabled']}`}
+              className={`${styles['sidebar-link']} ${pathname === '/tailor/profile' ? styles['sidebar-link-active'] : ''} ${!hasProfile && styles['sidebar-link-disabled']}`}
               onClick={e => {
                 if (!hasProfile) {
                   e.preventDefault();

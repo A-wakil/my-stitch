@@ -6,6 +6,7 @@ import { TailorProfileDisplay } from "../components/dashboard/tailor-profile-dis
 import styles from "./page.module.css"
 import { Profile } from "../types/design"
 
+const profileCache = new Map<string, Profile>()
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -17,6 +18,14 @@ export default function ProfilePage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      const cachedProfile = profileCache.get(user.id)
+      if (cachedProfile) {
+        setProfileData(cachedProfile)
+        setDataLoaded(true)
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await supabase
         .from('tailor_details')
@@ -41,6 +50,7 @@ export default function ProfilePage() {
           specializations: data.specializations || [],
         }
         setProfileData(transformedData)
+        profileCache.set(user.id, transformedData)
         setDataLoaded(true)
       }
     } catch (error) {
@@ -62,6 +72,11 @@ export default function ProfilePage() {
   const handleProfileUpdate = (updatedProfile: typeof profileData) => {
     setProfileData(updatedProfile)
     setIsEditing(false)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && updatedProfile) {
+        profileCache.set(user.id, updatedProfile)
+      }
+    })
   }
 
   if (loading) return <div>Loading...</div>
