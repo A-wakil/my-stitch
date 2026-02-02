@@ -38,8 +38,17 @@ export default function EditDesignPage() {
     }
   }
 
-  const handleSubmitSuccess = () => {
-    router.push("/tailor/designs")
+  const handleSubmitSuccess = async () => {
+    // Clear the cache before navigating back
+    const { supabase } = await import("../../../../lib/supabaseClient")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { clearDesignCache } = await import("../../../components/dashboard/design-grid")
+      clearDesignCache(user.id)
+    }
+    
+    // Navigate back with force reload
+    window.location.href = "/tailor/designs"
   }
 
   if (isLoading) {

@@ -51,6 +51,21 @@ export async function PUT(
     console.log('[ID] Update - Image URLs:', imageUrls)
     console.log('[ID] Update - Video URLs:', videoUrls)
 
+    const { data: tailor, error: tailorError } = await supabase
+      .from('tailor_details')
+      .select('is_approved')
+      .eq('id', created_by)
+      .maybeSingle()
+
+    if (tailorError) {
+      console.error('Error checking tailor approval:', tailorError)
+      return NextResponse.json({ message: "Failed to verify tailor approval" }, { status: 500 })
+    }
+
+    if (!tailor?.is_approved) {
+      return NextResponse.json({ message: "Tailor approval required to update designs" }, { status: 403 })
+    }
+
     const { data, error } = await supabase
       .from('designs')
       .update({
@@ -60,6 +75,8 @@ export async function PUT(
         videos: videoUrls, // Videos in videos column
         price: price,
         currency_code: currency_code,
+        approval_status: 'pending',
+        rejection_reason: null,
         created_by: created_by,
         completion_time: parseInt(formData.get("completion_time") as string),
         gender: formData.get("gender") as string

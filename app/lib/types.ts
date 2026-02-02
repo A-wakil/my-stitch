@@ -95,6 +95,8 @@ export interface Measurement {
     fabrics: string[]
     price?: number
     currency_code?: CurrencyCode
+    approval_status?: 'pending' | 'approved' | 'rejected'
+    rejection_reason?: string | null
     is_deleted?: boolean
     is_soft_deleted?: boolean
     completion_time?: number  // Time in weeks for the tailor to complete the design

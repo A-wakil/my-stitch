@@ -15,9 +15,21 @@ interface Design {
   images: string[]
   videos?: string[]
   price?: number
+  currency_code?: string | null
+  approval_status?: 'pending' | 'approved' | 'rejected' | null
+  rejection_reason?: string | null
 }
 
 const designGridCache = new Map<string, Design[]>()
+
+// Export function to clear cache
+export function clearDesignCache(userId?: string) {
+  if (userId) {
+    designGridCache.delete(userId)
+  } else {
+    designGridCache.clear()
+  }
+}
 
 export function DesignGrid() {
   const { formatAmount, convertToPreferred } = useCurrency()
@@ -105,7 +117,8 @@ export function DesignGrid() {
       
       for (const design of designs) {
         if (design.price !== undefined && design.price !== null) {
-          const convertedTotalPrice = await convertToPreferred(design.price, 'USD')
+          const fromCurrency = (design.currency_code || 'USD') as any
+          const convertedTotalPrice = await convertToPreferred(design.price, fromCurrency)
           
           newPrices[design.id] = {
             totalPrice: formatAmount(convertedTotalPrice)
@@ -273,26 +286,51 @@ export function DesignGrid() {
                     </div>
                   )}
                   <div className={styles['card-footer']}>
-                    <button 
-                      className={styles['edit-button']}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(design.id);
-                      }}
-                    >
-                      <Pencil size={20} />
-                      Edit
-                    </button>
-                    <button 
-                      className={styles['delete-button']}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openDeleteModal(design.id);
-                      }}
-                    >
-                      <Trash2 size={20} />
-                      Delete
-                    </button>
+                    <div className={styles.statusRow}>
+                      <span
+                        className={`${styles.statusBadge} ${
+                          (design.approval_status === 'approved' || design.approval_status === null)
+                            ? styles.statusApproved
+                            : design.approval_status === 'rejected'
+                              ? styles.statusRejected
+                              : styles.statusPending
+                        }`}
+                      >
+                        {(design.approval_status === 'approved' || design.approval_status === null)
+                          ? 'Approved'
+                          : design.approval_status === 'rejected'
+                            ? 'Rejected'
+                            : 'Pending Approval'}
+                      </span>
+                    </div>
+                    {design.approval_status === 'rejected' && design.rejection_reason && (
+                      <p className={styles.rejectionReason}>
+                        Reason: {design.rejection_reason}
+                      </p>
+                    )}
+                    <div className={styles.buttonGroup}>
+                      <button 
+                        className={styles['edit-button']}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.currentTarget.disabled = true;
+                          handleEdit(design.id);
+                        }}
+                      >
+                        <Pencil size={20} />
+                        Edit
+                      </button>
+                      <button 
+                        className={styles['delete-button']}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteModal(design.id);
+                        }}
+                      >
+                        <Trash2 size={20} />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               )

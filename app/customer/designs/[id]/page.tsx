@@ -109,6 +109,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
   const [currentDesignIndex, setCurrentDesignIndex] = useState<number | null>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
   const [isMediaLoading, setIsMediaLoading] = useState(true)
+  const [isDesignUnavailable, setIsDesignUnavailable] = useState(false)
 
   // Bag context
   const { addItem } = useBag()
@@ -158,6 +159,11 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
       const cached = designCache.get(id)
       if (cached) {
+        if (cached.approval_status && cached.approval_status !== 'approved') {
+          setIsDesignUnavailable(true)
+          setIsLoading(false)
+          return
+        }
         setDesign(cached)
         setTailorId(cached.created_by)
         setIsLoading(false)
@@ -196,8 +202,15 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
           return
         }
 
+      if (data?.approval_status && data.approval_status !== 'approved') {
+        setIsDesignUnavailable(true)
+        setIsLoading(false)
+        return
+      }
+
       if (!data?.created_by) {
         console.error('No created_by field found for design')
+        setIsLoading(false)
         return
       }
 
@@ -494,6 +507,22 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     setShowReviewsModal(true);
     fetchReviews();
   };
+
+  if (isDesignUnavailable) {
+    return (
+      <div className={styles.container}>
+        <button 
+          onClick={() => router.push('/')}
+          className={styles.backButton}
+        >
+          <IoArrowBack /> Back to Home
+        </button>
+        <div className={styles.unavailableMessage}>
+          This design is currently pending approval and is not yet visible to customers.
+        </div>
+      </div>
+    )
+  }
 
   if (!design || isLoading) {
     return (

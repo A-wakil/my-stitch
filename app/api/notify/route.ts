@@ -14,22 +14,27 @@ type NotificationType =
   | 'order_shipped'
   | 'order_delivered'
   | 'order_cancelled'
-  | 'order_pending';
+  | 'order_pending'
+  | 'tailor_approved'
+  | 'design_approved'
+  | 'design_rejected';
 
 interface NotificationPayload {
   type: NotificationType;
   recipientEmail: string;
   recipientName: string;
-  orderId: string;
+  orderId?: string;
+  referenceId?: string;
   additionalData?: Record<string, any>;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const payload: NotificationPayload = await request.json();
-    const { type, recipientEmail, recipientName, orderId, additionalData } = payload;
+    const { type, recipientEmail, recipientName, orderId, referenceId, additionalData } = payload;
 
-    if (!type || !recipientEmail || !recipientName || !orderId) {
+    const requiresOrderId = type.startsWith('order_');
+    if (!type || !recipientEmail || !recipientName || (requiresOrderId && !orderId) || (!requiresOrderId && !referenceId)) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -37,17 +42,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate email subject and content based on notification type
-    const { subject, content } = generateEmailContent(type, recipientName, orderId, additionalData);
+    const { subject, content, plainText } = generateEmailContent(
+      type,
+      recipientName,
+      orderId,
+      referenceId,
+      additionalData
+    );
 
     console.log(`Attempting to send email to ${recipientEmail} with subject "${subject}"`);
     
     try {
       // Send email using Resend with verified domain
       const { data, error } = await resend.emails.send({
-        from: 'Tailor Mint <notifications@mytailormint.com>', // Updated brand name
+        from: 'Tailor Mint <notifications@mytailormint.com>',
         to: recipientEmail,
         subject,
         html: content,
+        text: plainText, // Plain text version for better deliverability
+        reply_to: 'support@mytailormint.com', // Add reply-to address
       });
 
       if (error) {
@@ -79,19 +92,38 @@ export async function POST(request: NextRequest) {
 function generateEmailContent(
   type: NotificationType,
   recipientName: string,
-  orderId: string,
+  orderId?: string,
+  referenceId?: string,
   additionalData?: Record<string, any>
-): { subject: string; content: string } {
+): { subject: string; content: string; plainText: string } {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mytailormint.com';
-  const orderUrl = `${baseUrl}/customer/orders/${orderId}`;
+  const orderUrl = orderId ? `${baseUrl}/customer/orders/${orderId}` : '';
   const tailorOrderUrl = `${baseUrl}/tailor/orders`;
+  const tailorDesignsUrl = `${baseUrl}/tailor/designs`;
   
   let subject = '';
   let content = '';
+  let plainText = '';
   
   const isTailor = additionalData?.recipientRole === 'TAILOR';
   
   const rolePrefix = additionalData?.recipientRole ? `[${additionalData.recipientRole}] ` : '';
+  
+  // Helper function to convert HTML email to plain text
+  const htmlToPlainText = (html: string): string => {
+    return html
+      .replace(/<style[^>]*>.*?<\/style>/gi, '')
+      .replace(/<script[^>]*>.*?<\/script>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\n\s*\n\s*\n/g, '\n\n')
+      .trim();
+  };
 
   switch (type) {
     case 'order_placed':
@@ -294,6 +326,95 @@ function generateEmailContent(
       `;
       break;
       
+    case 'tailor_approved':
+      subject = `Welcome to Tailor Mint - Your Account is Approved`;
+      content = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #d4edda; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #c3e6cb;">
+            <h2 style="margin-top: 0; color: #155724;">Account Approved</h2>
+            <p style="margin-bottom: 0;">Welcome to Tailor Mint!</p>
+          </div>
+          
+          <p>Hello ${recipientName},</p>
+          <p>Great news! Your tailor account has been approved. You're now ready to start showcasing your designs and receiving orders.</p>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <h3 style="margin-top: 0;">What you can do now:</h3>
+            <ul style="margin-bottom: 0;">
+              <li>Upload your custom designs</li>
+              <li>Set your pricing</li>
+              <li>Receive and manage customer orders</li>
+              <li>Build your brand on our platform</li>
+            </ul>
+          </div>
+          
+          <p>Get started by visiting your <a href="${tailorDesignsUrl}" style="color: #0066cc; text-decoration: underline;">designs dashboard</a> to upload your first design.</p>
+          
+          <p>If you have any questions or need assistance, our support team is here to help.</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
+        </div>
+      `;
+      break;
+
+    case 'design_approved':
+      subject = `Design Approved: ${additionalData?.designTitle || 'Your design'}`;
+      content = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #d4edda; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #c3e6cb;">
+            <h2 style="margin-top: 0; color: #155724;">Design Approved</h2>
+            <p style="margin-bottom: 0;">Your design is now live on the marketplace!</p>
+          </div>
+          
+          <p>Hello ${recipientName},</p>
+          <p>Great news! Your design has been reviewed and approved. It's now visible to customers on the Tailor Mint marketplace.</p>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <p style="margin-top: 0;"><strong>Design:</strong> ${additionalData?.designTitle || referenceId}</p>
+            <p style="margin-bottom: 0;"><strong>Status:</strong> Approved</p>
+          </div>
+          
+          <p>Customers can now browse and order your design. You'll receive notifications when orders come in.</p>
+          <p>View all your designs in your <a href="${tailorDesignsUrl}" style="color: #0066cc; text-decoration: underline;">dashboard</a>.</p>
+          
+          <p>Thank you for being part of Tailor Mint!</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
+        </div>
+      `;
+      break;
+
+    case 'design_rejected':
+      subject = `Design Update Required: ${additionalData?.designTitle || 'Your design'}`;
+      content = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #fff3cd; padding: 15px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ffc107;">
+            <h2 style="margin-top: 0; color: #856404;">Design Needs Updates</h2>
+            <p style="margin-bottom: 0;">Your design requires some changes before approval.</p>
+          </div>
+          
+          <p>Hello ${recipientName},</p>
+          <p>Thank you for submitting your design. After review, we need you to make some updates before we can approve it.</p>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;">
+            <p style="margin-top: 0;"><strong>Design:</strong> ${additionalData?.designTitle || referenceId}</p>
+            ${additionalData?.reason ? `<p><strong>Feedback:</strong> ${additionalData.reason}</p>` : ''}
+            <p style="margin-bottom: 0;"><strong>Status:</strong> Requires Changes</p>
+          </div>
+          
+          <h3>What to do next:</h3>
+          <ol>
+            <li>Review the feedback provided above</li>
+            <li>Edit your design in your dashboard</li>
+            <li>Resubmit for approval</li>
+          </ol>
+          
+          <p>Once you've made the necessary changes, your design will be reviewed again. Visit your <a href="${tailorDesignsUrl}" style="color: #0066cc; text-decoration: underline;">designs dashboard</a> to make edits.</p>
+          
+          <p>If you have questions about the feedback, please don't hesitate to reach out to our team.</p>
+          <p>Regards,<br>The Tailor Mint Team</p>
+        </div>
+      `;
+      break;
+
     default:
       if (isTailor) {
         subject = `${rolePrefix}Action Required: Order #${orderId} Update`;
@@ -321,5 +442,10 @@ function generateEmailContent(
       }
   }
 
-  return { subject, content };
+  // Generate plain text version from HTML if not already set
+  if (!plainText) {
+    plainText = htmlToPlainText(content);
+  }
+  
+  return { subject, content, plainText };
 } 

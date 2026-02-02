@@ -170,6 +170,7 @@ export function TailorProfileForm({ onComplete, onCancel, initialData }: TailorP
         website: formData.website,
         experience: formData.experience,
         specializations: formData.specializations,
+        ...(isNewProfile ? { is_approved: false } : {})
       }
 
       // Upsert into tailor_details, matching on the user ID

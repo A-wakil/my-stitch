@@ -55,6 +55,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   padding: 1.5rem;
+  padding-bottom: 5rem;
   position: relative;
   min-height: 300px;
   margin-bottom: 1rem;
@@ -141,6 +142,51 @@
 .activeThumbnail {
   border-color: #007185;
   opacity: 1;
+}
+
+.statusRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.statusApproved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statusPending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusRejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rejectionReason {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #7f1d1d;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  line-height: 1.4;
+  max-width: 350px;
+  text-align: right;
 }
 
 .carousel-controls {
@@ -246,11 +292,18 @@
 
 .card-footer {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
   position: absolute;
   bottom: 1.5rem;
   right: 1.5rem;
   z-index: 1;
+  align-items: flex-end;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
 }
 
 .edit-button, .delete-button {
@@ -270,8 +323,14 @@
   border: none;
 }
 
-.edit-button:hover {
+.edit-button:hover:not(:disabled) {
   background: #00242c;
+}
+
+.edit-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .delete-button {
@@ -380,6 +439,13 @@
   .card-content {
     min-height: auto;
     padding: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .rejectionReason {
+    max-width: 100%;
+    margin-bottom: 0.75rem;
+    text-align: left;
   }
 
   .card-title {
@@ -396,8 +462,11 @@
     bottom: auto;
     right: auto;
     width: 100%;
-    justify-content: stretch;
     margin-top: 1rem;
+  }
+  
+  .buttonGroup {
+    width: 100%;
   }
 
   .edit-button, 
@@ -406,6 +475,11 @@
     justify-content: center;
     padding: 0.65rem 1rem;
     font-size: 0.875rem;
+  }
+  
+  .statusRow {
+    justify-content: center;
+    margin-bottom: 0.75rem;
   }
 }
 

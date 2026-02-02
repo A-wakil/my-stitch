@@ -52,6 +52,7 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   const [totalPrice, setTotalPrice] = useState<string>('')
   const [storedPrice, setStoredPrice] = useState<number | null>(null)
   const [storedCurrency, setStoredCurrency] = useState<CurrencyCode>('USD')
+  const [isApproved, setIsApproved] = useState<boolean | null>(null)
   const [gender, setGender] = useState<'male' | 'female' | null>(
     initialData?.gender !== undefined ? initialData.gender : null
   )
@@ -77,6 +78,35 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
     }
   }, [initialData])
 
+  useEffect(() => {
+    let isMounted = true
+
+    const checkApproval = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data, error } = await supabase
+        .from('tailor_details')
+        .select('is_approved')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error checking approval status:', error)
+        return
+      }
+
+      if (isMounted) {
+        setIsApproved(!!data?.is_approved)
+      }
+    }
+
+    checkApproval()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   // Convert price to selected currency whenever currency or priceInUSD changes
   useEffect(() => {
     async function updateDisplayPrice() {
@@ -92,6 +122,10 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   // Form validation
   const formValidation = useMemo(() => {
     const newErrors: FormErrors = {}
+
+    if (isApproved === false) {
+      return { valid: false, message: "Your tailor account is pending approval" }
+    }
 
     // Check basic fields
     if (!title.trim()) {
@@ -200,6 +234,12 @@ export function DesignForm({ onSubmitSuccess, initialData }: DesignFormProps) {
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
       <Toaster />
+      {isApproved === false && (
+        <div className={styles.approvalNotice}>
+          Your tailor account is pending approval. You can complete your profile,
+          but design uploads are disabled until you are approved.
+        </div>
+      )}
       <div className={styles.formGroup}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Design Title</h2>
