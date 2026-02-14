@@ -19,8 +19,8 @@ interface SidebarProps {
 
 const mainNavItems = [
   { name: 'My Account', path: '/customer/profile', icon: <IoPersonOutline size={20} /> },
-  { name: 'Saved Measurements', path: '/customer/measurements', icon: <LuRuler size={20} /> },
-  { name: 'My Orders', path: '/customer/orders', icon: <HiOutlineShoppingBag size={20} /> },
+  { name: 'Measurements', path: '/customer/measurements', icon: <LuRuler size={20} /> },
+  { name: 'Orders', path: '/customer/orders', icon: <HiOutlineShoppingBag size={20} /> },
 ]
 
 const secondaryNavItems = [
