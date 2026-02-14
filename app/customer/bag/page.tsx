@@ -190,12 +190,6 @@ export default function BagPage() {
           >
             Empty Bag
           </button>
-          <button 
-            className={styles.continueShoppingBtn}
-            onClick={() => router.push('/')}
-          >
-            Continue Shopping
-          </button>
         </div>
       </div>
 
@@ -353,6 +347,13 @@ export default function BagPage() {
               disabled={!isShippingComplete() || isProcessingCheckout}
             >
               {isProcessingCheckout ? 'Redirecting to Payment...' : 'Proceed to Payment'}
+            </button>
+            
+            <button 
+              className={styles.continueLinkBtn}
+              onClick={() => router.push('/')}
+            >
+              ← Continue Shopping
             </button>
           </div>
         </div>

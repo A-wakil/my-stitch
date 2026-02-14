@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // 3. Create Stripe checkout session
+    // 3. Create Stripe checkout session with pre-filled shipping address
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
@@ -101,9 +101,9 @@ export async function POST(req: NextRequest) {
         shipping_address: JSON.stringify(shipping_address),
       },
       customer_email: user.email,
-      shipping_address_collection: {
-        allowed_countries: ['US', 'CA'],
-      },
+      // Store the shipping address in metadata - it will be used when creating the order
+      // Note: Stripe Checkout doesn't support pre-filling shipping addresses directly
+      // The address from the bag page is stored in metadata and used after payment
     })
 
     return NextResponse.json({ 
