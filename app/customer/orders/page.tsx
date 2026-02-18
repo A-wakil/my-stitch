@@ -9,6 +9,7 @@ import { IoArrowBack } from 'react-icons/io5'
 import { RatingModal } from '../../components/ui/RatingModal'
 import { toast } from 'react-hot-toast'
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import { formatDesignTitle } from '../../lib/formatters'
 
 type OrderStatus = 'all' | 'pending' | 'accepted' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'cancelled' | 'rejected'
 
@@ -490,7 +491,7 @@ export default function OrdersPage() {
                           {item.design?.images?.[selectedImages[itemKey] || 0] && (
                             <img
                               src={item.design.images[selectedImages[itemKey] || 0]}
-                              alt={item.design.title}
+                              alt={formatDesignTitle(item.design.title)}
                               className={styles.designImage}
                             />
                           )}
@@ -500,7 +501,7 @@ export default function OrdersPage() {
                             <img
                               key={index}
                               src={image}
-                              alt={`${item.design?.title} view ${index + 1}`}
+                              alt={`${formatDesignTitle(item.design?.title) || 'Design'} view ${index + 1}`}
                               className={`${styles.thumbnail} ${selectedImages[itemKey] === index ? styles.activeThumbnail : ''}`}
                               onClick={() => setSelectedImages(prev => ({
                                 ...prev,
@@ -512,7 +513,7 @@ export default function OrdersPage() {
                       </div>
                       <div className={styles.itemDetails}>
                         <h3 className={styles.itemTitle}>
-                          {item.design?.title || (item.design_id ? `Design #${item.design_id}` : 'Design Unavailable')}
+                          {formatDesignTitle(item.design?.title) || (item.design_id ? `Design #${item.design_id}` : 'Design Unavailable')}
                           {item.design?.is_soft_deleted && (
                             <span className={styles.designArchivedBadge}>
                               (Archived Design)
@@ -571,7 +572,7 @@ export default function OrdersPage() {
                       {order.design?.images?.[selectedImages[order.id] || 0] && (
                         <img
                           src={order.design.images[selectedImages[order.id] || 0]}
-                          alt={order.design.title}
+                          alt={formatDesignTitle(order.design.title)}
                           className={styles.designImage}
                         />
                       )}
@@ -581,7 +582,7 @@ export default function OrdersPage() {
                         <img
                           key={index}
                           src={image}
-                          alt={`${order.design?.title} view ${index + 1}`}
+                          alt={`${formatDesignTitle(order.design?.title) || 'Design'} view ${index + 1}`}
                           className={`${styles.thumbnail} ${selectedImages[order.id] === index ? styles.activeThumbnail : ''}`}
                           onClick={() => setSelectedImages(prev => ({
                             ...prev,
@@ -593,7 +594,7 @@ export default function OrdersPage() {
                   </div>
                   <div className={styles.itemDetails}>
                     <h3 className={styles.itemTitle}>
-                      {order.design?.title || `Design #${order.design_id}`}
+                      {formatDesignTitle(order.design?.title) || `Design #${order.design_id}`}
                       {order.design?.is_soft_deleted && (
                         <span className={styles.designArchivedBadge}>
                           (Archived Design)

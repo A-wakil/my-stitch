@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabaseClient'
 import { toast } from 'react-hot-toast'
 import { Measurement } from '../../../lib/types'
 import { loadStripe } from '@stripe/stripe-js'
+import { formatDesignTitle } from '../../../lib/formatters'
 
 interface OrderConfirmationModalProps {
   isOpen: boolean
@@ -485,7 +486,7 @@ export default function OrderConfirmationModal({
           <div className={styles.section}>
             <h4>Order Summary</h4>
             <div className={styles.orderDetails}>
-              <p>Design: {orderDetails.design.title}</p>
+              <p>Design: {formatDesignTitle(orderDetails.design.title)}</p>
             </div>
           </div>
 

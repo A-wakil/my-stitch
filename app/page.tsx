@@ -2,10 +2,9 @@
 
 
 import "./page.css"
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Header } from "./customer/ui/Header/Header"
 import { GalleryImage } from "./customer/ui/GalleryImage/GalleryImage"
-import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 import { useGender } from "./context/GenderContext"
 import { AuthDialog } from "./components/AuthDialog/AuthDialog";
 import { MailingListModal } from "./components/ui/MailingListModal";
@@ -35,11 +34,9 @@ const designsCache = new Map<string, Design[]>()
 
 export default function Home() {
   const [designs, setDesigns] = useState<Design[]>([])
-  const [page, setPage] = useState(1)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [isMailingListModalOpen, setIsMailingListModalOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [hasMore, setHasMore] = useState(true)
   const [isLoadingDesigns, setIsLoadingDesigns] = useState(true)
   const [navigatingDesignId, setNavigatingDesignId] = useState<string | null>(null)
   const router = useRouter()
@@ -63,7 +60,6 @@ export default function Home() {
       const cached = designsCache.get(cacheKey)
       if (cached) {
         setDesigns(cached)
-        setHasMore(cached.length >= 10)
         setIsLoadingDesigns(false)
         return
       }
@@ -86,7 +82,6 @@ export default function Home() {
       const data = await response.json();
       designsCache.set(cacheKey, data);
       setDesigns(data);
-      setHasMore(data.length >= 10);
     } catch (error) {
       console.error('Error fetching designs:', error);
     } finally {
@@ -180,25 +175,6 @@ export default function Home() {
     }
   }
 
-
-  const loadMoreDesigns = useCallback(() => {
-    if (!hasMore) return;
-    
-    setTimeout(() => {
-      setDesigns(prevDesigns => {
-        if (prevDesigns.length >= 20) {
-          setHasMore(false);
-          return prevDesigns;
-        }
-        return [...prevDesigns];
-      });
-      setPage(prevPage => prevPage + 1);
-      setIsFetching(false);
-    }, 1000);
-  }, [hasMore]);
-
-  const { isFetching, setIsFetching } = useInfiniteScroll(loadMoreDesigns, hasMore);
-
   return (
     <div className="min-h-screen">
       <Header />
@@ -253,7 +229,7 @@ export default function Home() {
           <div className="gallery-grid">
             {filteredDesigns.map((design, index) => (
               <GalleryImage
-                key={`${design.title}-${index}`}
+                key={design.id}
                 images={design.images}
                 alt={design.title}
                 onClick={() => handleDesignClick(design)}
@@ -265,8 +241,6 @@ export default function Home() {
             ))}
           </div>
         )}
-        
-        {isFetching && hasMore && <p className="loading-message">Loading more...</p>}
       </main>
       <AuthDialog
         isOpen={isAuthDialogOpen}

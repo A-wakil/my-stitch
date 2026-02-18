@@ -15,6 +15,7 @@ import { StarRating } from "../../../components/ui/StarRating"
 import { useCurrency } from '../../../context/CurrencyContext'
 import { useBag } from '../../../context/BagContext'
 import { calculateCustomerPrice } from '../../../lib/pricing'
+import { formatDesignTitle } from '../../../lib/formatters'
 
 interface DesignDetail {
   id: string
@@ -543,6 +544,8 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
     )
   }
 
+  const displayTitle = formatDesignTitle(design.title)
+
   return (
     <div className={styles.container}>
       <button 
@@ -617,7 +620,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             ) : (
               <img 
                 src={mediaItems[selectedMediaIndex]?.url}
-                alt={design.title}
+                alt={displayTitle}
                 className={styles.primaryImage}
                 onClick={() => setIsImageZoomed(true)}
                 style={{ cursor: 'zoom-in' }}
@@ -650,7 +653,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
                 ) : (
                   <img
                     src={item.url}
-                    alt={`${design.title} view ${index + 1}`}
+                    alt={`${displayTitle} view ${index + 1}`}
                     className={styles.thumbnail}
                   />
                 )}
@@ -704,7 +707,7 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
 
         {/* Right side - Product details */}
         <div className={styles.detailsSection}>
-          <h1 className={styles.title}>{design.title}</h1>
+          <h1 className={styles.title}>{displayTitle}</h1>
           
           <div className={styles.description}>
             <p>{design.description}</p>
@@ -991,11 +994,11 @@ export default function DesignDetail({ params }: { params: Promise<{ id: string 
             </button>
             <img 
               src={mediaItems[selectedMediaIndex]?.url}
-              alt={design.title}
+              alt={displayTitle}
               className={styles.zoomedImage}
             />
             <div className={styles.zoomImageInfo}>
-              <p>{design.title} - View {selectedMediaIndex + 1} of {mediaItems.length}</p>
+              <p>{displayTitle} - View {selectedMediaIndex + 1} of {mediaItems.length}</p>
             </div>
           </div>
         </div>

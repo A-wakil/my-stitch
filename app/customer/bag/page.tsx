@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import styles from './BagPage.module.css'
 import { toast } from 'react-hot-toast'
 import { supabase } from '../../lib/supabaseClient'
+import { formatDesignTitle } from '../../lib/formatters'
 
 interface DesignData {
   id: string
@@ -198,14 +199,17 @@ export default function BagPage() {
           {loadingDesigns ? (
             <div className={styles.loading}>Loading design details...</div>
           ) : (
-            itemsWithDesigns.map(item => (
+            itemsWithDesigns.map(item => {
+              const designTitle = formatDesignTitle(item.design?.title) || 'Design'
+
+              return (
               <div key={item.id} className={styles.itemCard}>
                 <div className={styles.itemImages}>
                   {item.design?.images && item.design.images.length > 0 ? (
                     <>
                       <img 
                         src={item.design.images[0]} 
-                        alt={item.design?.title || 'Design'}
+                        alt={designTitle}
                         className={styles.itemImage}
                       />
                       {item.design.images.length > 1 && (
@@ -214,7 +218,7 @@ export default function BagPage() {
                             <img 
                               key={idx}
                               src={img} 
-                              alt={`${item.design?.title || 'Design'} view ${idx + 2}`}
+                              alt={`${designTitle} view ${idx + 2}`}
                               className={styles.thumbnailImage}
                             />
                           ))}
@@ -233,7 +237,7 @@ export default function BagPage() {
                 
                 <div className={styles.itemDetails}>
                   <h3 className={styles.designTitle}>
-                    {item.design?.title || 'Custom Design'}
+                    {formatDesignTitle(item.design?.title) || 'Custom Design'}
                   </h3>
                   
                   <div className={styles.itemSpecs}>
@@ -255,7 +259,7 @@ export default function BagPage() {
                   {removingItemId === item.id ? 'Removing...' : 'Remove'}
                 </button>
               </div>
-            ))
+            )})
           )}
         </div>
         

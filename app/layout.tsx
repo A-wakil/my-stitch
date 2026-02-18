@@ -8,7 +8,7 @@ interface RootLayoutProps {
 }
 
 export const metadata: Metadata = {
-  title: "Tailor Mint — Custom Tailoring, Made-to-Measure",
+  title: " Tailor Mint — Custom Tailoring, Made-to-Measure",
   description: "Bespoke outfits from vetted tailors. Precise measurements, easy ordering, and tracked delivery.",
   icons: {
     icon: [{ url: "/favicon.ico", sizes: "any" },
