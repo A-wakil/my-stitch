@@ -28,6 +28,7 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
   const [generalError, setGeneralError] = useState('')
   const [errors, setErrors] = useState<{ email?: string; password?: string; firstName?: string; lastName?: string; role?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   // Generate unique IDs for inputs to avoid duplicates
@@ -50,6 +51,7 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
     } else {
       console.log("Dialog closed, resetting loading state.")
       setIsLoading(false)
+      setIsGoogleLoading(false)
       setIsForgotPassword(false) // Reset forgot password state when closing
     }
   }, [isOpen, isSignUp, isForgotPassword])
@@ -232,6 +234,41 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
     if (e.target === e.currentTarget) onClose()
   }
 
+  const handleGoogleSignIn = async () => {
+    if (isLoading || isGoogleLoading) return
+
+    setInfoMessage('')
+    setGeneralError('')
+    setErrors({})
+    setIsGoogleLoading(true)
+
+    try {
+      const callbackParams = new URLSearchParams()
+      const nextPath = redirectTo && redirectTo.startsWith('/') ? redirectTo : ''
+      const intentRole = (role === 'tailor' || defaultRole === 'tailor') ? 'tailor' : 'customer'
+
+      if (nextPath) {
+        callbackParams.set('next', nextPath)
+      }
+      callbackParams.set('intent_role', intentRole)
+
+      const callbackUrl = `${window.location.origin}/auth/callback?${callbackParams.toString()}`
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl,
+        },
+      })
+
+      if (error) throw error
+    } catch (error: unknown) {
+      console.error('Google sign-in error:', error)
+      setGeneralError('Google sign-in failed. Please try again.')
+      setIsGoogleLoading(false)
+    }
+  }
+
   if (typeof window !== 'undefined') {
     document.body.style.overflow = isOpen ? 'hidden' : 'auto'
   }
@@ -264,6 +301,46 @@ export function AuthDialog({ isOpen, onClose, defaultRole = 'customer', redirect
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            {!isForgotPassword && (
+              <>
+                <button
+                  type="button"
+                  className={styles.googleButton}
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading || isGoogleLoading}
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className={styles.loadingSpinner} size={16} />
+                  ) : (
+                    <span className={styles.googleIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" role="img" aria-label="Google">
+                        <path
+                          d="M21.805 10.023h-9.18v3.955h5.264c-.226 1.274-.97 2.353-2.067 3.074v2.552h3.344c1.958-1.803 3.084-4.456 3.084-7.604 0-.658-.058-1.292-.165-1.905Z"
+                          fill="#4285F4"
+                        />
+                        <path
+                          d="M12.625 22c2.79 0 5.13-.924 6.84-2.504l-3.344-2.552c-.926.621-2.114.99-3.496.99-2.687 0-4.964-1.816-5.778-4.258H3.39v2.673A10.33 10.33 0 0 0 12.625 22Z"
+                          fill="#34A853"
+                        />
+                        <path
+                          d="M6.847 13.676A6.197 6.197 0 0 1 6.524 11.7c0-.686.117-1.35.323-1.976V7.051H3.39A10.33 10.33 0 0 0 2.25 11.7c0 1.652.397 3.216 1.14 4.649l3.457-2.673Z"
+                          fill="#FBBC05"
+                        />
+                        <path
+                          d="M12.625 5.465c1.517 0 2.88.522 3.95 1.548l2.963-2.962C17.752 2.43 15.413 1.4 12.625 1.4A10.33 10.33 0 0 0 3.39 7.051l3.457 2.673c.814-2.442 3.09-4.258 5.778-4.258Z"
+                          fill="#EA4335"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                  <span>Continue with Google</span>
+                </button>
+                <div className={styles.divider}>
+                  <span>or</span>
+                </div>
+              </>
+            )}
+
             <div className={styles.formGroup}>
               <label htmlFor={emailInputId} className={styles.label}>Email</label>
               <input

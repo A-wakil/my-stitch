@@ -15,6 +15,8 @@ function AuthCallbackContent() {
         const code = searchParams.get('code')
         const tokenHash = searchParams.get('token_hash')
         const type = searchParams.get('type')
+        const nextPath = searchParams.get('next')
+        const intentRole = searchParams.get('intent_role')
 
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
@@ -37,11 +39,31 @@ function AuthCallbackContent() {
           return
         }
 
-        const role = (user.user_metadata?.roles as string) || 'customer'
+        const isValidRole = (value: unknown): value is 'customer' | 'tailor' | 'both' =>
+          value === 'customer' || value === 'tailor' || value === 'both'
+
+        const metadataRole = user.user_metadata?.roles
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('roles, firstname, lastname')
+          .eq('id', user.id)
+          .single()
+
+        const resolvedRole =
+          (isValidRole(profileData?.roles) && profileData.roles) ||
+          (isValidRole(metadataRole) && metadataRole) ||
+          (isValidRole(intentRole) && intentRole) ||
+          'customer'
 
         const { data: updated } = await supabase
           .from('profiles')
-          .update({ roles: role })
+          .update({
+            roles: resolvedRole,
+            email: user.email,
+            firstname: user.user_metadata?.first_name || profileData?.firstname || 'User',
+            lastname: user.user_metadata?.last_name || profileData?.lastname || null,
+          })
           .eq('id', user.id)
           .select('id')
 
@@ -53,11 +75,16 @@ function AuthCallbackContent() {
               email: user.email,
               firstname: user.user_metadata?.first_name || 'User',
               lastname: user.user_metadata?.last_name || null,
-              roles: role,
+              roles: resolvedRole,
             })
         }
 
-        if (role === 'tailor' || role === 'both') {
+        if (nextPath && nextPath.startsWith('/')) {
+          router.replace(nextPath)
+          return
+        }
+
+        if (resolvedRole === 'tailor' || resolvedRole === 'both') {
           router.replace('/tailor')
           return
         }
