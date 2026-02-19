@@ -24,6 +24,10 @@ export function Header() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [profileName, setProfileName] = useState<{ firstName: string; lastName: string }>({
+    firstName: '',
+    lastName: '',
+  })
   const [authDefaultRole, setAuthDefaultRole] = useState<'customer' | 'tailor' | 'both'>('customer')
   const [authRedirectTo, setAuthRedirectTo] = useState<string | null>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -41,6 +45,43 @@ export function Header() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadProfileName = async () => {
+      if (!user?.id) {
+        if (isMounted) {
+          setProfileName({ firstName: '', lastName: '' })
+        }
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('firstname, lastname')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error loading profile name:', error)
+        return
+      }
+
+      if (isMounted) {
+        setProfileName({
+          firstName: data?.firstname || '',
+          lastName: data?.lastname || '',
+        })
+      }
+    }
+
+    loadProfileName()
+
+    return () => {
+      isMounted = false
+    }
+  }, [user?.id])
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -172,6 +213,20 @@ export function Header() {
     }
   }
 
+  const displayName = (() => {
+    const profileFullName = `${profileName.firstName} ${profileName.lastName}`.trim()
+    if (profileFullName) return profileFullName
+
+    const metadataFullName = `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim()
+    if (metadataFullName) return metadataFullName
+
+    if (typeof user?.user_metadata?.name === 'string' && user.user_metadata.name.trim()) {
+      return user.user_metadata.name.trim()
+    }
+
+    return user?.email?.split('@')[0] || 'User'
+  })()
+
   return (
     <>
       <header className="header">
@@ -222,7 +277,7 @@ export function Header() {
                     {user ? (
                       <>
                         <div className="user-info">
-                          <p className="user-name">{user.user_metadata.first_name} {user.user_metadata.last_name}</p>
+                          <p className="user-name">{displayName}</p>
                           <p className="user-email">{user.email}</p>
                         </div>
                         <div className="user-menu-divider"></div>
